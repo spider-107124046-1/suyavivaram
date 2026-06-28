@@ -1,8 +1,6 @@
-/* ============================================================
- *  SHARED STYLES
- *  Common animations, fonts, and utility classes
- *  used across all Resumify pages.
- * ============================================================ */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
 body {
   font-family: "Lato", sans-serif;

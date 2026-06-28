@@ -1,0 +1,145 @@
+import React from 'react';
+import { useNavigate } from 'react-router-dom';
+
+const TemplatesPage = () => {
+  const navigate = useNavigate();
+
+  const navigateBack = () => { navigate('/'); };
+  const selectTemplate = (templateId) => { navigate(`/builder?template=${templateId}`); };
+
+  const templates = [
+    {
+      id: 'on-campus',
+      title: 'OnCampus Resume',
+      description: 'A clean, professional format optimized for academic institutions. Perfect for engineering and research roles.',
+      color: 'blue',
+      iconPath: 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z'
+    },
+    {
+      id: 'modern-creative',
+      title: 'Modern Creative',
+      description: 'A vibrant layout with accent colors and a sidebar. Ideal for creative professionals, designers, and developers.',
+      color: 'purple',
+      iconPath: 'M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01'
+    },
+    {
+      id: 'corporate-minimal',
+      title: 'Corporate Minimal',
+      description: 'A strictly business layout focusing on experience and skills, featuring a clear two-column structure.',
+      color: 'emerald',
+      iconPath: 'M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z'
+    }
+  ];
+
+  const renderTemplateCard = (template) => {
+    const colorClasses = {
+      blue: {
+        border: 'hover:border-blue-500',
+        iconBg: 'bg-blue-100',
+        iconText: 'text-blue-600',
+        ctaText: 'text-blue-600 font-bold group-hover:text-blue-700'
+      },
+      purple: {
+        border: 'hover:border-purple-500',
+        iconBg: 'bg-purple-100',
+        iconText: 'text-purple-600',
+        ctaText: 'text-purple-600 font-bold group-hover:text-purple-700'
+      },
+      emerald: {
+        border: 'hover:border-emerald-500',
+        iconBg: 'bg-emerald-100',
+        iconText: 'text-emerald-600',
+        ctaText: 'text-emerald-600 font-bold group-hover:text-emerald-700'
+      }
+    };
+    const colors = colorClasses[template.color];
+
+    return (
+      <div
+        key={template.id}
+        onClick={() => selectTemplate(template.id)}
+        className={`group cursor-pointer bg-white/80 backdrop-blur-md rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 border border-white/50 ${colors.border} transform hover:-translate-y-1 ring-1 ring-slate-900/5 p-8 flex flex-col h-full`}
+      >
+        <div className={`flex items-center justify-center w-16 h-16 rounded-full ${colors.iconBg} ${colors.iconText} mb-6 group-hover:scale-110 transition-transform duration-300`}>
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="h-8 w-8"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={template.iconPath} />
+          </svg>
+        </div>
+        <h3 className="font-bold text-2xl text-slate-900 mb-3">{template.title}</h3>
+        <p className="text-slate-500 leading-relaxed mb-8 flex-grow">{template.description}</p>
+        <div className={`flex items-center ${colors.ctaText}`}>
+          Select Template
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="h-5 w-5 ml-2 transform group-hover:translate-x-1 transition-transform"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+          </svg>
+        </div>
+      </div>
+    );
+  };
+
+  return (
+    <div className="relative min-h-screen bg-white overflow-hidden font-sans selection:bg-teal-100 flex flex-col">
+      {/* Background Blobs */}
+      <div className="absolute top-[-10%] left-[-5%] w-[50vw] h-[50vw] bg-[#FDF6B2] rounded-full mix-blend-multiply filter blur-[100px] opacity-70 animate-blob" />
+      <div className="absolute top-[-10%] right-[-10%] w-[50vw] h-[50vw] bg-[#99F6E4] rounded-full mix-blend-multiply filter blur-[100px] opacity-70 animate-blob animation-delay-2000" />
+      <div className="absolute bottom-[-20%] left-[10%] w-[50vw] h-[50vw] bg-[#FF7E67] rounded-full mix-blend-multiply filter blur-[100px] opacity-40 animate-blob animation-delay-4000" />
+      <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-white rounded-full blur-[80px] opacity-60 z-0 pointer-events-none" />
+
+      {/* Main Content */}
+      <div className="relative z-10 flex-grow flex flex-col items-center justify-center p-6">
+        <div className="w-full max-w-5xl mx-auto">
+          {/* Back Button */}
+          <div className="flex justify-between items-center mb-10">
+            <button
+              onClick={navigateBack}
+              className="flex items-center text-slate-500 hover:text-slate-800 transition-colors font-medium"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-5 w-5 mr-2"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+              </svg>
+              Back
+            </button>
+          </div>
+
+          {/* Header */}
+          <div className="text-center mb-12">
+            <h1 className="text-4xl md:text-5xl font-black text-slate-900 mb-4 tracking-tight">Choose a Template</h1>
+            <p className="text-xl text-slate-600 max-w-2xl mx-auto leading-relaxed">
+              Select a design that best fits your profession and personality to start building.
+            </p>
+          </div>
+
+          {/* Template Cards Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {templates.map(renderTemplateCard)}
+          </div>
+        </div>
+      </div>
+
+      {/* Footer */}
+      <footer className="relative z-10 py-6 text-center text-slate-500 text-sm font-medium">
+        Made with ❤️ by TPF-NITT
+      </footer>
+    </div>
+  );
+};
+
+export default TemplatesPage;
