@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, Fragment } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
+import { usePWA } from '../components/PWAContext';
 import {
   OnCampusEditor,
   OnCampusPreview
@@ -26,6 +27,7 @@ const BuilderPage = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const selectedTemplate = searchParams.get('template') || 'on-campus';
+  const { isInstallable, installApp } = usePWA();
 
   const [resumeData, setResumeData] = useState(() => {
     const uploaded = sessionStorage.getItem('uploadedResumeData');
@@ -443,6 +445,20 @@ const BuilderPage = () => {
                 </Fragment>
               )}
             </div>
+          )}
+
+          {/* --- Install App Button --- */}
+          {isInstallable && (
+            <button
+              onClick={installApp}
+              className="h-7 sm:h-8 px-2 sm:px-3 bg-teal-600 hover:bg-teal-700 text-white rounded text-sm flex items-center justify-center space-x-1.5 ml-2 transition-colors animate-pulse"
+              title="Install as an App"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 sm:h-4 sm:w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+              </svg>
+              <span>Install App</span>
+            </button>
           )}
 
           {/* --- Save Configuration Button --- */}

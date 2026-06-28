@@ -1,11 +1,13 @@
 import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { reconstructResumeData } from '../utils/helpers';
+import { usePWA } from '../components/PWAContext';
 
 const LandingPage = () => {
   const navigate = useNavigate();
   const fileInputRef = useRef(null);
   const [errorMsg, setErrorMsg] = useState(null);
+  const { isInstallable, installApp } = usePWA();
 
   const navigateToTemplates = () => { navigate('/templates'); };
   const navigateToFAQ = () => { navigate('/faq'); };
@@ -45,6 +47,18 @@ const LandingPage = () => {
     <div className="relative min-h-screen bg-white overflow-hidden font-sans selection:bg-teal-100 flex flex-col">
       {/* --- Navigation Bar --- */}
       <nav className="relative z-50 flex items-center justify-end px-6 py-6 max-w-7xl mx-auto w-full">
+        {isInstallable && (
+          <button
+            onClick={installApp}
+            className="mr-4 px-4 py-2 bg-slate-900 text-white rounded-lg text-sm font-semibold hover:bg-slate-800 transition-all hover:shadow-md flex items-center gap-1.5"
+            aria-label="Install App"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+            </svg>
+            <span>Install App</span>
+          </button>
+        )}
         <button
           onClick={navigateToFAQ}
           className="text-slate-600 hover:text-slate-900 transition-colors"
@@ -131,6 +145,17 @@ const LandingPage = () => {
             >
               <span>Load Resume</span>
             </button>
+            {isInstallable && (
+              <button
+                onClick={installApp}
+                className="px-8 py-4 bg-teal-50 hover:bg-teal-100 text-[#2EC4B6] border-2 border-[#2EC4B6]/20 text-lg font-bold rounded-lg shadow-md hover:shadow-lg transition-all transform hover:-translate-y-1 flex items-center gap-3 min-w-[200px] justify-center"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                </svg>
+                <span>Install App</span>
+              </button>
+            )}
           </div>
         </div>
       </div>
