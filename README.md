@@ -1,6 +1,6 @@
-# Resumify
+# Suyavivaram (சுயவிவரம்)
 
-Resumify is a real-time, stateless client-side resume builder. It features multiple polished, professional resume formats (OnCampus, Modern Creative, and Corporate Minimal) that users can edit, customize, crop photos/logos for, and download as pixel-perfect PDFs.
+Suyavivaram is a real-time, stateless client-side resume builder. It features multiple polished, professional resume formats (OnCampus, Modern Creative, and Corporate Minimal) that users can edit, customize, crop photos/logos for, and download as pixel-perfect PDFs.
 
 This repository represents a structured migration to a modern frontend build system using React, Vite, and Tailwind CSS.
 

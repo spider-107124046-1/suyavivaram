@@ -136,7 +136,6 @@ const TemplatesPage = () => {
 
       {/* Footer */}
       <footer className="relative z-10 py-6 text-center text-slate-500 text-sm font-medium">
-        Made with ❤️ by TPF-NITT
       </footer>
     </div>
   );

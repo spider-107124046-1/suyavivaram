@@ -57,8 +57,8 @@ const FAQPage = () => {
 
   const faqs = [
     {
-      q: 'Is Resumify free to use?',
-      a: 'Yes, Resumify is a completely free and open-source tool designed to help students generate professional resumes without any cost.'
+      q: 'Is Suyavivaram free to use?',
+      a: 'Yes, Suyavivaram is a completely free and open-source tool designed to help students generate professional resumes without any cost.'
     },
     {
       q: 'Do I need to create an account or sign in?',
@@ -74,7 +74,7 @@ const FAQPage = () => {
     },
     {
       q: 'Why does the download take a few seconds?',
-      a: 'Unlike basic tools that take a screenshot, Resumify spins up a real, high-fidelity browser engine on our server to ensure your margins, fonts, and layout are pixel-perfect. This high-quality rendering takes about 2-5 seconds.'
+      a: 'Unlike basic tools that take a screenshot, Suyavivaram spins up a real, high-fidelity browser engine on our server to ensure your margins, fonts, and layout are pixel-perfect. This high-quality rendering takes about 2-5 seconds.'
     },
     {
       q: 'Why did I get a \'Timeout\' error when downloading?',

@@ -60,7 +60,7 @@ const LandingPage = () => {
                 />
               </svg>
             </div>
-            <span className="text-4xl font-extrabold text-slate-900 tracking-tight">Resumify</span>
+            <span className="text-3xl md:text-4xl font-extrabold text-slate-900 tracking-tight">Suyavivaram (சுயவிவரம்)</span>
           </div>
 
           {/* Headline */}
@@ -88,7 +88,6 @@ const LandingPage = () => {
 
       {/* --- Footer --- */}
       <footer className="relative z-10 py-6 text-center text-slate-500 text-sm font-medium">
-        Made with ❤️ by TPF-NITT
       </footer>
     </div>
   );
