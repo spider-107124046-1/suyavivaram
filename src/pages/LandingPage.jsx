@@ -1,11 +1,45 @@
-import React from 'react';
+import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { reconstructResumeData } from '../utils/helpers';
 
 const LandingPage = () => {
   const navigate = useNavigate();
+  const fileInputRef = useRef(null);
+  const [errorMsg, setErrorMsg] = useState(null);
 
   const navigateToTemplates = () => { navigate('/templates'); };
   const navigateToFAQ = () => { navigate('/faq'); };
+
+  const handleLoadConfigClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      try {
+        const json = JSON.parse(event.target.result);
+        const { resumeData, layout, themeColor } = reconstructResumeData(json);
+        
+        // Save in sessionStorage
+        sessionStorage.setItem('uploadedResumeData', JSON.stringify(resumeData));
+        sessionStorage.setItem('uploadedThemeColor', themeColor);
+        
+        // Navigate to the editor with correct template
+        navigate(`/builder?template=${layout}`);
+      } catch (err) {
+        console.error("Invalid configuration file", err);
+        setErrorMsg(err.message || "Failed to parse JSON file. Please make sure it's a valid resume config.");
+        setTimeout(() => setErrorMsg(null), 5000);
+      }
+    };
+    reader.readAsText(file);
+    // Reset file input value so same file can be loaded again
+    e.target.value = "";
+  };
 
   return (
     <div className="relative min-h-screen bg-white overflow-hidden font-sans selection:bg-teal-100 flex flex-col">
@@ -74,7 +108,7 @@ const LandingPage = () => {
             Create professional, ATS-friendly resumes with our real-time builder. Start from polished templates, format it perfectly, and stand out.
           </p>
 
-          {/* Get Started Button */}
+          {/* Get Started and Load Resume Buttons */}
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <button
               onClick={navigateToTemplates}
@@ -82,9 +116,34 @@ const LandingPage = () => {
             >
               <span>Get Started</span>
             </button>
+            <input
+              type="file"
+              accept=".json"
+              ref={fileInputRef}
+              onChange={handleFileChange}
+              className="hidden"
+              id="config-file-loader"
+            />
+            <button
+              onClick={handleLoadConfigClick}
+              className="px-8 py-4 bg-slate-900 hover:bg-slate-800 text-white text-lg font-bold rounded-lg shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-1 flex items-center gap-3 min-w-[200px] justify-center"
+              id="load-resume-button"
+            >
+              <span>Load Resume</span>
+            </button>
           </div>
         </div>
       </div>
+
+      {/* --- Error message banner --- */}
+      {errorMsg && (
+        <div className="fixed bottom-10 left-1/2 -translate-x-1/2 bg-red-500 text-white px-6 py-3 rounded-lg shadow-lg z-50 animate-fade-in flex items-center gap-3">
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <span>{errorMsg}</span>
+        </div>
+      )}
 
       {/* --- Footer --- */}
       <footer className="relative z-10 py-6 text-center text-slate-500 text-sm font-medium">

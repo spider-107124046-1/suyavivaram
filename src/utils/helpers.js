@@ -57,3 +57,42 @@ export const generateUniqueId = () => {
 };
 
 export const isPlaceholderImage = url => !url || url.includes("via.placeholder.com") || url.includes("dummyimage.com") || url.includes("placeholder.png");
+
+export function reconstructResumeData(config) {
+  if (!config || !config.resumeData) {
+    throw new Error("Invalid configuration file: missing resumeData.");
+  }
+  
+  const resumeData = JSON.parse(JSON.stringify(config.resumeData));
+  
+  if (!resumeData.personalDetails) {
+    resumeData.personalDetails = {};
+  }
+  
+  const images = config.images || {};
+  
+  // Reconstruct photo
+  if (images.photo && images.photo.startsWith("data:image")) {
+    resumeData.personalDetails.photo = images.photo;
+  } else if (resumeData.personalDetails.photo === "uploaded-photo") {
+    // If the base64 string is missing, default to placeholder
+    resumeData.personalDetails.photo = "assets/images/placeholder.png";
+  }
+  
+  // Reconstruct logo
+  if (images.logo === "NITTLogo" || resumeData.personalDetails.logo === "NITTLogo") {
+    resumeData.personalDetails.logo = "assets/images/NITTLogo.png";
+  } else if (images.logo && images.logo.startsWith("data:image")) {
+    resumeData.personalDetails.logo = images.logo;
+  } else if (resumeData.personalDetails.logo === "uploaded-logo") {
+    // If the base64 string is missing, default to placeholder
+    resumeData.personalDetails.logo = "assets/images/placeholder.png";
+  }
+  
+  return {
+    resumeData,
+    layout: config.layout || "on-campus",
+    themeColor: config.themeColor || "#0f172a"
+  };
+}
+

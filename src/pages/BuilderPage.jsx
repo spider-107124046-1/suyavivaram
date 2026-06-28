@@ -49,7 +49,14 @@ const BuilderPage = () => {
   const [zoomLevel, setZoomLevel] = useState(1);
   const [zoomInputVal, setZoomInputVal] = useState("100%");
   const [isDownloading, setIsDownloading] = useState(false);
-  const [themeColor, setThemeColor] = useState("#0f172a");
+  const [themeColor, setThemeColor] = useState(() => {
+    const uploadedColor = sessionStorage.getItem('uploadedThemeColor');
+    if (uploadedColor) {
+      sessionStorage.removeItem('uploadedThemeColor');
+      return uploadedColor;
+    }
+    return "#0f172a";
+  });
   const [showColorPicker, setShowColorPicker] = useState(false);
   const [showLogoSelectionModal, setShowLogoSelectionModal] = useState(false);
   const [errorMessage, setErrorMessage] = useState(null);
@@ -274,6 +281,60 @@ const BuilderPage = () => {
     }
   };
 
+  const handleSaveConfig = () => {
+    try {
+      const clonedResumeData = JSON.parse(JSON.stringify(resumeData));
+      const images = {
+        photo: "",
+        logo: ""
+      };
+
+      if (clonedResumeData.personalDetails) {
+        // Extract base64 photo if present
+        if (clonedResumeData.personalDetails.photo && clonedResumeData.personalDetails.photo.startsWith("data:image")) {
+          images.photo = clonedResumeData.personalDetails.photo;
+          clonedResumeData.personalDetails.photo = "uploaded-photo";
+        }
+        
+        // Extract base64 logo / handle NITT logo
+        if (clonedResumeData.personalDetails.logo) {
+          if (clonedResumeData.personalDetails.logo === "assets/images/NITTLogo.png") {
+            images.logo = "NITTLogo";
+            clonedResumeData.personalDetails.logo = "NITTLogo";
+          } else if (clonedResumeData.personalDetails.logo.startsWith("data:image")) {
+            images.logo = clonedResumeData.personalDetails.logo;
+            clonedResumeData.personalDetails.logo = "uploaded-logo";
+          }
+        }
+      }
+
+      const config = {
+        version: "1.0",
+        layout: selectedTemplate,
+        themeColor: themeColor,
+        resumeData: clonedResumeData,
+        images: images
+      };
+
+      const jsonStr = JSON.stringify(config, null, 2);
+      const blob = new Blob([jsonStr], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      const userName = resumeData.personalDetails?.name
+        ? resumeData.personalDetails.name.trim().toLowerCase().replace(/\s+/g, "_")
+        : "resume";
+      link.href = url;
+      link.download = `${userName}_suyavivaram_config.json`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error("Failed to save configuration:", error);
+      showBannerError("Failed to save configuration.");
+    }
+  };
+
   const handleZoomInputChange = (e) => setZoomInputVal(e.target.value);
 
   const applyZoomInput = () => {
@@ -383,6 +444,18 @@ const BuilderPage = () => {
               )}
             </div>
           )}
+
+          {/* --- Save Configuration Button --- */}
+          <button
+            onClick={handleSaveConfig}
+            className="h-7 sm:h-8 px-2 sm:px-3 bg-slate-700 hover:bg-slate-800 text-white rounded text-sm flex items-center justify-center space-x-1.5 ml-2 transition-colors"
+            title="Save configuration to JSON"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 sm:h-4 sm:w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
+            </svg>
+            <span>Save Config</span>
+          </button>
 
           {/* --- PDF Generation Button --- */}
           <button
