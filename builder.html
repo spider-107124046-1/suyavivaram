@@ -12,8 +12,6 @@
     <link rel="stylesheet" href="https://unpkg.com/react-image-crop/dist/ReactCrop.css" />
     <link rel="stylesheet" href="assets/css/shared.css" />
     <link rel="stylesheet" href="assets/css/style.css" />
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script type="importmap">
       {
         "imports": {
@@ -2953,253 +2951,145 @@
           }
 
           setIsDownloading(true);
+
           try {
-            const doc = new jspdf.jsPDF({
-              orientation: "portrait",
-              unit: "mm",
-              format: "a4"
+            const printWindow = window.open("", "_blank");
+            if (!printWindow) {
+              showBannerError("Popup blocked. Please allow popups for this website to download your resume.");
+              setIsDownloading(false);
+              return;
+            }
+
+            const doc = printWindow.document;
+            doc.open();
+            doc.write(`
+              <!DOCTYPE html>
+              <html lang="en">
+              <head>
+                <meta charset="UTF-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <title>${resumeData.personalDetails.name || 'Resume'}</title>
+              </head>
+              <body>
+                <div id="print-container"></div>
+              </body>
+              </html>
+            `);
+            doc.close();
+
+            // Clone and copy all stylesheets, font links, and custom style elements
+            document.querySelectorAll('link, style').forEach(el => {
+              if (el.id === 'pdf-generation-fonts') return;
+              doc.head.appendChild(el.cloneNode(true));
             });
 
-            let customStyleTag = null;
-            const fontStyleId = "pdf-generation-fonts";
-            const existingStyle = document.getElementById(fontStyleId);
-            if (existingStyle) existingStyle.remove();
-
-            const loadFontAsBase64 = async (url) => {
-              try {
-                const response = await fetch(url);
-                if (!response.ok) return null;
-                const blob = await response.blob();
-                if (blob.size === 0) return null;
-                return new Promise((resolve, reject) => {
-                  const reader = new FileReader();
-                  reader.onloadend = () => {
-                    const base64data = reader.result;
-                    resolve(base64data.split(",")[1]);
-                  };
-                  reader.onerror = reject;
-                  reader.readAsDataURL(blob);
-                });
-              } catch {
-                return null;
+            // Insert custom print layout and spacing CSS
+            const printStyle = doc.createElement('style');
+            printStyle.innerHTML = `
+              @media print {
+                @page {
+                  size: A4 portrait;
+                  margin: 0;
+                }
+                body {
+                  margin: 0 !important;
+                  padding: 0 !important;
+                  background: white !important;
+                  -webkit-print-color-adjust: exact !important;
+                  print-color-adjust: exact !important;
+                }
+                #print-container {
+                  width: 210mm !important;
+                  margin: 0 !important;
+                  padding: 0 !important;
+                }
+                .resume-page-container {
+                  width: 210mm !important;
+                  height: 297mm !important;
+                  max-height: 297mm !important;
+                  margin: 0 !important;
+                  border: none !important;
+                  box-shadow: none !important;
+                  page-break-after: always !important;
+                  page-break-inside: avoid !important;
+                  overflow: hidden !important;
+                  box-sizing: border-box !important;
+                  position: relative !important;
+                }
+                /* Hide helper button overlays, upload triggers, and interactive components */
+                button,
+                [aria-label^="Upload"],
+                [class*="upload-btn"],
+                .no-print {
+                  display: none !important;
+                }
               }
-            };
-
-            let baseRegular, baseBold, baseCambria;
-            try {
-              baseRegular = await loadFontAsBase64("https://cdn.jsdelivr.net/gh/google/fonts@main/ofl/lato/Lato-Regular.ttf");
-              baseBold = await loadFontAsBase64("https://cdn.jsdelivr.net/gh/google/fonts@main/ofl/lato/Lato-Bold.ttf");
-            } catch (e) {
-              console.error("Lato font VFS loading failed:", e);
-            }
-            try {
-              baseCambria = await loadFontAsBase64("https://cdn.jsdelivr.net/gh/serendipious/every-font@master/Cambria%20-%20Regular.ttf");
-            } catch (e) {
-              console.error("Cambria font VFS loading failed:", e);
-            }
-
-            if (baseRegular) {
-              doc.addFileToVFS("Lato-Regular.ttf", baseRegular);
-              doc.addFont("Lato-Regular.ttf", "Lato", "normal");
-              doc.addFont("Lato-Regular.ttf", "Lato", "400");
-            }
-            if (baseBold) {
-              doc.addFileToVFS("Lato-Bold.ttf", baseBold);
-              doc.addFont("Lato-Bold.ttf", "Lato", "bold");
-              doc.addFont("Lato-Bold.ttf", "Lato", "700");
-            }
-            if (baseCambria) {
-              doc.addFileToVFS("Cambria.ttf", baseCambria);
-              doc.addFont("Cambria.ttf", "Cambria", "normal");
-              doc.addFont("Cambria.ttf", "Cambria", "400");
-            }
-
-            customStyleTag = document.createElement("style");
-            customStyleTag.id = fontStyleId;
-            let cssText = "";
-            if (baseRegular) {
-              cssText += `
-                @font-face {
-                  font-family: 'Lato';
-                  src: url(data:font/ttf;base64,${baseRegular}) format('truetype');
-                  font-weight: normal;
-                  font-style: normal;
+              @media screen {
+                body {
+                  background: #f1f5f9;
+                  display: flex;
+                  flex-direction: column;
+                  align-items: center;
+                  padding: 2rem 0;
+                  margin: 0;
+                  font-family: "Lato", sans-serif;
                 }
-                @font-face {
-                  font-family: 'Lato';
-                  src: url(data:font/ttf;base64,${baseRegular}) format('truetype');
-                  font-weight: 400;
-                  font-style: normal;
+                .resume-page-container {
+                  background: white;
+                  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
+                  margin-bottom: 2rem;
+                  box-sizing: border-box;
+                  position: relative;
                 }
-              `;
-            }
-            if (baseBold) {
-              cssText += `
-                @font-face {
-                  font-family: 'Lato';
-                  src: url(data:font/ttf;base64,${baseBold}) format('truetype');
-                  font-weight: bold;
-                  font-style: normal;
+                button,
+                [aria-label^="Upload"],
+                [class*="upload-btn"],
+                .no-print {
+                  display: none !important;
                 }
-                @font-face {
-                  font-family: 'Lato';
-                  src: url(data:font/ttf;base64,${baseBold}) format('truetype');
-                  font-weight: 700;
-                  font-style: normal;
-                }
-              `;
-            }
-            if (baseCambria) {
-              cssText += `
-                @font-face {
-                  font-family: 'Cambria';
-                  src: url(data:font/ttf;base64,${baseCambria}) format('truetype');
-                  font-weight: normal;
-                  font-style: normal;
-                }
-              `;
-            }
-
-            let styleOverrides = `
-              .section-header-flex {
-                align-items: flex-end !important;
-              }
-              .section-header-line {
-                margin-bottom: 4px !important;
-              }
-              .resume-section-container {
-                margin-bottom: 1.1rem !important;
-              }
-              .custom-square-list li::before {
-                width: 3px !important;
-                height: 3px !important;
-                top: 0.6em !important;
               }
             `;
+            doc.head.appendChild(printStyle);
 
-            if (selectedTemplate === "modern-creative") {
-              styleOverrides += `
-                .modern-creative-skill-tag {
-                  position: relative;
-                  top: -5px;
-                }
-                .modern-creative-date {
-                  position: relative;
-                  top: -2px;
-                }
-                .modern-creative-contact-icon {
-                  position: relative;
-                  top: 4px;
-                }
-                .modern-creative-section-border {
-                  position: relative;
-                  top: 3px;
-                }
-              `;
-            } else if (selectedTemplate === "corporate-minimal") {
-              styleOverrides += `
-                .corporate-minimal-list-item::before {
-                  top: 15px !important;
-                }
-              `;
-            }
+            const container = doc.getElementById('print-container');
+            pages.forEach(page => {
+              const clone = page.cloneNode(true);
+              // Clean up buttons and upload prompts in the cloned pages
+              clone.querySelectorAll('button, [aria-label^="Upload"], .no-print').forEach(el => el.remove());
+              container.appendChild(clone);
+            });
 
-            customStyleTag.innerHTML = cssText + styleOverrides;
-            document.head.appendChild(customStyleTag);
+            // Wait for all images (photos, logos) in the document to load
+            const images = Array.from(doc.querySelectorAll('img'));
+            const imagePromises = images.map(img => {
+              if (img.complete) return Promise.resolve();
+              return new Promise(resolve => {
+                img.onload = resolve;
+                img.onerror = resolve;
+              });
+            });
 
-            if (baseRegular) {
-              doc.setFont("Lato", "normal");
-            }
+            // Wait for fonts and images to be fully loaded
+            Promise.all([...imagePromises, printWindow.document.fonts.ready]).then(() => {
+              setTimeout(() => {
+                printWindow.focus();
+                
+                // Automatically close the window after printing is accepted or cancelled
+                printWindow.onafterprint = () => {
+                  printWindow.close();
+                };
+                
+                printWindow.print();
+              }, 300);
+            }).catch(err => {
+              console.error("Error waiting for print assets to load:", err);
+              printWindow.focus();
+              printWindow.print();
+            });
 
-            const isMobile = /Mobi|Android|iPhone|iPad|iPod|Windows Phone/.test(navigator.userAgent) || window.innerWidth < 800;
-            let wasFallbackUsed = false;
-
-            for (let i = 0; i < pages.length; i++) {
-              const pageEl = pages[i];
-              const uploadButtons = pageEl.parentElement?.querySelectorAll('button[aria-label^="Upload"]');
-              if (uploadButtons) {
-                uploadButtons.forEach(btn => btn.style.visibility = "hidden");
-              }
-
-              if (isMobile) {
-                try {
-                  if (i > 0) doc.addPage();
-                  await doc.html(pageEl, {
-                    callback: () => {},
-                    x: 0, y: 0, width: 210, windowWidth: 794,
-                    html2canvas: { scale: 0.26458, useCORS: true, logging: false, letterRendering: false, allowTaint: true },
-                    autoPaging: false
-                  });
-                  wasFallbackUsed = true;
-                } catch (err) {
-                  console.warn("pdf.html failed on mobile, falling back to html2canvas rendering", err);
-                  const clone = pageEl.cloneNode(true);
-                  clone.querySelectorAll('button[aria-label^="Upload"]').forEach(btn => btn.style.visibility = "hidden");
-                  const devW = 794;
-                  const devH = 1122;
-                  const tempContainer = document.createElement("div");
-                  tempContainer.style.position = "absolute";
-                  tempContainer.style.left = "-9999px";
-                  tempContainer.style.top = "0";
-                  tempContainer.style.width = `${devW}px`;
-                  tempContainer.style.height = `${devH}px`;
-                  tempContainer.style.overflow = "visible";
-                  tempContainer.appendChild(clone);
-                  document.body.appendChild(tempContainer);
-
-                  try {
-                    const canvas = await html2canvas(tempContainer, {
-                      scale: 2, useCORS: true, logging: false, letterRendering: false, allowTaint: true,
-                      width: devW, height: devH, windowWidth: devW, windowHeight: devH
-                    });
-                    const imgData = canvas.toDataURL("image/png", 1);
-                    if (i > 0) doc.addPage();
-                    doc.addImage(imgData, "PNG", 0, 0, 210, 297);
-                  } catch (canvasErr) {
-                    console.error("html2canvas fallback failed", canvasErr);
-                    showBannerError("Could not render page for PDF. Please try again.");
-                  } finally {
-                    if (tempContainer.parentElement) document.body.removeChild(tempContainer);
-                    if (uploadButtons) {
-                      uploadButtons.forEach(btn => btn.style.visibility = "visible");
-                    }
-                  }
-                }
-              } else {
-                if (i > 0) doc.addPage();
-                try {
-                  await doc.html(pageEl, {
-                    callback: () => {},
-                    x: 0, y: 0, width: 210, windowWidth: 794,
-                    html2canvas: { scale: 0.26458, useCORS: true, logging: false, letterRendering: false, allowTaint: true },
-                    autoPaging: false
-                  });
-                } catch (err) {
-                  console.error("pdf.html error", err);
-                  showBannerError("Could not render page for PDF. Please try again.");
-                } finally {
-                  if (uploadButtons) {
-                    uploadButtons.forEach(btn => btn.style.visibility = "visible");
-                  }
-                }
-              }
-            }
-
-            if (customStyleTag) customStyleTag.remove();
-
-            if ((!isMobile || (isMobile && wasFallbackUsed)) && doc.getNumberOfPages() > 1) {
-              try {
-                // Delete empty first page if generated accidentally
-                doc.deletePage(1);
-              } catch (delErr) {
-                console.warn("Could not delete first PDF page:", delErr);
-              }
-            }
-
-            doc.save(`${resumeData.personalDetails.name.replace(/\s/g, "_")}_Resume.pdf`);
           } catch (e) {
-            console.error("PDF Generation failed", e);
-            showBannerError(e.message || "An error occurred while generating the PDF.");
+            console.error("PDF Print Window initialization failed", e);
+            showBannerError(e.message || "An error occurred while preparing the PDF print layout.");
           } finally {
             setIsDownloading(false);
           }
