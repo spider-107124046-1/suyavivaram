@@ -3,97 +3,132 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Resumify</title>
+    <title>Resumify - Build your resume in minutes</title>
+    <meta name="description" content="Create professional, ATS-friendly resumes with our real-time builder. Powered by AI to help you write impactful descriptions and stand out." />
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Lato:wght@400;700&display=swap"
-      rel="stylesheet"
-    />
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-    <script>
-      window.pdfjsLib.GlobalWorkerOptions.workerSrc =
-        "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
-    </script>
-    <link
-      rel="stylesheet"
-      href="https://unpkg.com/react-image-crop/dist/ReactCrop.css"
-    />
-
-    <style>
-      body {
-        font-family: "Lato", sans-serif;
-      }
-      .custom-bullet-list {
-        list-style: none;
-        padding-left: 0;
-      }
-      .custom-bullet-list li {
-        position: relative;
-        padding-left: 2rem; /* Corresponds to pl-8 */
-      }
-      .custom-bullet-list li::before {
-        content: "•";
-        position: absolute;
-        left: 0.75rem; /* Adjust horizontal position of bullet */
-        top: 0.05em; /* Adjust vertical position to align with text */
-        font-size: 1em;
-      }
-      .technical-skills-list li {
-        padding-left: 3rem; /* Corresponds to pl-12 */
-      }
-      .technical-skills-list li::before {
-        left: 1.75rem; /* Moves bullet further right */
-      }
-      .custom-square-list {
-        list-style: none;
-        padding-left: 0;
-      }
-      .custom-square-list li {
-        position: relative;
-        padding-left: 3rem; /* Match other lists */
-      }
-      .custom-square-list li::before {
-        content: "";
-        position: absolute;
-        left: 1.75rem; /* Match other lists */
-        top: 0.55em;
-        width: 5px;
-        height: 5px;
-        background-color: black;
-      }
-      @keyframes fadeIn {
-        from {
-          opacity: 0;
-          transform: translate(-50%, 10px);
-        }
-        to {
-          opacity: 1;
-          transform: translate(-50%, 0);
-        }
-      }
-      .animate-fade-in {
-        animation: fadeIn 0.3s ease-out forwards;
-        transform: translateX(-50%);
-      }
-    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Lato:wght@400;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="assets/css/shared.css" />
     <script type="importmap">
       {
         "imports": {
           "react/": "https://esm.sh/react@19.2.0/",
           "react": "https://esm.sh/react@19.2.0",
-          "react-dom/": "https://esm.sh/react-dom@19.2.0/",
-          "react-image-crop": "https://esm.sh/react-image-crop@11.0.5"
+          "react-dom/": "https://esm.sh/react-dom@19.2.0/"
         }
       }
     </script>
-    <script type="module" crossorigin src="/assets/js/app.js"></script>
-    <link rel="stylesheet" crossorigin href="/assets/css/style.css">
   </head>
-  <body class="bg-gray-200">
+  <body class="bg-white">
     <div id="root"></div>
+    <script type="module">
+      import { jsx, jsxs, Fragment } from 'react/jsx-runtime';
+      import React from 'react';
+      import { createRoot } from 'react-dom/client';
+
+      /* ============================================================
+       *  COMPONENT: LandingPage
+       *  The hero/landing page with branding and a "Get Started" CTA.
+       * ============================================================ */
+      const LandingPage = () => {
+        const navigateToStart     = () => { window.location.href = '/start.html'; };
+        const navigateToFAQ       = () => { window.location.href = '/faq.html'; };
+
+        return jsxs('div', {
+          className: 'relative min-h-screen bg-white overflow-hidden font-sans selection:bg-teal-100 flex flex-col',
+          children: [
+            /* --- Navigation Bar --- */
+            jsx('nav', {
+              className: 'relative z-50 flex items-center justify-end px-6 py-6 max-w-7xl mx-auto w-full',
+              children: jsx('button', {
+                onClick: navigateToFAQ,
+                className: 'text-slate-600 hover:text-slate-900 transition-colors',
+                'aria-label': 'Help',
+                children: jsx('svg', {
+                  xmlns: 'http://www.w3.org/2000/svg', className: 'h-9 w-9', fill: 'none',
+                  viewBox: '0 0 24 24', stroke: 'currentColor', strokeWidth: 1.5,
+                  children: jsx('path', {
+                    strokeLinecap: 'round', strokeLinejoin: 'round',
+                    d: 'M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z'
+                  })
+                })
+              })
+            }),
+
+            /* --- Animated Background Blobs --- */
+            jsx('div', { className: 'absolute top-[-10%] left-[-5%] w-[50vw] h-[50vw] bg-[#FDF6B2] rounded-full mix-blend-multiply filter blur-[100px] opacity-70 animate-blob' }),
+            jsx('div', { className: 'absolute top-[-10%] right-[-10%] w-[50vw] h-[50vw] bg-[#99F6E4] rounded-full mix-blend-multiply filter blur-[100px] opacity-70 animate-blob animation-delay-2000' }),
+            jsx('div', { className: 'absolute bottom-[-20%] left-[10%] w-[50vw] h-[50vw] bg-[#FF7E67] rounded-full mix-blend-multiply filter blur-[100px] opacity-40 animate-blob animation-delay-4000' }),
+            jsx('div', { className: 'absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-white rounded-full blur-[80px] opacity-60 z-0 pointer-events-none' }),
+
+            /* --- Main Hero Content --- */
+            jsx('div', {
+              className: 'relative z-10 flex-grow flex flex-col justify-center items-center px-6 text-center',
+              children: jsxs('div', {
+                className: 'max-w-4xl mx-auto',
+                children: [
+                  /* Logo + Brand */
+                  jsxs('div', {
+                    className: 'flex justify-center items-center gap-3 mb-8',
+                    children: [
+                      jsx('div', {
+                        className: 'bg-slate-900 text-white p-2.5 rounded-xl shadow-lg transform rotate-[-5deg]',
+                        children: jsx('svg', {
+                          xmlns: 'http://www.w3.org/2000/svg', className: 'h-8 w-8', fill: 'none',
+                          viewBox: '0 0 24 24', stroke: 'currentColor', strokeWidth: 2,
+                          children: jsx('path', {
+                            strokeLinecap: 'round', strokeLinejoin: 'round',
+                            d: 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z'
+                          })
+                        })
+                      }),
+                      jsx('span', { className: 'text-4xl font-extrabold text-slate-900 tracking-tight', children: 'Resumify' })
+                    ]
+                  }),
+
+                  /* Headline */
+                  jsxs('h1', {
+                    className: 'text-5xl md:text-7xl font-black text-slate-900 leading-tight mb-6 tracking-tight',
+                    children: [
+                      'Build your resume ',
+                      jsx('br', {}),
+                      jsx('span', { className: 'text-slate-800', children: 'in minutes.' })
+                    ]
+                  }),
+
+                  /* Description */
+                  jsx('p', {
+                    className: 'text-xl text-slate-600 mb-10 max-w-2xl mx-auto leading-relaxed',
+                    children: 'Create professional, ATS-friendly resumes with our real-time builder. Powered by AI to help you write impactful descriptions and stand out.'
+                  }),
+
+                  /* Get Started Button */
+                  jsx('div', {
+                    className: 'flex flex-col sm:flex-row items-center justify-center gap-4',
+                    children: jsx('button', {
+                      onClick: navigateToStart,
+                      className: 'px-8 py-4 bg-[#2EC4B6] hover:bg-[#25a599] text-white text-lg font-bold rounded-lg shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-1 flex items-center gap-3 min-w-[200px] justify-center',
+                      children: jsx('span', { children: 'Get Started' })
+                    })
+                  })
+                ]
+              })
+            }),
+
+            /* --- Footer --- */
+            jsx('footer', {
+              className: 'relative z-10 py-6 text-center text-slate-500 text-sm font-medium',
+              children: 'Made with \u2764\uFE0F by TPF-NITT'
+            })
+          ]
+        });
+      };
+
+      /* --- Mount --- */
+      const rootElement = document.getElementById('root');
+      const root = createRoot(rootElement);
+      root.render(jsx(React.StrictMode, { children: jsx(LandingPage, {}) }));
+    </script>
   </body>
 </html>

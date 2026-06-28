@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Resumify - How would you like to start?</title>
+    <meta name="description" content="Choose between starting fresh with a resume template or uploading an existing resume for AI-powered extraction." />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Lato:wght@400;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="assets/css/shared.css" />
+    <script type="importmap">
+      {
+        "imports": {
+          "react/": "https://esm.sh/react@19.2.0/",
+          "react": "https://esm.sh/react@19.2.0",
+          "react-dom/": "https://esm.sh/react-dom@19.2.0/"
+        }
+      }
+    </script>
+  </head>
+  <body class="bg-white">
+    <div id="root"></div>
+    <script type="module">
+      import { jsx, jsxs } from 'react/jsx-runtime';
+      import React from 'react';
+      import { createRoot } from 'react-dom/client';
+
+      /* ============================================================
+       *  COMPONENT: StartOptionPage
+       *  Prompts the user to create a new resume from a template
+       *  or upload an existing PDF resume.
+       * ============================================================ */
+      const StartOptionPage = () => {
+        const navigateBack = () => { window.location.href = '/'; };
+        const navigateToTemplates = () => { window.location.href = '/templates.html'; };
+        const navigateToUpload = () => { window.location.href = '/upload.html'; };
+
+        /* --- Back Button Icon --- */
+        const BackArrowIcon = jsx('svg', {
+          xmlns: 'http://www.w3.org/2000/svg', className: 'h-5 w-5 mr-2', fill: 'none',
+          viewBox: '0 0 24 24', stroke: 'currentColor',
+          children: jsx('path', { strokeLinecap: 'round', strokeLinejoin: 'round', strokeWidth: 2, d: 'M10 19l-7-7m0 0l7-7m-7 7h18' })
+        });
+
+        /* --- Choose Template Arrow --- */
+        const ForwardArrowIcon = jsx('svg', {
+          xmlns: 'http://www.w3.org/2000/svg', className: 'h-5 w-5 ml-2 transform group-hover:translate-x-1 transition-transform',
+          fill: 'none', viewBox: '0 0 24 24', stroke: 'currentColor',
+          children: jsx('path', { strokeLinecap: 'round', strokeLinejoin: 'round', strokeWidth: 2, d: 'M17 8l4 4m0 0l-4 4m4-4H3' })
+        });
+
+        return jsxs('div', {
+          className: 'relative min-h-screen bg-white overflow-hidden font-sans selection:bg-teal-100 flex flex-col',
+          children: [
+            /* Background Blobs */
+            jsx('div', { className: 'absolute top-[-10%] left-[-5%] w-[50vw] h-[50vw] bg-[#FDF6B2] rounded-full mix-blend-multiply filter blur-[100px] opacity-70 animate-blob' }),
+            jsx('div', { className: 'absolute top-[-10%] right-[-10%] w-[50vw] h-[50vw] bg-[#99F6E4] rounded-full mix-blend-multiply filter blur-[100px] opacity-70 animate-blob animation-delay-2000' }),
+            jsx('div', { className: 'absolute bottom-[-20%] left-[10%] w-[50vw] h-[50vw] bg-[#FF7E67] rounded-full mix-blend-multiply filter blur-[100px] opacity-40 animate-blob animation-delay-4000' }),
+            jsx('div', { className: 'absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-white rounded-full blur-[80px] opacity-60 z-0 pointer-events-none' }),
+
+            /* Main Content */
+            jsx('div', {
+              className: 'relative z-10 flex-grow flex flex-col items-center justify-center p-6',
+              children: jsxs('div', {
+                className: 'w-full max-w-5xl mx-auto',
+                children: [
+                  /* Back Button */
+                  jsx('div', {
+                    className: 'flex justify-between items-center mb-10',
+                    children: jsxs('button', {
+                      onClick: navigateBack,
+                      className: 'flex items-center text-slate-500 hover:text-slate-800 transition-colors font-medium',
+                      children: [BackArrowIcon, 'Back']
+                    })
+                  }),
+
+                  /* Headline */
+                  jsxs('div', {
+                    className: 'text-center mb-12',
+                    children: [
+                      jsx('h1', { className: 'text-4xl md:text-5xl font-black text-slate-900 mb-4 tracking-tight', children: 'How would you like to start?' }),
+                      jsx('p', { className: 'text-xl text-slate-600', children: 'Choose your preferred way to create your resume' })
+                    ]
+                  }),
+
+                  /* Selection Grid */
+                  jsxs('div', {
+                    className: 'grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto',
+                    children: [
+                      /* Option 1: Create New From Template */
+                      jsxs('div', {
+                        onClick: navigateToTemplates,
+                        className: 'group cursor-pointer bg-white rounded-3xl p-8 shadow-xl hover:shadow-2xl border border-slate-100 transition-all duration-300 transform hover:-translate-y-2 relative overflow-hidden',
+                        children: [
+                          jsx('div', {
+                            className: 'absolute top-0 right-0 bg-blue-100 text-blue-600 text-xs font-bold px-3 py-1 rounded-bl-xl rounded-tr-2xl',
+                            children: 'Recommended'
+                          }),
+                          jsx('div', {
+                            className: 'bg-blue-50 w-16 h-16 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300',
+                            children: jsx('svg', {
+                              xmlns: 'http://www.w3.org/2000/svg', className: 'h-8 w-8 text-blue-600', fill: 'none',
+                              viewBox: '0 0 24 24', stroke: 'currentColor',
+                              children: jsx('path', {
+                                strokeLinecap: 'round', strokeLinejoin: 'round', strokeWidth: 2,
+                                d: 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z'
+                              })
+                            })
+                          }),
+                          jsx('h2', { className: 'text-2xl font-bold text-slate-900 mb-3', children: 'Create from Template' }),
+                          jsx('p', { className: 'text-slate-500 mb-8 leading-relaxed', children: 'Start fresh with one of our professionally designed templates. Perfect for creating a new resume from scratch.' }),
+                          jsxs('div', {
+                            className: 'space-y-2 mb-8 text-sm text-slate-500',
+                            children: [
+                              jsxs('div', {
+                                className: 'flex items-center',
+                                children: [
+                                  jsx('svg', { className: 'w-4 h-4 text-blue-500 mr-2', fill: 'none', stroke: 'currentColor', viewBox: '0 0 24 24', children: jsx('path', { strokeLinecap: 'round', strokeLinejoin: 'round', strokeWidth: '2', d: 'M5 13l4 4L19 7' }) }),
+                                  'Professional templates'
+                                ]
+                              }),
+                              jsxs('div', {
+                                className: 'flex items-center',
+                                children: [
+                                  jsx('svg', { className: 'w-4 h-4 text-blue-500 mr-2', fill: 'none', stroke: 'currentColor', viewBox: '0 0 24 24', children: jsx('path', { strokeLinecap: 'round', strokeLinejoin: 'round', strokeWidth: '2', d: 'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z' }) }),
+                                  'Ready in 5 minutes'
+                                ]
+                              })
+                            ]
+                          }),
+                          jsxs('div', {
+                            className: 'flex items-center text-blue-600 font-bold group-hover:text-blue-700',
+                            children: ['Choose Template', ForwardArrowIcon]
+                          })
+                        ]
+                      }),
+
+                      /* Option 2: Upload Existing Resume */
+                      jsxs('div', {
+                        onClick: navigateToUpload,
+                        className: 'group cursor-pointer bg-white rounded-3xl p-8 shadow-xl hover:shadow-2xl border border-slate-100 transition-all duration-300 transform hover:-translate-y-2 relative overflow-hidden',
+                        children: [
+                          jsx('div', {
+                            className: 'bg-emerald-50 w-16 h-16 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300',
+                            children: jsx('svg', {
+                              xmlns: 'http://www.w3.org/2000/svg', className: 'h-8 w-8 text-emerald-600', fill: 'none',
+                              viewBox: '0 0 24 24', stroke: 'currentColor',
+                              children: jsx('path', {
+                                strokeLinecap: 'round', strokeLinejoin: 'round', strokeWidth: 2,
+                                d: 'M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4'
+                              })
+                            })
+                          }),
+                          jsx('h2', { className: 'text-2xl font-bold text-slate-900 mb-3', children: 'Upload Existing Resume' }),
+                          jsx('p', { className: 'text-slate-500 mb-8 leading-relaxed', children: "Already have a resume? Upload it and we'll extract the content so you can edit and enhance it with AI. Double check on the content once extracted!" }),
+                          jsxs('div', {
+                            className: 'space-y-2 mb-8 text-sm text-slate-500',
+                            children: [
+                              jsxs('div', {
+                                className: 'flex items-center',
+                                children: [
+                                  jsx('svg', { className: 'w-4 h-4 text-emerald-500 mr-2', fill: 'none', stroke: 'currentColor', viewBox: '0 0 24 24', children: jsx('path', { strokeLinecap: 'round', strokeLinejoin: 'round', strokeWidth: '2', d: 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z' }) }),
+                                  'Supports PDF'
+                                ]
+                              }),
+                              jsxs('div', {
+                                className: 'flex items-center',
+                                children: [
+                                  jsx('svg', { className: 'w-4 h-4 text-emerald-500 mr-2', fill: 'none', stroke: 'currentColor', viewBox: '0 0 24 24', children: jsx('path', { strokeLinecap: 'round', strokeLinejoin: 'round', strokeWidth: '2', d: 'M13 10V3L4 14h7v7l9-11h-7z' }) }),
+                                  'AI-powered extraction'
+                                ]
+                              })
+                            ]
+                          }),
+                          jsxs('div', {
+                            className: 'flex items-center text-emerald-600 font-bold group-hover:text-emerald-700',
+                            children: ['Upload Resume', ForwardArrowIcon]
+                          })
+                        ]
+                      })
+                    ]
+                  })
+                ]
+              })
+            }),
+
+            /* Footer */
+            jsx('footer', { className: 'relative z-10 py-6 text-center text-slate-500 text-sm font-medium', children: 'Made with \u2764\uFE0F by TPF-NITT' })
+          ]
+        });
+      };
+
+      /* --- Mount --- */
+      const rootElement = document.getElementById('root');
+      const root = createRoot(rootElement);
+      root.render(jsx(React.StrictMode, { children: jsx(StartOptionPage, {}) }));
+    </script>
+  </body>
+</html>

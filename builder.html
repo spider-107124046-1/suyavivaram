@@ -1,0 +1,3434 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Resume Builder - Resumify</title>
+    <meta name="description" content="Edit, customize, and download your resume in real-time." />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700;900&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="https://unpkg.com/react-image-crop/dist/ReactCrop.css" />
+    <link rel="stylesheet" href="assets/css/shared.css" />
+    <link rel="stylesheet" href="assets/css/style.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script type="importmap">
+      {
+        "imports": {
+          "react/": "https://esm.sh/react@19.2.0/",
+          "react": "https://esm.sh/react@19.2.0",
+          "react-dom/": "https://esm.sh/react-dom@19.2.0/",
+          "react-image-crop": "https://esm.sh/react-image-crop@11.0.5"
+        }
+      }
+    </script>
+  </head>
+  <body class="bg-gray-200">
+    <div id="root"></div>
+
+    <script type="module">
+      import { jsx, jsxs, Fragment } from 'react/jsx-runtime';
+      import React, { useState, useEffect, useRef, useImperativeHandle, useLayoutEffect, forwardRef } from 'react';
+      import { createRoot } from 'react-dom/client';
+      import ReactCrop from 'react-image-crop';
+
+      /* ============================================================
+       *  SECTION: CONSTANTS & MATH UTILS
+       *  Color options, default/sample data, and crop math helpers.
+       * ============================================================ */
+      const PAGE_HEIGHT_PX = 1122;
+
+      const THEME_COLOR_OPTIONS = [
+        { name: "Slate", hex: "#0f172a" },
+        { name: "Maroon", hex: "#7f1d1d" },
+        { name: "Dark Blue", hex: "#1e3a8a" },
+        { name: "Purple", hex: "#581c87" },
+        { name: "Teal", hex: "#134e4a" },
+        { name: "Black", hex: "#000000" }
+      ];
+
+      const THEME_COLOR_STYLES = {
+        "#0f172a": { textPrimary: "#E7E8EA", textSecondary: "#9FA2A9", border: "#3F4554", tagBg: "#272E3F" },
+        "#7f1d1d": { textPrimary: "#F2E8E8", textSecondary: "#CBA4A4", border: "#984A4A", tagBg: "#8B3333" },
+        "#1e3a8a": { textPrimary: "#E8EBF3", textSecondary: "#A5B0D0", border: "#4B61A1", tagBg: "#344D95" },
+        "#581c87": { textPrimary: "#EEE8F3", textSecondary: "#BCA4CF", border: "#79499F", tagBg: "#683293" },
+        "#134e4a": { textPrimary: "#E7EDEC", textSecondary: "#A0B8B6", border: "#42716E", tagBg: "#2A5F5C" },
+        "#000000": { textPrimary: "#E5E5E5", textSecondary: "#999999", border: "#333333", tagBg: "#191919" }
+      };
+
+      const DEFAULT_RESUME_DATA = {
+        personalDetails: {
+          name: "JOHN DOE",
+          photo: "assets/images/placeholder.png",
+          degree: "B.Tech - Computer Science and Engineering",
+          gender: "Male",
+          dob: "06/09/2005",
+          email: "tp@nitt.edu",
+          contact: "+91-431-2501081",
+          logo: "assets/images/placeholder.png",
+          linkedin: "",
+          github: ""
+        },
+        summary: "",
+        education: [
+          { id: "edu1", year: "2023-Present", degree: "B.Tech- CSE", institution: "NIT, Trichy", grade: "9.2" },
+          { id: "edu2", year: "2023", degree: "Class XII", institution: "Delhi Public School, R. K. Puram", grade: "97.2%" },
+          { id: "edu3", year: "2021", degree: "Class X", institution: "Delhi Public School, R. K. Puram", grade: "98.8%" }
+        ],
+        internships: [
+          { id: "int1", title: "Research Internship at Indian Institute of Technology Guwahati", date: "Jun 2025 - Present", description: "Working as a research intern on the project Air to Water Generator. I simulated a model in Dymola to extract water from humid air with the purpose of satisfying water requirements in coastal regions." },
+          { id: "int2", title: "Internship at AHODS Technologies Private Limited", date: "Jun 2025 - Aug 2025", description: "Collaborated with IIT Delhi on a project to enhance onboard hydrogen production for vehicles. Conducted a literature review on electrolysis methods to propose cost-effective solutions." }
+        ],
+        achievements: [
+          { id: "ach1", description: "Secured <b>Rank 2</b> in Cyber Olympiad(IFCO) in the Zonal level conducted by International Olympiad Foundation in 2022." },
+          { id: "ach2", description: "Achieved <b>Top 5%</b> in the national competitive programming contest CodeSprint 2023." },
+          { id: "ach3", description: "<b>IBPC Meritorious Student Award</b> in 2021 and 2023." }
+        ],
+        projects: [
+          { id: "proj1", name: "Smart Inventory System", date: "January 2025 - March 2025", description: "Designed and deployed a comprehensive inventory management system using the MERN stack to streamline stock tracking for local businesses. Implemented real-time data visualization dashboards using Chart.js to analyze sales trends and predict future stock requirements with 95% accuracy." },
+          { id: "proj2", name: "Weather App", date: "May 2025", description: "Developed a Weather App that displays the weather of 3 cities on the home page. It also displays the weather of any city searched for in the search box. It displays temperature, feels like temperature, humidity, and wind speed. The front end is made using HTML, CSS, and JavaScript. The API used to get weather data is Weather API by WeatherAPI.com." },
+          { id: "proj3", name: "Chatty", date: "June 2025", description: "Built Chatty, a real-time chat application with one-on-one messaging and online status, using the MERN stack with Socket.io, JWT for security, and Zustand for state management. Optimized database queries and implemented a caching layer, improving message delivery speed by 30%." }
+        ],
+        skills: [
+          { id: "skill1", category: "Programming Languages", skills: "C++, C, JavaScript, HTML, CSS" },
+          { id: "skill2", category: "Frameworks/Libraries", skills: "React.js, Socket.io" },
+          { id: "skill3", category: "Tools", skills: "Visual Studio Code, Git, GitHub, Node.js" },
+          { id: "skill4", category: "Other Softwares", skills: "Figma, Photoshop" }
+        ],
+        positions: [
+          { id: "pos1", title: "Associate, The Product Folks NITT", date: "May 2025-Present", description: "As a member of the Product Management Club of NIT Trichy, I take part in upskilling sessions and work on case studies, projects, and product decks." },
+          { id: "pos2", title: "Manager, Marketing, Festember", date: "Mar 2024 - Present", description: "Worked as a Marketing Manager of Festember'24, the annual cultural festival of NIT Trichy. Executed the task of establishing partnerships with various companies through effective communication and negotiation strategies." }
+        ],
+        activities: [
+          { id: "act1", title: "Social Activities", description: "A volunteer under the HumaNITTy programme, NIT Trichy chapter, which aims at visiting local old age homes and orphanages and spending quality time with them.\nOrganized a campus-wide blood donation camp in collaboration with the Red Cross Society, collecting over 200 units of blood." },
+          { id: "act2", title: "Cultural Activities", description: "Secured 1st position in Pixel Pirates event of Pragyan in 2023.\nDAN 1 - Black Belt Holder in Karate" },
+          { id: "act3", title: "Sports Activities", description: "Participated in 10K sportsfete marathon" }
+        ],
+        languages: [],
+        webLinks: [],
+        coursework: [],
+        technicalAchievements: []
+      };
+
+      const MODERN_CREATIVE_SAMPLE_DATA = {
+        personalDetails: {
+          name: "SAM WILSON",
+          photo: "assets/images/placeholder.png",
+          degree: "B.Des - Product Design",
+          gender: "Male",
+          dob: "12/05/2003",
+          email: "s@gmail.com",
+          contact: "+91-9876543210",
+          logo: "",
+          linkedin: "https://linkedin.com/in/samwilson",
+          github: "https://github.com/samwilson"
+        },
+        summary: "Creative and detail-oriented Product Designer with a passion for user-centric solutions. Experienced in creating intuitive interfaces and conducting user research. Proficient in modern design tools and prototyping frameworks, with a strong ability to collaborate across cross-functional teams to deliver high-quality digital products.",
+        education: [
+          { id: "edu1", year: "2021-2025", degree: "B.Des", institution: "National Institute of Design", grade: "8.8 CGPA" },
+          { id: "edu2", year: "2021", degree: "Class XII", institution: "City High School", grade: "95%" }
+        ],
+        internships: [
+          { id: "int1", title: "Product Design Intern", date: "May 2024 - Jul 2024", description: "Designed user-centric interfaces for a mobile application. Conducted user research and usability testing to improve experience." },
+          { id: "int2", title: "UI/UX Intern", date: "May 2023 - Jul 2023", description: "Collaborated with the dev team to implement responsive designs. Created wireframes and prototypes for web platforms." }
+        ],
+        achievements: [
+          { id: "ach1", description: "Winner of National Design Challenge 2023." },
+          { id: "ach2", description: "Featured in Design Daily Magazine for innovative mobile UI concepts." }
+        ],
+        projects: [
+          { id: "proj1", name: "SmartHome App", date: "Jan 2024", description: "A mobile app to control smart home devices. Created wireframes, high-fidelity mockups, and interactive prototypes." },
+          { id: "proj2", name: "Portfolio Website", date: "Nov 2023", description: "Designed and developed a personal portfolio website using React and Tailwind CSS to showcase design projects." }
+        ],
+        skills: [
+          { id: "skill1", category: "", skills: "Figma, Adobe XD, Photoshop, Illustrator, ProtoPie, Framer, HTML, CSS, React.js" }
+        ],
+        positions: [
+          { id: "pos1", title: "Creative Lead", date: "2023-Present", description: "Leading the design team for the college annual magazine. Overseeing layout, typography, and visual consistency." }
+        ],
+        activities: [
+          { id: "act1", title: "Volunteering", description: "Volunteer at local animal shelter.\nOrganized fundraising event for charity." },
+          { id: "act2", title: "Interests", description: "Photography, Traveling, Sketching." }
+        ],
+        languages: [
+          { id: "lang1", language: "English", proficiency: "Native" },
+          { id: "lang2", language: "Spanish", proficiency: "Intermediate" }
+        ],
+        webLinks: [],
+        coursework: [],
+        technicalAchievements: []
+      };
+
+      const CORPORATE_MINIMAL_SAMPLE_DATA = {
+        personalDetails: {
+          name: "Divyansh Kumar Singh",
+          photo: "",
+          degree: "B.Tech in Computer Science",
+          gender: "",
+          dob: "",
+          email: "divyanshnikhil@gmail.com",
+          contact: "+91-8697-537-895",
+          logo: "",
+          linkedin: "divyansh-kumar-singh",
+          github: "d-skyhawk"
+        },
+        summary: "",
+        education: [
+          { id: "edu1", year: "Expected June 2019", degree: "B.Tech in Computer Science", institution: "NATIONAL INSTITUTE OF TECHNOLOGY DURGAPUR", grade: "Cum. GPA: 9.13/10.0" },
+          { id: "edu2", year: "Grad. May 2013", degree: "Indian Certificate of Secondary Education", institution: "DON BOSCO SCHOOL BANDEL", grade: "Aggregate: 94.6 %" },
+          { id: "edu3", year: "Grad. May 2015", degree: "Indian School Certificate", institution: "DON BOSCO SCHOOL BANDEL", grade: "Aggregate: 97.0 %" }
+        ],
+        internships: [
+          { id: "int1", title: "Research Intern at IIT Madras", date: "June 2018 - August 2018", description: "Worked on Machine Learning algorithms for predictive analysis. Optimized data processing pipelines using Python and Scikit-Learn.\nImplemented a new feature selection method that improved model accuracy by 15%." }
+        ],
+        achievements: [
+          { id: "ach1", description: "Secured <b>Top 1 percentile</b> in Indian School Certificate Examination 2015." },
+          { id: "ach2", description: "School and City Topper at 6th National Cyber Olympiad." },
+          { id: "ach3", description: "Active Participant in Competitive Programming Contests held over Codechef, Codeforces, Hackerrank and other Online Judge Platforms." }
+        ],
+        projects: [
+          { id: "proj1", name: "SPAM FILTER", date: "Jan 2017 - Present", description: "Separating Spam emails from Ham using Naive Bayes and Support Vector Machines.Tested on subset of 2005 TREC Public Spam Corpus with accuracy of 91.8% using Naive Bayes and 97.2% using Support Vector Machines." },
+          { id: "proj2", name: "STOCK PRICE PREDICTION", date: "Aug 2016 - Oct 2016", description: "Developed a recurrent neural network using LSTM to predict stock prices.Trained the model on 5 years of historical data achieving 85% directional accuracy." }
+        ],
+        skills: [
+          { id: "skill1", category: "LANGUAGES", skills: "Proficient:\nC • C++ •\nIntermediate/Basics:\nPython • Shell • Java" },
+          { id: "skill2", category: "TOOLS AND FRAMEWORKS", skills: "Git • Scikit-Learn(ML) • MySQL" }
+        ],
+        positions: [
+          { id: "pos1", title: "", date: "", description: "<b>Competitive Programming and Academic Mentor</b> for freshmen and sophomores at NIT Durgapur" },
+          { id: "pos2", title: "", date: "", description: "<b>Mentoring Competitive Programming Aspirants</b> through my blog on Algorithms, Programming and Mathematical concepts." }
+        ],
+        activities: [
+          { id: "act1", title: "EXTRACURRICULAR ACTIVITIES", description: "Top Performer at a Global Tech Company Challenge titled \"<b>Design the future of gaming and entertainment</b>\"\nHobbies: Sudoku Solving, Cycling and playing Cricket." }
+        ],
+        languages: [],
+        webLinks: [
+          { id: "link1", name: "LinkedIn", url: "divyansh-kumar-singh" },
+          { id: "link2", name: "Codechef", url: "d_skyhawk" },
+          { id: "link3", name: "Codeforces", url: "d_skyhawk" },
+          { id: "link4", name: "Hackerrank", url: "d_skyhawk" },
+          { id: "link5", name: "Github", url: "d-skyhawk" }
+        ],
+        coursework: [
+          { id: "cw1", category: "UNDERGRADUATE", subjects: "Data Structures\nOperating Systems\nObject Oriented Programming\nDiscrete Mathematics" }
+        ],
+        technicalAchievements: []
+      };
+
+      const DEFAULT_CROP = { x: 0, y: 0, width: 0, height: 0, unit: "px" };
+
+      const clamp = (val, min, max) => Math.min(Math.max(val, min), max);
+
+      const areCropsEqual = (a, b) => a === b || (a.width === b.width && a.height === b.height && a.x === b.x && a.y === b.y && a.unit === b.unit);
+
+      function makeAspectCrop(crop, aspect, width, height) {
+        const pixelCrop = convertToPixelCrop(crop, width, height);
+        if (crop.width) pixelCrop.height = pixelCrop.width / aspect;
+        if (crop.height) pixelCrop.width = pixelCrop.height * aspect;
+        if (pixelCrop.y + pixelCrop.height > height) {
+          pixelCrop.height = height - pixelCrop.y;
+          pixelCrop.width = pixelCrop.height * aspect;
+        }
+        if (pixelCrop.x + pixelCrop.width > width) {
+          pixelCrop.width = width - pixelCrop.x;
+          pixelCrop.height = pixelCrop.width / aspect;
+        }
+        return crop.unit === "%" ? convertToPercentCrop(pixelCrop, width, height) : pixelCrop;
+      }
+
+      function centerCrop(crop, width, height) {
+        const pixelCrop = convertToPixelCrop(crop, width, height);
+        pixelCrop.x = (width - pixelCrop.width) / 2;
+        pixelCrop.y = (height - pixelCrop.height) / 2;
+        return crop.unit === "%" ? convertToPercentCrop(pixelCrop, width, height) : pixelCrop;
+      }
+
+      function convertToPercentCrop(crop, width, height) {
+        if (crop.unit === "%") return { ...DEFAULT_CROP, ...crop, unit: "%" };
+        return {
+          unit: "%",
+          x: crop.x ? (crop.x / width) * 100 : 0,
+          y: crop.y ? (crop.y / height) * 100 : 0,
+          width: crop.width ? (crop.width / width) * 100 : 0,
+          height: crop.height ? (crop.height / height) * 100 : 0
+        };
+      }
+
+      function convertToPixelCrop(crop, width, height) {
+        if (!crop.unit) return { ...DEFAULT_CROP, ...crop, unit: "px" };
+        if (crop.unit === "px") return { ...DEFAULT_CROP, ...crop, unit: "px" };
+        return {
+          unit: "px",
+          x: crop.x ? (crop.x * width) / 100 : 0,
+          y: crop.y ? (crop.y * height) / 100 : 0,
+          width: crop.width ? (crop.width * width) / 100 : 0,
+          height: crop.height ? (crop.height * height) / 100 : 0
+        };
+      }
+
+      const generateUniqueId = () => {
+        if (typeof crypto !== "undefined" && crypto.randomUUID) {
+          try { return crypto.randomUUID(); } catch {}
+        }
+        return Date.now().toString(36) + Math.random().toString(36).substring(2);
+      };
+
+      const isPlaceholderImage = url => !url || url.includes("via.placeholder.com") || url.includes("dummyimage.com") || url.includes("placeholder.png");
+
+
+      /* ============================================================
+       *  SECTION: SHARED FORM COMPONENTS
+       *  Accordion containers, inputs, and textareas.
+       * ============================================================ */
+      const OnCampusAccordion = ({ title, children, defaultOpen = false, icon }) => {
+        const [isOpen, setIsOpen] = useState(defaultOpen);
+        return jsxs("div", {
+          className: `mb-5 rounded-xl transition-all duration-300 border ${isOpen ? "border-blue-400 shadow-md bg-white ring-1 ring-blue-100" : "border-gray-200 shadow-sm hover:border-blue-300 bg-white"}`,
+          children: [
+            jsxs("button", {
+              type: "button",
+              onClick: () => setIsOpen(!isOpen),
+              className: "w-full flex items-center justify-between px-5 py-4 focus:outline-none group rounded-xl",
+              children: [
+                jsxs("div", {
+                  className: "flex items-center gap-3",
+                  children: [
+                    jsx("div", {
+                      className: `p-2 rounded-lg transition-colors duration-300 ${isOpen ? "bg-blue-100 text-blue-600" : "bg-gray-100 text-gray-500 group-hover:bg-blue-50 group-hover:text-blue-500"}`,
+                      children: icon || jsx("div", { className: "w-5 h-5 bg-gray-400 rounded-sm" })
+                    }),
+                    jsx("span", { className: `text-lg font-bold transition-colors ${isOpen ? "text-gray-900" : "text-gray-600 group-hover:text-gray-900"}`, children: title })
+                  ]
+                }),
+                jsx("div", {
+                  className: `p-2 rounded-full transition-all duration-300 ${isOpen ? "bg-blue-50 text-blue-600 rotate-180" : "bg-gray-50 text-gray-400 group-hover:bg-gray-100 group-hover:text-gray-600"}`,
+                  children: jsx("svg", {
+                    xmlns: "http://www.w3.org/2000/svg", className: "h-5 w-5", fill: "none",
+                    viewBox: "0 0 24 24", stroke: "currentColor",
+                    children: jsx("path", { strokeLinecap: "round", strokeLinejoin: 'round', strokeWidth: 2.5, d: "M19 9l-7 7-7-7" })
+                  })
+                })
+              ]
+            }),
+            jsx("div", {
+              className: `grid transition-[grid-template-rows] duration-300 ease-in-out ${isOpen ? "grid-rows-[1fr]" : "grid-rows-[0fr]"}`,
+              children: jsx("div", {
+                className: "overflow-hidden",
+                children: jsxs("div", {
+                  className: "px-5 pb-5",
+                  children: [
+                    jsx("div", { className: "h-px bg-gray-100 mb-5 mx-1" }),
+                    children
+                  ]
+                })
+              })
+            })
+          ]
+        });
+      };
+
+      const OnCampusTextInput = ({ label, value, name, onChange }) => jsxs("div", {
+        className: "mb-4",
+        children: [
+          jsx("label", { className: "block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5 ml-1", children: label }),
+          jsx("input", {
+            type: "text", name, value, onChange,
+            className: "w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all duration-200 bg-gray-50 focus:bg-white text-gray-800 text-base placeholder-gray-400 shadow-sm",
+            placeholder: `Enter ${label.toLowerCase()}`
+          })
+        ]
+      });
+
+      const OnCampusTextArea = ({ label, value, name, rows = 3, onChange }) => jsxs("div", {
+        className: "mb-4",
+        children: [
+          jsx("label", { className: "block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5 ml-1", children: label }),
+          jsx("textarea", {
+            name, value, rows, onChange,
+            className: "w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all duration-200 bg-gray-50 focus:bg-white text-gray-800 text-base placeholder-gray-400 shadow-sm resize-y",
+            placeholder: `Enter ${label.toLowerCase()}`
+          })
+        ]
+      });
+
+      const ModernAccordion = ({ title, children, defaultOpen = false, icon }) => {
+        const [isOpen, setIsOpen] = useState(defaultOpen);
+        return jsxs("div", {
+          className: `mb-5 rounded-xl transition-all duration-300 border ${isOpen ? "border-purple-400 shadow-md bg-white ring-1 ring-purple-100" : "border-gray-200 shadow-sm hover:border-purple-300 bg-white"}`,
+          children: [
+            jsxs("button", {
+              type: "button",
+              onClick: () => setIsOpen(!isOpen),
+              className: "w-full flex items-center justify-between px-5 py-4 focus:outline-none group rounded-xl",
+              children: [
+                jsxs("div", {
+                  className: "flex items-center gap-3",
+                  children: [
+                    jsx("div", {
+                      className: `p-2 rounded-lg transition-colors duration-300 ${isOpen ? "bg-purple-100 text-purple-600" : "bg-gray-100 text-gray-500 group-hover:bg-purple-50 group-hover:text-purple-500"}`,
+                      children: icon || jsx("div", { className: "w-5 h-5 bg-gray-400 rounded-sm" })
+                    }),
+                    jsx("span", { className: `text-lg font-bold transition-colors ${isOpen ? "text-gray-900" : "text-gray-600 group-hover:text-gray-900"}`, children: title })
+                  ]
+                }),
+                jsx("div", {
+                  className: `p-2 rounded-full transition-all duration-300 ${isOpen ? "bg-purple-50 text-purple-600 rotate-180" : "bg-gray-50 text-gray-400 group-hover:bg-gray-100 group-hover:text-gray-600"}`,
+                  children: jsx("svg", {
+                    xmlns: "http://www.w3.org/2000/svg", className: "h-5 w-5", fill: "none",
+                    viewBox: "0 0 24 24", stroke: "currentColor",
+                    children: jsx("path", { strokeLinecap: "round", strokeLinejoin: 'round', strokeWidth: 2.5, d: "M19 9l-7 7-7-7" })
+                  })
+                })
+              ]
+            }),
+            jsx("div", {
+              className: `grid transition-[grid-template-rows] duration-300 ease-in-out ${isOpen ? "grid-rows-[1fr]" : "grid-rows-[0fr]"}`,
+              children: jsx("div", {
+                className: "overflow-hidden",
+                children: jsxs("div", {
+                  className: "px-5 pb-5",
+                  children: [
+                    jsx("div", { className: "h-px bg-gray-100 mb-5 mx-1" }),
+                    children
+                  ]
+                })
+              })
+            })
+          ]
+        });
+      };
+
+      const ModernTextInput = ({ label, value, name, onChange }) => jsxs("div", {
+        className: "mb-4",
+        children: [
+          jsx("label", { className: "block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5 ml-1", children: label }),
+          jsx("input", {
+            type: "text", name, value, onChange,
+            className: "w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-4 focus:ring-purple-500/10 focus:border-purple-500 transition-all duration-200 bg-gray-50 focus:bg-white text-gray-800 text-base placeholder-gray-400 shadow-sm",
+            placeholder: `Enter ${label.toLowerCase()}`
+          })
+        ]
+      });
+
+      const ModernTextArea = ({ label, value, name, rows = 3, onChange }) => jsxs("div", {
+        className: "mb-4",
+        children: [
+          jsx("label", { className: "block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5 ml-1", children: label }),
+          jsx("textarea", {
+            name, value, rows, onChange,
+            className: "w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-4 focus:ring-purple-500/10 focus:border-purple-500 transition-all duration-200 bg-gray-50 focus:bg-white text-gray-800 text-base placeholder-gray-400 shadow-sm resize-y",
+            placeholder: `Enter ${label.toLowerCase()}`
+          })
+        ]
+      });
+
+      const CorporateAccordion = ({ title, children, defaultOpen = false, icon }) => {
+        const [isOpen, setIsOpen] = useState(defaultOpen);
+        return jsxs("div", {
+          className: `mb-5 rounded-xl transition-all duration-300 border ${isOpen ? "border-emerald-400 shadow-md bg-white ring-1 ring-emerald-100" : "border-gray-200 shadow-sm hover:border-emerald-300 bg-white"}`,
+          children: [
+            jsxs("button", {
+              type: "button",
+              onClick: () => setIsOpen(!isOpen),
+              className: "w-full flex items-center justify-between px-5 py-4 focus:outline-none group rounded-xl",
+              children: [
+                jsxs("div", {
+                  className: "flex items-center gap-3",
+                  children: [
+                    jsx("div", {
+                      className: `p-2 rounded-lg transition-colors duration-300 ${isOpen ? "bg-emerald-100 text-emerald-600" : "bg-gray-100 text-gray-500 group-hover:bg-emerald-50 group-hover:text-emerald-500"}`,
+                      children: icon || jsx("div", { className: "w-5 h-5 bg-gray-400 rounded-sm" })
+                    }),
+                    jsx("span", { className: `text-lg font-bold transition-colors ${isOpen ? "text-gray-900" : "text-gray-600 group-hover:text-gray-900"}`, children: title })
+                  ]
+                }),
+                jsx("div", {
+                  className: `p-2 rounded-full transition-all duration-300 ${isOpen ? "bg-emerald-50 text-emerald-600 rotate-180" : "bg-gray-50 text-gray-400 group-hover:bg-gray-100 group-hover:text-gray-600"}`,
+                  children: jsx("svg", {
+                    xmlns: "http://www.w3.org/2000/svg", className: "h-5 w-5", fill: "none",
+                    viewBox: "0 0 24 24", stroke: "currentColor",
+                    children: jsx("path", { strokeLinecap: "round", strokeLinejoin: 'round', strokeWidth: 2.5, d: "M19 9l-7 7-7-7" })
+                  })
+                })
+              ]
+            }),
+            jsx("div", {
+              className: `grid transition-[grid-template-rows] duration-300 ease-in-out ${isOpen ? "grid-rows-[1fr]" : "grid-rows-[0fr]"}`,
+              children: jsx("div", {
+                className: "overflow-hidden",
+                children: jsxs("div", {
+                  className: "px-5 pb-5",
+                  children: [
+                    jsx("div", { className: "h-px bg-gray-100 mb-5 mx-1" }),
+                    children
+                  ]
+                })
+              })
+            })
+          ]
+        });
+      };
+
+      const CorporateTextInput = ({ label, value, name, onChange }) => jsxs("div", {
+        className: "mb-4",
+        children: [
+          jsx("label", { className: "block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5 ml-1", children: label }),
+          jsx("input", {
+            type: "text", name, value, onChange,
+            className: "w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all duration-200 bg-gray-50 focus:bg-white text-gray-800 text-base placeholder-gray-400 shadow-sm",
+            placeholder: `Enter ${label.toLowerCase()}`
+          })
+        ]
+      });
+
+      const CorporateTextArea = ({ label, value, name, rows = 3, onChange }) => jsxs("div", {
+        className: "mb-4",
+        children: [
+          jsx("label", { className: "block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5 ml-1", children: label }),
+          jsx("textarea", {
+            name, value, rows, onChange,
+            className: "w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all duration-200 bg-gray-50 focus:bg-white text-gray-800 text-base placeholder-gray-400 shadow-sm resize-y",
+            placeholder: `Enter ${label.toLowerCase()}`
+          })
+        ]
+      });
+
+      const ResumeSection = ({ title, children, splittable = false }) => jsxs("div", {
+        className: "mb-6 break-inside-avoid resume-section-container",
+        "data-splittable": splittable,
+        children: [
+          jsxs("div", {
+            className: "flex items-center mb-1 section-header-flex",
+            children: [
+              jsx("h2", { className: "text-xl font-bold pr-4 flex-shrink-0", style: { paddingBottom: "4px" }, children: title }),
+              jsx("div", { className: "flex-grow border-t-[4px] section-header-line", style: { borderColor: "#C00000" } })
+            ]
+          }),
+          children
+        ]
+      });
+
+
+      /* ============================================================
+       *  RESUME FORMAT: ON-CAMPUS
+       *  Editor sidebar layout, Raw preview layout, and PDF preview pagination container.
+       * ============================================================ */
+      const OnCampusEditor = ({ resumeData, setResumeData, photoFileInputRef, logoFileInputRef }) => {
+        const [isEnhancing, setIsEnhancing] = useState(null);
+        const [cropSrc, setCropSrc] = useState("");
+        const [crop, setCrop] = useState();
+        const [completedCrop, setCompletedCrop] = useState();
+        const [showCropModal, setShowCropModal] = useState(false);
+        const [cropTarget, setCropTarget] = useState(null);
+        const imageRef = useRef(null);
+
+        const handlePersonalDetailsChange = (e) => {
+          const { name, value } = e.target;
+          setResumeData(prev => ({
+            ...prev,
+            personalDetails: { ...prev.personalDetails, [name]: value }
+          }));
+        };
+
+        const handleEnhanceDescription = async (section, itemId, currentText) => {
+          if (!currentText.trim()) {
+            alert("Please enter a description to enhance.");
+            return;
+          }
+          setIsEnhancing(itemId);
+          try {
+            const response = await fetch("/.netlify/functions/gemini", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                prompt: `Rewrite and enhance the following professional experience description for a resume, making it more impactful, professional, and concise. Focus on action verbs and quantifiable results where possible. Do not add any new information. Keep the response as a single paragraph. Original description: "${currentText}"`
+              })
+            });
+            if (!response.ok) throw new Error("Network response was not ok");
+            const data = await response.json();
+            const enhancedText = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
+            if (enhancedText) {
+              setResumeData(prev => {
+                const list = prev[section].map(item => item.id === itemId ? { ...item, description: enhancedText } : item);
+                return { ...prev, [section]: list };
+              });
+            }
+          } catch (e) {
+            console.error("AI enhancement failed:", e);
+            alert("Failed to enhance description. Please try again.");
+          } finally {
+            setIsEnhancing(null);
+          }
+        };
+
+        const handleListItemChange = (section, itemId, e) => {
+          const { name, value } = e.target;
+          setResumeData(prev => {
+            const list = prev[section].map(item => item.id === itemId ? { ...item, [name]: value } : item);
+            return { ...prev, [section]: list };
+          });
+        };
+
+        const handleAddListItem = (section, itemTemplate) => {
+          setResumeData(prev => ({
+            ...prev,
+            [section]: [...prev[section], itemTemplate]
+          }));
+        };
+
+        const handleRemoveListItem = (section, itemId) => {
+          setResumeData(prev => ({
+            ...prev,
+            [section]: prev[section].filter(item => item.id !== itemId)
+          }));
+        };
+
+        const handleUseDefaultLogo = () => {
+          const logoPath = "assets/images/NITTLogo.png";
+          setResumeData(prev => ({
+            ...prev,
+            personalDetails: { ...prev.personalDetails, logo: logoPath }
+          }));
+        };
+
+        const handleFileChange = (e, target) => {
+          if (e.target.files && e.target.files.length > 0) {
+            setCropTarget(target);
+            setCrop(undefined);
+            const reader = new FileReader();
+            reader.addEventListener("load", () => {
+              setCropSrc(reader.result?.toString() || "");
+            });
+            reader.readAsDataURL(e.target.files[0]);
+            setShowCropModal(true);
+          }
+        };
+
+        function onImageLoad(e) {
+          imageRef.current = e.currentTarget;
+          const { width, height } = e.currentTarget;
+          const aspect = cropTarget === "logo" ? 1 : 130 / 140;
+          const initialCrop = centerCrop(makeAspectCrop({ unit: "%", width: 90 }, aspect, width, height), width, height);
+          setCrop(initialCrop);
+          setCompletedCrop(initialCrop);
+        }
+
+        const handleCropSave = () => {
+          if (!completedCrop || !imageRef.current) return;
+          const img = imageRef.current;
+          const canvas = document.createElement("canvas");
+          const scaleX = img.naturalWidth / img.width;
+          const scaleY = img.naturalHeight / img.height;
+          canvas.width = completedCrop.width * scaleX;
+          canvas.height = completedCrop.height * scaleY;
+          const ctx = canvas.getContext("2d");
+          if (!ctx) throw new Error("No 2d context");
+          const pixelRatio = window.devicePixelRatio;
+          canvas.width = completedCrop.width * scaleX * pixelRatio;
+          canvas.height = completedCrop.height * scaleY * pixelRatio;
+          ctx.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
+          ctx.imageSmoothingQuality = "high";
+          ctx.drawImage(
+            img,
+            completedCrop.x * scaleX,
+            completedCrop.y * scaleY,
+            completedCrop.width * scaleX,
+            completedCrop.height * scaleY,
+            0,
+            0,
+            completedCrop.width * scaleX,
+            completedCrop.height * scaleY
+          );
+          const dataUrl = canvas.toDataURL("image/jpeg");
+          const target = cropTarget;
+          if (target) {
+            setResumeData(prev => ({
+              ...prev,
+              personalDetails: { ...prev.personalDetails, [target]: dataUrl }
+            }));
+          }
+          setShowCropModal(false);
+          setCropSrc("");
+          if (photoFileInputRef.current) photoFileInputRef.current.value = "";
+          if (logoFileInputRef.current) logoFileInputRef.current.value = "";
+        };
+
+        return jsxs("div", {
+          className: "p-4 bg-white relative",
+          children: [
+            jsx("h1", { className: "text-3xl font-bold text-center mb-8 text-gray-800", children: "Resume Editor" }),
+
+            /* --- Personal Details accordion --- */
+            jsxs(OnCampusAccordion, {
+              title: "Personal Details",
+              defaultOpen: true,
+              icon: jsx("svg", {
+                xmlns: "http://www.w3.org/2000/svg", className: "h-5 w-5", fill: "none", viewBox: "0 0 24 24", stroke: "currentColor",
+                children: jsx("path", { strokeLinecap: "round", strokeLinejoin: "round", strokeWidth: 2, d: "M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" })
+              }),
+              children: [
+                jsx(OnCampusTextInput, { label: "Full Name", name: "name", value: resumeData.personalDetails.name, onChange: handlePersonalDetailsChange }),
+                jsxs("div", {
+                  className: "mb-4",
+                  children: [
+                    jsx("label", { className: "block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5 ml-1", children: "Profile Photo" }),
+                    jsx("input", { type: "file", accept: "image/*", onChange: (e) => handleFileChange(e, "photo"), ref: photoFileInputRef, className: "hidden" }),
+                    jsx("button", {
+                      onClick: () => photoFileInputRef.current?.click(),
+                      className: "w-full px-4 py-2.5 border border-dashed border-gray-300 rounded-lg hover:bg-gray-50 hover:border-blue-300 hover:text-blue-600 transition-all bg-white text-gray-600 text-sm font-medium",
+                      children: "Upload Photo"
+                    })
+                  ]
+                }),
+                jsxs("div", {
+                  className: "mb-4",
+                  children: [
+                    jsx("label", { className: "block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5 ml-1", children: "Institute Logo" }),
+                    jsx("input", { type: "file", accept: "image/*", onChange: (e) => handleFileChange(e, "logo"), ref: logoFileInputRef, className: "hidden" }),
+                    jsxs("div", {
+                      className: "flex gap-2",
+                      children: [
+                        jsx("button", {
+                          onClick: handleUseDefaultLogo,
+                          className: "w-1/2 px-4 py-2.5 border border-gray-300 rounded-lg hover:bg-gray-50 hover:border-blue-300 hover:text-blue-600 transition-all bg-white text-gray-600 text-sm font-medium",
+                          children: "NITT Logo"
+                        }),
+                        jsx("button", {
+                          onClick: () => logoFileInputRef.current?.click(),
+                          className: "w-1/2 px-4 py-2.5 border border-dashed border-gray-300 rounded-lg hover:bg-gray-50 hover:border-blue-300 hover:text-blue-600 transition-all bg-white text-gray-600 text-sm font-medium",
+                          children: "Upload Logo"
+                        })
+                      ]
+                    })
+                  ]
+                }),
+                jsx(OnCampusTextInput, { label: "Degree", name: "degree", value: resumeData.personalDetails.degree, onChange: handlePersonalDetailsChange }),
+                jsx(OnCampusTextInput, { label: "Gender", name: "gender", value: resumeData.personalDetails.gender, onChange: handlePersonalDetailsChange }),
+                jsx(OnCampusTextInput, { label: "Date of Birth", name: "dob", value: resumeData.personalDetails.dob, onChange: handlePersonalDetailsChange }),
+                jsx(OnCampusTextInput, { label: "Email", name: "email", value: resumeData.personalDetails.email, onChange: handlePersonalDetailsChange }),
+                jsx(OnCampusTextInput, { label: "Contact", name: "contact", value: resumeData.personalDetails.contact, onChange: handlePersonalDetailsChange })
+              ]
+            }),
+
+            /* --- Education accordion --- */
+            jsxs(OnCampusAccordion, {
+              title: "Educational Qualification",
+              icon: jsxs("svg", {
+                xmlns: "http://www.w3.org/2000/svg", className: "h-5 w-5", fill: "none", viewBox: "0 0 24 24", stroke: "currentColor",
+                children: [
+                  jsx("path", { d: "M12 14l9-5-9-5-9 5 9 5z" }),
+                  jsx("path", { d: "M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14zm-4 6v-7.5l4-2.222" })
+                ]
+              }),
+              children: [
+                resumeData.education.map((item) => jsxs("div", {
+                  className: "border-b border-gray-100 pb-4 mb-4 last:border-0 last:pb-0 last:mb-0",
+                  children: [
+                    jsx("h3", { className: "text-sm font-semibold text-gray-800 mb-3", children: "Education" }),
+                    jsx(OnCampusTextInput, { label: "Year", name: "year", value: item.year, onChange: e => handleListItemChange("education", item.id, e) }),
+                    jsx(OnCampusTextInput, { label: "Degree/Examination", name: "degree", value: item.degree, onChange: e => handleListItemChange("education", item.id, e) }),
+                    jsx(OnCampusTextInput, { label: "Institution/Board", name: "institution", value: item.institution, onChange: e => handleListItemChange("education", item.id, e) }),
+                    jsx(OnCampusTextInput, { label: "CGPA/Percentage", name: "grade", value: item.grade, onChange: e => handleListItemChange("education", item.id, e) }),
+                    jsx("div", {
+                      className: "flex justify-end",
+                      children: jsx("button", {
+                        onClick: () => handleRemoveListItem("education", item.id),
+                        className: "px-3 py-1.5 bg-red-500 text-white rounded-md hover:bg-red-600 text-xs font-semibold shadow-sm transition-colors",
+                        children: "Remove Education"
+                      })
+                    })
+                  ]
+                }, item.id)),
+                jsx("button", {
+                  onClick: () => handleAddListItem("education", { id: generateUniqueId(), year: "", degree: "", institution: "", grade: "" }),
+                  className: "mt-4 w-full py-2 border-2 border-dashed border-blue-200 text-blue-600 rounded-lg hover:bg-blue-50 hover:border-blue-300 transition-colors font-semibold text-sm",
+                  children: "+ Add Education"
+                })
+              ]
+            }),
+
+            /* --- Academic Achievements accordion --- */
+            jsxs(OnCampusAccordion, {
+              title: "Academic Achievements",
+              icon: jsx("svg", {
+                xmlns: "http://www.w3.org/2000/svg", className: "h-5 w-5", fill: "none", viewBox: "0 0 24 24", stroke: "currentColor",
+                children: jsx("path", { strokeLinecap: "round", strokeLinejoin: "round", strokeWidth: 2, d: "M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" })
+              }),
+              children: [
+                resumeData.achievements.map((item) => jsxs("div", {
+                  className: "border-b border-gray-100 pb-4 mb-4 last:border-0 last:pb-0 last:mb-0",
+                  children: [
+                    jsx("h3", { className: "text-sm font-semibold text-gray-800 mb-3", children: "Achievement" }),
+                    jsx(OnCampusTextArea, { label: "Description", name: "description", value: item.description, onChange: e => handleListItemChange("achievements", item.id, e) }),
+                    jsx("p", { className: "text-xs text-gray-400 -mt-2 mb-2 ml-1", children: "Use <b>text</b> to make text bold." }),
+                    jsx("div", {
+                      className: "flex justify-end",
+                      children: jsx("button", {
+                        onClick: () => handleRemoveListItem("achievements", item.id),
+                        className: "px-3 py-1.5 bg-red-500 text-white rounded-md hover:bg-red-600 text-xs font-semibold shadow-sm transition-colors",
+                        children: "Remove Achievement"
+                      })
+                    })
+                  ]
+                }, item.id)),
+                jsx("button", {
+                  onClick: () => handleAddListItem("achievements", { id: generateUniqueId(), description: "" }),
+                  className: "mt-4 w-full py-2 border-2 border-dashed border-blue-200 text-blue-600 rounded-lg hover:bg-blue-50 hover:border-blue-300 transition-colors font-semibold text-sm",
+                  children: "+ Add Achievement"
+                })
+              ]
+            }),
+
+            /* --- Internship Experience accordion --- */
+            jsxs(OnCampusAccordion, {
+              title: "Internship Experience",
+              icon: jsx("svg", {
+                xmlns: "http://www.w3.org/2000/svg", className: "h-5 w-5", fill: "none", viewBox: "0 0 24 24", stroke: "currentColor",
+                children: jsx("path", { strokeLinecap: "round", strokeLinejoin: "round", strokeWidth: 2, d: "M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" })
+              }),
+              children: [
+                resumeData.internships.map((item) => jsxs("div", {
+                  className: "border-b border-gray-100 pb-4 mb-4 last:border-0 last:pb-0 last:mb-0",
+                  children: [
+                    jsx("h3", { className: "text-sm font-semibold text-gray-800 mb-3", children: "Internship" }),
+                    jsx(OnCampusTextInput, { label: "Title", name: "title", value: item.title, onChange: e => handleListItemChange("internships", item.id, e) }),
+                    jsx(OnCampusTextInput, { label: "Date", name: "date", value: item.date, onChange: e => handleListItemChange("internships", item.id, e) }),
+                    jsx(OnCampusTextArea, { label: "Description", name: "description", rows: 5, value: item.description, onChange: e => handleListItemChange("internships", item.id, e) }),
+                    jsx("p", { className: "text-xs text-gray-400 -mt-2 mb-2 ml-1", children: "Use <b>text</b> to make text bold." }),
+                    jsxs("div", {
+                      className: "flex items-center justify-between mt-3",
+                      children: [
+                        jsx("button", {
+                          disabled: isEnhancing === item.id,
+                          onClick: () => handleEnhanceDescription("internships", item.id, item.description),
+                          className: `px-3 py-1.5 text-white rounded text-xs font-semibold shadow-sm transition-colors ${isEnhancing === item.id ? 'bg-purple-400 cursor-wait' : 'bg-purple-600 hover:bg-purple-700'}`,
+                          children: isEnhancing === item.id ? "Enhancing..." : "✨ AI Enhance"
+                        }),
+                        jsx("button", {
+                          onClick: () => handleRemoveListItem("internships", item.id),
+                          className: "px-3 py-1.5 bg-red-500 text-white rounded-md hover:bg-red-600 text-xs font-semibold shadow-sm transition-colors",
+                          children: "Remove Internship"
+                        })
+                      ]
+                    })
+                  ]
+                }, item.id)),
+                jsx("button", {
+                  onClick: () => handleAddListItem("internships", { id: generateUniqueId(), title: "", date: "", description: "" }),
+                  className: "mt-4 w-full py-2 border-2 border-dashed border-blue-200 text-blue-600 rounded-lg hover:bg-blue-50 hover:border-blue-300 transition-colors font-semibold text-sm",
+                  children: "+ Add Internship"
+                })
+              ]
+            }),
+
+            /* --- Projects accordion --- */
+            jsxs(OnCampusAccordion, {
+              title: "Projects",
+              icon: jsx("svg", {
+                xmlns: "http://www.w3.org/2000/svg", className: "h-5 w-5", fill: "none", viewBox: "0 0 24 24", stroke: "currentColor",
+                children: jsx("path", { strokeLinecap: "round", strokeLinejoin: "round", strokeWidth: 2, d: "M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" })
+              }),
+              children: [
+                resumeData.projects.map((item) => jsxs("div", {
+                  className: "border-b border-gray-100 pb-4 mb-4 last:border-0 last:pb-0 last:mb-0",
+                  children: [
+                    jsx("h3", { className: "text-sm font-semibold text-gray-800 mb-3", children: "Project" }),
+                    jsx(OnCampusTextInput, { label: "Name", name: "name", value: item.name, onChange: e => handleListItemChange("projects", item.id, e) }),
+                    jsx(OnCampusTextInput, { label: "Date", name: "date", value: item.date, onChange: e => handleListItemChange("projects", item.id, e) }),
+                    jsx(OnCampusTextArea, { label: "Description", name: "description", rows: 5, value: item.description, onChange: e => handleListItemChange("projects", item.id, e) }),
+                    jsx("p", { className: "text-xs text-gray-400 -mt-2 mb-2 ml-1", children: "Use <b>text</b> to make text bold. Use a newline for bullet points." }),
+                    jsxs("div", {
+                      className: "flex items-center justify-between mt-3",
+                      children: [
+                        jsx("button", {
+                          disabled: isEnhancing === item.id,
+                          onClick: () => handleEnhanceDescription("projects", item.id, item.description),
+                          className: `px-3 py-1.5 text-white rounded text-xs font-semibold shadow-sm transition-colors ${isEnhancing === item.id ? 'bg-purple-400 cursor-wait' : 'bg-purple-600 hover:bg-purple-700'}`,
+                          children: isEnhancing === item.id ? "Enhancing..." : "✨ AI Enhance"
+                        }),
+                        jsx("button", {
+                          onClick: () => handleRemoveListItem("projects", item.id),
+                          className: "px-3 py-1.5 bg-red-500 text-white rounded-md hover:bg-red-600 text-xs font-semibold shadow-sm transition-colors",
+                          children: "Remove Project"
+                        })
+                      ]
+                    })
+                  ]
+                }, item.id)),
+                jsx("button", {
+                  onClick: () => handleAddListItem("projects", { id: generateUniqueId(), name: "", date: "", description: "" }),
+                  className: "mt-4 w-full py-2 border-2 border-dashed border-blue-200 text-blue-600 rounded-lg hover:bg-blue-50 hover:border-blue-300 transition-colors font-semibold text-sm",
+                  children: "+ Add Project"
+                })
+              ]
+            }),
+
+            /* --- Technical Skills accordion --- */
+            jsxs(OnCampusAccordion, {
+              title: "Technical Skills and Certifications",
+              icon: jsx("svg", {
+                xmlns: "http://www.w3.org/2000/svg", className: "h-5 w-5", fill: "none", viewBox: "0 0 24 24", stroke: "currentColor",
+                children: jsx("path", { strokeLinecap: "round", strokeLinejoin: "round", strokeWidth: 2, d: "M13 10V3L4 14h7v7l9-11h-7z" })
+              }),
+              children: [
+                resumeData.skills.map((item) => jsxs("div", {
+                  className: "border-b border-gray-100 pb-4 mb-4 last:border-0 last:pb-0 last:mb-0",
+                  children: [
+                    jsx("h3", { className: "text-sm font-semibold text-gray-800 mb-3", children: "Skill" }),
+                    jsx(OnCampusTextInput, { label: "Category", name: "category", value: item.category, onChange: e => handleListItemChange("skills", item.id, e) }),
+                    jsx(OnCampusTextInput, { label: "Skills", name: "skills", value: item.skills, onChange: e => handleListItemChange("skills", item.id, e) }),
+                    jsx("div", {
+                      className: "flex justify-end",
+                      children: jsx("button", {
+                        onClick: () => handleRemoveListItem("skills", item.id),
+                        className: "px-3 py-1.5 bg-red-500 text-white rounded-md hover:bg-red-600 text-xs font-semibold shadow-sm transition-colors",
+                        children: "Remove Skill"
+                      })
+                    })
+                  ]
+                }, item.id)),
+                jsx("button", {
+                  onClick: () => handleAddListItem("skills", { id: generateUniqueId(), category: "", skills: "" }),
+                  className: "mt-4 w-full py-2 border-2 border-dashed border-blue-200 text-blue-600 rounded-lg hover:bg-blue-50 hover:border-blue-300 transition-colors font-semibold text-sm",
+                  children: "+ Add Skill"
+                })
+              ]
+            }),
+
+            /* --- Positions of Responsibility accordion --- */
+            jsxs(OnCampusAccordion, {
+              title: "Positions of Responsibility",
+              icon: jsx("svg", {
+                xmlns: "http://www.w3.org/2000/svg", className: "h-5 w-5", fill: "none", viewBox: "0 0 24 24", stroke: "currentColor",
+                children: jsx("path", { strokeLinecap: "round", strokeLinejoin: "round", strokeWidth: 2, d: "M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" })
+              }),
+              children: [
+                resumeData.positions.map((item) => jsxs("div", {
+                  className: "border-b border-gray-100 pb-4 mb-4 last:border-0 last:pb-0 last:mb-0",
+                  children: [
+                    jsx("h3", { className: "text-sm font-semibold text-gray-800 mb-3", children: "Position" }),
+                    jsx(OnCampusTextInput, { label: "Title", name: "title", value: item.title, onChange: e => handleListItemChange("positions", item.id, e) }),
+                    jsx(OnCampusTextInput, { label: "Date", name: "date", value: item.date, onChange: e => handleListItemChange("positions", item.id, e) }),
+                    jsx(OnCampusTextArea, { label: "Description", name: "description", value: item.description, onChange: e => handleListItemChange("positions", item.id, e) }),
+                    jsx("p", { className: "text-xs text-gray-400 -mt-2 mb-2 ml-1", children: "Use <b>text</b> to make text bold." }),
+                    jsxs("div", {
+                      className: "flex items-center justify-between mt-3",
+                      children: [
+                        jsx("button", {
+                          disabled: isEnhancing === item.id,
+                          onClick: () => handleEnhanceDescription("positions", item.id, item.description),
+                          className: `px-3 py-1.5 text-white rounded text-xs font-semibold shadow-sm transition-colors ${isEnhancing === item.id ? 'bg-purple-400 cursor-wait' : 'bg-purple-600 hover:bg-purple-700'}`,
+                          children: isEnhancing === item.id ? "Enhancing..." : "✨ AI Enhance"
+                        }),
+                        jsx("button", {
+                          onClick: () => handleRemoveListItem("positions", item.id),
+                          className: "px-3 py-1.5 bg-red-500 text-white rounded-md hover:bg-red-600 text-xs font-semibold shadow-sm transition-colors",
+                          children: "Remove Position"
+                        })
+                      ]
+                    })
+                  ]
+                }, item.id)),
+                jsx("button", {
+                  onClick: () => handleAddListItem("positions", { id: generateUniqueId(), title: "", date: "", description: "" }),
+                  className: "mt-4 w-full py-2 border-2 border-dashed border-blue-200 text-blue-600 rounded-lg hover:bg-blue-50 hover:border-blue-300 transition-colors font-semibold text-sm",
+                  children: "+ Add Position"
+                })
+              ]
+            }),
+
+            /* --- Extracurriculars accordion --- */
+            jsxs(OnCampusAccordion, {
+              title: "Extracurricular Activities",
+              icon: jsx("svg", {
+                xmlns: "http://www.w3.org/2000/svg", className: "h-5 w-5", fill: "none", viewBox: "0 0 24 24", stroke: "currentColor",
+                children: jsx("path", { strokeLinecap: "round", strokeLinejoin: "round", strokeWidth: 2, d: "M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" })
+              }),
+              children: resumeData.activities.map(item => jsxs("div", {
+                className: "mb-4",
+                children: [
+                  jsx(OnCampusTextArea, { label: item.title, name: "description", value: item.description, onChange: e => handleListItemChange("activities", item.id, e) }),
+                  jsx("p", { className: "text-xs text-gray-400 -mt-2 mb-2 ml-1", children: "Use a newline for bullet points. Use <b>text</b> to make text bold." })
+                ]
+              }, item.id))
+            }),
+
+            /* --- Crop Modal overlay --- */
+            showCropModal && jsx("div", {
+              className: "fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50",
+              children: jsxs("div", {
+                className: "bg-white p-4 rounded-lg max-w-2xl w-full",
+                children: [
+                  jsx("h2", { className: "text-xl font-bold mb-4", children: "Crop Your Image" }),
+                  cropSrc && jsx(ReactCrop, {
+                    crop: crop,
+                    onChange: (c, percentCrop) => setCrop(percentCrop),
+                    onComplete: c => setCompletedCrop(c),
+                    aspect: cropTarget === "logo" ? 1 : 130 / 140,
+                    children: jsx("img", { ref: imageRef, alt: "Crop me", src: cropSrc, onLoad: onImageLoad, style: { maxHeight: "70vh" } })
+                  }),
+                  jsxs("div", {
+                    className: "mt-4 flex justify-end space-x-2",
+                    children: [
+                      jsx("button", { onClick: () => setShowCropModal(false), className: "px-4 py-2 bg-gray-300 text-gray-800 rounded hover:bg-gray-400", children: "Cancel" }),
+                      jsx("button", { onClick: handleCropSave, className: "px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600", children: "Crop & Save" })
+                    ]
+                  })
+                ]
+              })
+            })
+          ]
+        });
+      };
+
+      const OnCampusResumeLayout = forwardRef(({ resumeData }, ref) => {
+        const { personalDetails, education, internships, achievements, projects, skills, positions, activities } = resumeData;
+        const formatBold = text => text ? text.replace(/<b>/g, "<strong>").replace(/<\/b>/g, "</strong>").replace(/\n/g, "<br />") : "";
+
+        return jsxs("div", {
+          ref,
+          className: "bg-white shadow-lg pt-14 px-10 pb-2 leading-relaxed w-[210mm] text-black",
+          style: { fontFamily: "Lato, sans-serif" },
+          children: [
+            jsxs("header", {
+              className: "flex items-start justify-between pb-4 text-[15px]",
+              children: [
+                jsxs("div", {
+                  className: "flex items-center flex-grow min-w-0",
+                  children: [
+                    personalDetails.logo && jsx("img", { src: personalDetails.logo, alt: "Institute Logo", className: "h-36 w-36 mr-6 flex-shrink-0" }),
+                    jsxs("div", {
+                      className: "flex-grow min-w-0",
+                      children: [
+                        jsx("h1", { className: "font-bold tracking-wide break-words text-[25px] leading-none mb-1", children: personalDetails.name }),
+                        jsx("p", { children: personalDetails.degree }),
+                        jsxs("div", {
+                          className: "leading-normal",
+                          children: [
+                            jsxs("p", { children: ["Gender: ", personalDetails.gender] }),
+                            jsxs("p", { children: ["Date of Birth: ", personalDetails.dob] }),
+                            jsxs("p", { children: ["E-mail: ", personalDetails.email] }),
+                            jsxs("p", { children: ["Contact : ", personalDetails.contact] })
+                          ]
+                        })
+                      ]
+                    })
+                  ]
+                }),
+                personalDetails.photo && jsx("img", { src: personalDetails.photo, alt: "Profile", className: "h-[140px] w-[130px] object-cover border-2 border-black ml-4 flex-shrink-0" })
+              ]
+            }),
+            jsx("hr", { className: "border-t-[3px] border-black mt-4 mb-2 -mx-10" }),
+            jsxs("main", {
+              className: "text-[15px] pt-2",
+              children: [
+                education && education.length > 0 && jsx(ResumeSection, {
+                  title: "Educational Qualification",
+                  children: jsx("div", {
+                    className: "mt-3.5",
+                    children: jsxs("table", {
+                      className: "w-full border-collapse border border-black text-black text-center text-[15px]",
+                      children: [
+                        jsx("thead", {
+                          children: jsxs("tr", {
+                            children: [
+                              jsx("th", { className: "border border-black p-2 font-bold h-[0.5in]", children: "Year" }),
+                              jsx("th", { className: "border border-black p-2 font-bold h-[0.5in]", children: "Degree/Examination" }),
+                              jsx("th", { className: "border border-black p-2 font-bold h-[0.5in]", children: "Institution/Board" }),
+                              jsx("th", { className: "border border-black p-2 font-bold h-[0.5in]", children: "CGPA/Percentage" })
+                            ]
+                          })
+                        }),
+                        jsx("tbody", {
+                          children: education.map(item => jsxs("tr", {
+                            children: [
+                              jsx("td", { className: "border border-black p-2 h-[0.5in]", children: item.year }),
+                              jsx("td", { className: "border border-black p-2 h-[0.5in]", children: item.degree }),
+                              jsx("td", { className: "border border-black p-2 h-[0.5in]", children: item.institution }),
+                              jsx("td", { className: "border border-black p-2 h-[0.5in]", children: item.grade })
+                            ]
+                          }, item.id))
+                        })
+                      ]
+                    })
+                  })
+                }),
+                achievements && achievements.length > 0 && jsx(ResumeSection, {
+                  title: "Academic Achievements",
+                  splittable: true,
+                  children: jsx("ul", {
+                    className: "custom-bullet-list technical-skills-list space-y-1 text-[15px]",
+                    children: achievements.map(item => jsx("li", { dangerouslySetInnerHTML: { __html: item.description } }, item.id))
+                  })
+                }),
+                internships && internships.length > 0 && jsx(ResumeSection, {
+                  title: "Internship Experience",
+                  splittable: true,
+                  children: jsx("ul", {
+                    className: "custom-bullet-list technical-skills-list space-y-4 text-[15px]",
+                    children: internships.map(item => jsxs("li", {
+                      children: [
+                        jsxs("div", {
+                          className: "flex justify-between items-baseline",
+                          children: [
+                            jsx("h3", { className: "font-bold text-[15px]", children: item.title }),
+                            jsx("p", { className: "flex-shrink-0 ml-4 text-right", children: item.date })
+                          ]
+                        }),
+                        jsx("div", { dangerouslySetInnerHTML: { __html: formatBold(item.description) } })
+                      ]
+                    }, item.id))
+                  })
+                }),
+                projects && projects.length > 0 && jsx(ResumeSection, {
+                  title: "Projects",
+                  splittable: true,
+                  children: jsx("ul", {
+                    className: "custom-bullet-list technical-skills-list space-y-4 text-[15px]",
+                    children: projects.map(item => jsxs("li", {
+                      children: [
+                        jsxs("div", {
+                          className: "flex justify-between items-baseline",
+                          children: [
+                            jsx("h3", { className: "font-bold text-[15px]", children: item.name }),
+                            jsx("p", { className: "flex-shrink-0 ml-4 text-right", children: item.date })
+                          ]
+                        }),
+                        item.description.includes("\n") ? jsx("ul", {
+                          className: "custom-square-list mt-1",
+                          children: item.description.split("\n").filter(line => line.trim() !== "").map((line, idx) => jsx("li", { dangerouslySetInnerHTML: { __html: line.replace(/<b>/g, "<strong>").replace(/<\/b>/g, "</strong>") } }, idx))
+                        }) : jsx("div", { dangerouslySetInnerHTML: { __html: formatBold(item.description) } })
+                      ]
+                    }, item.id))
+                  })
+                }),
+                skills && skills.length > 0 && jsx(ResumeSection, {
+                  title: "Technical Skills and Certifications",
+                  splittable: false,
+                  children: jsx("ul", {
+                    className: "custom-bullet-list technical-skills-list",
+                    children: skills.map(item => jsxs("li", {
+                      className: "flex items-start",
+                      children: [
+                        jsx("span", { className: "w-56 flex-shrink-0 break-words", children: item.category }),
+                        jsx("span", { className: "mx-2 flex-shrink-0", children: ":" }),
+                        jsx("span", { className: "flex-1 break-words", children: item.skills })
+                      ]
+                    }, item.id))
+                  })
+                }),
+                positions && positions.length > 0 && jsx(ResumeSection, {
+                  title: "Positions of Responsibility",
+                  splittable: true,
+                  children: jsx("ul", {
+                    className: "custom-bullet-list technical-skills-list space-y-4 text-[15px]",
+                    children: positions.map(item => jsxs("li", {
+                      children: [
+                        jsxs("div", {
+                          className: "flex justify-between items-baseline",
+                          children: [
+                            jsx("h3", { className: "font-bold text-[15px]", children: item.title }),
+                            jsx("p", { className: "flex-shrink-0 ml-4 text-right", children: item.date })
+                          ]
+                        }),
+                        jsx("div", { dangerouslySetInnerHTML: { __html: formatBold(item.description) } })
+                      ]
+                    }, item.id))
+                  })
+                }),
+                activities && activities.some(item => item.description.trim() !== "") && jsx(ResumeSection, {
+                  title: "Extracurricular Activities",
+                  splittable: true,
+                  children: jsx("div", {
+                    className: "space-y-3",
+                    children: activities.map(item => item.description.trim() !== "" && jsxs("div", {
+                      children: [
+                        jsx("h3", { className: "font-bold text-[15px]", children: item.title }),
+                        jsx("ul", {
+                          className: "custom-bullet-list technical-skills-list mt-1",
+                          children: item.description.split("\n").map((line, idx) => line.trim() !== "" && jsx("li", { dangerouslySetInnerHTML: { __html: line } }, idx))
+                        })
+                      ]
+                    }, item.id))
+                  })
+                })
+              ]
+            }),
+            jsxs("footer", {
+              className: "flex items-center justify-center text-center w-full",
+              style: { fontFamily: "Cambria, serif", fontSize: "10pt", color: "#808080", lineHeight: "1.2", paddingBottom: "9px" },
+              children: [
+                jsx("div", { style: { borderTop: "1px solid #2596be", width: "100px", margin: "0 15px" } }),
+                jsxs("div", {
+                  className: "px-1",
+                  children: [
+                    jsx("p", { style: { margin: 0 }, children: "Department of Training and Placement, NIT Trichy 620015" }),
+                    jsx("p", { style: { margin: 0 }, children: "Telephone : +91-431-2501081 | e-mail: tp@nitt.edu," }),
+                    jsx("p", { style: { margin: 0 }, children: "tnp.nitt@gmail.com" })
+                  ]
+                }),
+                jsx("div", { style: { borderTop: "1px solid #2596be", width: "100px", margin: "0 15px" } })
+              ]
+            })
+          ]
+        });
+      });
+
+      const OnCampusPreview = forwardRef(({ resumeData, onPhotoUploadClick, onLogoUploadClick }, ref) => {
+        const rawLayoutRef = useRef(null);
+        const pagesContainerRef = useRef(null);
+        const [pagesHtml, setPagesHtml] = useState([]);
+        const [headerHtml, setHeaderHtml] = useState("");
+        const [footerHtml, setFooterHtml] = useState("");
+        const [footerHeight, setFooterHeight] = useState(0);
+
+        const isMobileOrSmallScreen = typeof navigator !== "undefined" && (/Mobi|Android|iPhone|iPad|iPod|Windows Phone/.test(navigator.userAgent) || typeof window !== "undefined" && window.innerWidth < 800);
+
+        useImperativeHandle(ref, () => ({
+          getHtmlForPdf: () => pagesContainerRef.current
+        }));
+
+        useLayoutEffect(() => {
+          const calculateLayout = () => {
+            if (!rawLayoutRef.current) return;
+            const scratchDiv = document.createElement("div");
+            scratchDiv.style.position = "absolute";
+            scratchDiv.style.left = "-9999px";
+            scratchDiv.style.top = "0";
+            scratchDiv.style.width = "794px";
+            scratchDiv.style.transform = "none";
+            scratchDiv.style.zoom = "1";
+            scratchDiv.style.pointerEvents = "none";
+            scratchDiv.style.visibility = "hidden";
+            scratchDiv.innerHTML = rawLayoutRef.current.innerHTML;
+            document.body.appendChild(scratchDiv);
+
+            const headerEl = scratchDiv.querySelector("header");
+            const footerEl = scratchDiv.querySelector("footer");
+            const mainEl = scratchDiv.querySelector("main");
+            const hrEl = scratchDiv.querySelector("header + hr");
+
+            if (!headerEl || !footerEl || !mainEl || !hrEl) {
+              if (scratchDiv.parentElement) scratchDiv.parentElement.removeChild(scratchDiv);
+              return;
+            }
+
+            setHeaderHtml(headerEl.outerHTML);
+            setFooterHtml(footerEl.outerHTML);
+
+            const getOuterHeight = (el) => {
+              if (!el) return 0;
+              const style = window.getComputedStyle(el);
+              return el.getBoundingClientRect().height + parseInt(style.marginTop, 10) + parseInt(style.marginBottom, 10);
+            };
+
+            const sections = Array.from(mainEl.children);
+            const mainStyle = window.getComputedStyle(mainEl);
+            const paddingTop = parseInt(mainStyle.paddingTop, 10);
+            const bottomGap = isMobileOrSmallScreen ? 12 : 5;
+
+            const headerAndHrHeight = getOuterHeight(headerEl) + getOuterHeight(hrEl);
+            const rawFooterVal = isMobileOrSmallScreen ? (footerEl.getBoundingClientRect().height || 0) : getOuterHeight(footerEl);
+
+            if (isMobileOrSmallScreen) {
+              setFooterHeight(rawFooterVal);
+            }
+
+            const topPadding = 64;
+            const bottomPadding = 48;
+            const firstPageMaxHeight = PAGE_HEIGHT_PX - topPadding - headerAndHrHeight - rawFooterVal - paddingTop - bottomGap;
+            const subsequentPageMaxHeight = PAGE_HEIGHT_PX - bottomPadding - rawFooterVal - bottomGap;
+
+            const pages = [];
+            let currentPageHtml = "";
+            let currentPageHeight = 0;
+            let isFirstPage = true;
+
+            for (const section of sections) {
+              let pageMaxHeight = isFirstPage ? firstPageMaxHeight : subsequentPageMaxHeight;
+              const sectionHeight = getOuterHeight(section);
+
+              if (currentPageHeight + sectionHeight <= pageMaxHeight) {
+                currentPageHtml += section.outerHTML;
+                currentPageHeight += sectionHeight;
+                continue;
+              }
+
+              if (section.dataset.splittable !== "true") {
+                if (currentPageHtml) pages.push(currentPageHtml);
+                currentPageHtml = section.outerHTML;
+                currentPageHeight = sectionHeight;
+                isFirstPage = false;
+                continue;
+              }
+
+              const sectionHeader = section.children[0];
+              const sectionList = section.children[1];
+              if (!sectionHeader || !sectionList) {
+                currentPageHtml += section.outerHTML;
+                currentPageHeight += sectionHeight;
+                continue;
+              }
+
+              const listItems = Array.from(sectionList.children);
+              const headerHeight = getOuterHeight(sectionHeader);
+              const firstItemHeight = listItems.length > 0 ? getOuterHeight(listItems[0]) : 0;
+
+              if (currentPageHeight > 0 && currentPageHeight + headerHeight + firstItemHeight > pageMaxHeight) {
+                pages.push(currentPageHtml);
+                currentPageHtml = "";
+                currentPageHeight = 0;
+                isFirstPage = false;
+                pageMaxHeight = subsequentPageMaxHeight;
+              }
+
+              const divOpen = `<div class="${section.className}" data-splittable="true">`;
+              const divClose = "</div>";
+              let headerHtmlToAppend = sectionHeader.outerHTML;
+              currentPageHeight += headerHeight;
+
+              const listOpen = `<${sectionList.tagName.toLowerCase()} class="${sectionList.className}">`;
+              const listClose = `</${sectionList.tagName.toLowerCase()}>`;
+              let accumulatedItemsHtml = "";
+
+              for (const listItem of listItems) {
+                const itemHeight = getOuterHeight(listItem);
+                if (currentPageHeight + itemHeight > pageMaxHeight) {
+                  if (accumulatedItemsHtml === "") {
+                    if (currentPageHtml) pages.push(currentPageHtml);
+                    currentPageHtml = "";
+                    isFirstPage = false;
+                    pageMaxHeight = subsequentPageMaxHeight;
+                    headerHtmlToAppend = sectionHeader.outerHTML;
+                    accumulatedItemsHtml = listItem.outerHTML;
+                    currentPageHeight = headerHeight + itemHeight;
+                    headerHtmlToAppend = "";
+                  } else {
+                    currentPageHtml += divOpen + headerHtmlToAppend + listOpen + accumulatedItemsHtml + listClose + divClose;
+                    pages.push(currentPageHtml);
+                    isFirstPage = false;
+                    pageMaxHeight = subsequentPageMaxHeight;
+                    currentPageHtml = "";
+                    accumulatedItemsHtml = listItem.outerHTML;
+                    currentPageHeight = itemHeight;
+                    headerHtmlToAppend = "";
+                  }
+                } else {
+                  accumulatedItemsHtml += listItem.outerHTML;
+                  currentPageHeight += itemHeight;
+                }
+              }
+
+              if (accumulatedItemsHtml) {
+                currentPageHtml += divOpen + headerHtmlToAppend + listOpen + accumulatedItemsHtml + listClose + divClose;
+              }
+            }
+
+            if (currentPageHtml) pages.push(currentPageHtml);
+            if (pages.length === 0 && mainEl.innerHTML) pages.push(mainEl.innerHTML);
+
+            if (isMobileOrSmallScreen) {
+              try {
+                const tempMain = scratchDiv.querySelector("main");
+                if (tempMain) {
+                  const elements = Array.from(tempMain.children);
+                  const splitPages = [];
+                  let currentPageContent = "";
+                  let currentPageHeight = 0;
+                  const firstPageLimit = firstPageMaxHeight;
+                  const subsequentPageLimit = subsequentPageMaxHeight;
+
+                  const measureHeight = (html) => {
+                    const measureDiv = document.createElement("div");
+                    measureDiv.style.position = "absolute";
+                    measureDiv.style.left = "-9999px";
+                    measureDiv.style.width = "794px";
+                    measureDiv.innerHTML = html;
+                    document.body.appendChild(measureDiv);
+                    const h = measureDiv.getBoundingClientRect().height;
+                    document.body.removeChild(measureDiv);
+                    return h;
+                  };
+
+                  let currentLimit = firstPageLimit;
+                  for (const el of elements) {
+                    const itemHtml = el.outerHTML;
+                    const itemHeight = getOuterHeight(el);
+
+                    if (currentPageHeight + itemHeight <= currentLimit) {
+                      currentPageContent += itemHtml;
+                      currentPageHeight += itemHeight;
+                    } else {
+                      const listEl = el.querySelector("ul, ol");
+                      if (listEl && listEl.children.length > 1) {
+                        const tagStart = el.outerHTML.split("<" + el.tagName.toLowerCase())[0] || "";
+                        const listItems = Array.from(listEl.children);
+                        let listTagStart = `<${listEl.tagName.toLowerCase()} class="${listEl.className}">`;
+                        let listTagEnd = `</${listEl.tagName.toLowerCase()}>`;
+                        let splitDone = false;
+                        let accumulatedListItemsHtml = "";
+
+                        for (const liItem of listItems) {
+                          const liHeight = getOuterHeight(liItem);
+                          if (currentPageHeight + liHeight <= currentLimit) {
+                            accumulatedListItemsHtml += liItem.outerHTML;
+                            currentPageHeight += liHeight;
+                          } else {
+                            currentPageContent += el.outerHTML.replace(listEl.outerHTML, listTagStart + accumulatedListItemsHtml + listTagEnd);
+                            splitPages.push(currentPageContent);
+
+                            const remainingItemsHtml = listItems.slice(listItems.indexOf(liItem)).map(item => item.outerHTML).join("");
+                            const tagName = el.tagName.toLowerCase();
+                            const className = el.className;
+                            const splitSectionHtml = `<${tagName} class="${className}" data-splittable="true">${listTagStart}${remainingItemsHtml}${listTagEnd}</${tagName}>`;
+
+                            currentPageContent = splitSectionHtml;
+                            currentPageHeight = measureHeight(splitSectionHtml);
+                            currentLimit = subsequentPageLimit;
+                            splitDone = true;
+                            break;
+                          }
+                        }
+                        if (!splitDone) {
+                          currentPageContent += el.outerHTML;
+                        }
+                      } else {
+                        if (currentPageContent) splitPages.push(currentPageContent);
+                        currentPageContent = itemHtml;
+                        currentPageHeight = itemHeight;
+                        currentLimit = subsequentPageLimit;
+                      }
+                    }
+                  }
+                  if (currentPageContent) splitPages.push(currentPageContent);
+                  if (splitPages.length > 1) {
+                    pages.length = 0;
+                    for (const pg of splitPages) pages.push(pg);
+                  }
+                }
+              } catch (e) {
+                console.warn("Aggressive split pass failed", e);
+              }
+            }
+
+            scratchDiv.parentElement && scratchDiv.parentElement.removeChild(scratchDiv);
+            setPagesHtml(pages);
+          };
+
+          document.fonts.ready.then(() => {
+            setTimeout(calculateLayout, 200);
+          });
+        }, [resumeData]);
+
+        const UploadPromptIcon = () => jsxs("div", {
+          className: "text-center",
+          children: [
+            jsx("svg", {
+              xmlns: "http://www.w3.org/2000/svg", className: "h-8 w-8 mx-auto", fill: "none", viewBox: "0 0 24 24", stroke: "currentColor", strokeWidth: 2,
+              children: jsx("path", { strokeLinecap: "round", strokeLinejoin: "round", d: "M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" })
+            }),
+            jsx("span", { className: "text-sm mt-1", children: "Upload" })
+          ]
+        });
+
+        return jsxs("div", {
+          ref: pagesContainerRef,
+          className: "flex flex-col items-center gap-8",
+          children: [
+            jsx("div", {
+              className: "absolute top-0 left-[-9999px] opacity-0",
+              "aria-hidden": "true",
+              children: jsx(OnCampusResumeLayout, { resumeData: resumeData, ref: rawLayoutRef })
+            }),
+            pagesHtml.length > 0 ? pagesHtml.map((pageContent, idx) => jsxs("div", {
+              className: "relative",
+              children: [
+                jsxs("div", {
+                  className: `resume-page-container overflow-hidden bg-white shadow-lg px-10 pb-2 w-[210mm] h-[297mm] flex flex-col text-black leading-relaxed relative ${idx === 0 ? "pt-14" : "pt-10"}`,
+                  children: [
+                    idx === 0 && jsxs(Fragment, {
+                      children: [
+                        jsx("div", { dangerouslySetInnerHTML: { __html: headerHtml } }),
+                        jsx("hr", { className: "border-t-[3px] border-black mt-4 mb-2 -mx-10" })
+                      ]
+                    }),
+                    jsx("main", {
+                      className: `text-[15px] flex-grow ${idx === 0 ? "pt-2" : "pt-0"}`,
+                      style: isMobileOrSmallScreen ? { paddingBottom: `${footerHeight + 8}px` } : undefined,
+                      dangerouslySetInnerHTML: { __html: pageContent }
+                    }),
+                    jsx("div", {
+                      className: "absolute bottom-0 left-0 w-full bg-white z-10",
+                      dangerouslySetInnerHTML: { __html: footerHtml }
+                    })
+                  ]
+                }),
+                idx === 0 && jsxs(Fragment, {
+                  children: [
+                    jsx("button", {
+                      onClick: onLogoUploadClick,
+                      className: `absolute top-[56px] left-[40px] h-36 w-36 bg-black flex items-center justify-center text-white cursor-pointer group transition-opacity duration-300 ${
+                        isPlaceholderImage(resumeData.personalDetails.logo) ? "bg-opacity-50 opacity-100" : "bg-opacity-40 opacity-50 group-hover:opacity-100"
+                      }`,
+                      "aria-label": "Upload new logo",
+                      children: jsx(UploadPromptIcon, {})
+                    }),
+                    jsx("button", {
+                      onClick: onPhotoUploadClick,
+                      className: `absolute top-[56px] right-[40px] h-[140px] w-[130px] bg-black flex items-center justify-center text-white cursor-pointer group transition-opacity duration-300 ${
+                        isPlaceholderImage(resumeData.personalDetails.photo) ? "bg-opacity-50 opacity-100" : "bg-opacity-40 opacity-50 group-hover:opacity-100"
+                      }`,
+                      "aria-label": "Upload new photo",
+                      children: jsx(UploadPromptIcon, {})
+                    })
+                  ]
+                })
+              ]
+            }, idx)) : jsx("div", {
+              className: "bg-white shadow-lg w-[210mm] h-[297mm] flex items-center justify-center",
+              children: jsx("p", { className: "text-center p-8 text-gray-500", children: "Generating preview..." })
+            })
+          ]
+        });
+      });
+
+
+      /* ============================================================
+       *  RESUME FORMAT: MODERN CREATIVE
+       *  Editor sidebar layout, Raw preview layout, and PDF preview pagination container.
+       * ============================================================ */
+      const ModernCreativeEditor = ({ resumeData, setResumeData, photoFileInputRef, logoFileInputRef }) => {
+        const [isEnhancing, setIsEnhancing] = useState(null);
+        const [cropSrc, setCropSrc] = useState("");
+        const [crop, setCrop] = useState();
+        const [completedCrop, setCompletedCrop] = useState();
+        const [showCropModal, setShowCropModal] = useState(false);
+        const [cropTarget, setCropTarget] = useState(null);
+        const imageRef = useRef(null);
+
+        const handlePersonalDetailsChange = (e) => {
+          const { name, value } = e.target;
+          setResumeData(prev => ({
+            ...prev,
+            personalDetails: { ...prev.personalDetails, [name]: value }
+          }));
+        };
+
+        const handleSummaryChange = (e) => {
+          setResumeData(prev => ({
+            ...prev,
+            summary: e.target.value
+          }));
+        };
+
+        const handleSkillsChange = (e) => {
+          const val = e.target.value;
+          setResumeData(prev => ({
+            ...prev,
+            skills: [{ id: "skill-set-1", category: "", skills: val }]
+          }));
+        };
+
+        const handleEnhanceDescription = async (section, itemId, currentText) => {
+          if (!currentText.trim()) {
+            alert("Please enter a description to enhance.");
+            return;
+          }
+          setIsEnhancing(itemId);
+          try {
+            const response = await fetch("/.netlify/functions/gemini", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                prompt: `Rewrite and enhance the following professional experience description for a resume, making it more impactful, professional, and concise. Focus on action verbs and quantifiable results where possible based on the text. Do not add any new information. Keep the response as a single paragraph. Original description: "${currentText}"`
+              })
+            });
+            if (!response.ok) throw new Error("AI Server Error");
+            const data = await response.json();
+            const enhancedText = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
+            if (enhancedText) {
+              setResumeData(prev => {
+                const list = prev[section].map(item => item.id === itemId ? { ...item, description: enhancedText } : item);
+                return { ...prev, [section]: list };
+              });
+            }
+          } catch (e) {
+            console.error("AI enhancement failed:", e);
+            alert("Failed to enhance the description. Please try again.");
+          } finally {
+            setIsEnhancing(null);
+          }
+        };
+
+        const handleListItemChange = (section, itemId, e) => {
+          const { name, value } = e.target;
+          setResumeData(prev => {
+            const list = prev[section].map(item => item.id === itemId ? { ...item, [name]: value } : item);
+            return { ...prev, [section]: list };
+          });
+        };
+
+        const handleAddListItem = (section, itemTemplate) => {
+          setResumeData(prev => ({
+            ...prev,
+            [section]: [...prev[section], itemTemplate]
+          }));
+        };
+
+        const handleRemoveListItem = (section, itemId) => {
+          setResumeData(prev => ({
+            ...prev,
+            [section]: prev[section].filter(item => item.id !== itemId)
+          }));
+        };
+
+        const handleFileChange = (e, target) => {
+          if (e.target.files && e.target.files.length > 0) {
+            setCropTarget(target);
+            setCrop(undefined);
+            const reader = new FileReader();
+            reader.addEventListener("load", () => {
+              setCropSrc(reader.result?.toString() || "");
+            });
+            reader.readAsDataURL(e.target.files[0]);
+            setShowCropModal(true);
+          }
+        };
+
+        function onImageLoad(e) {
+          imageRef.current = e.currentTarget;
+          const { width, height } = e.currentTarget;
+          const initialCrop = centerCrop(makeAspectCrop({ unit: "%", width: 90 }, 1, width, height), width, height);
+          setCrop(initialCrop);
+          setCompletedCrop(initialCrop);
+        }
+
+        const handleCropSave = () => {
+          if (!completedCrop || !imageRef.current) return;
+          const img = imageRef.current;
+          const canvas = document.createElement("canvas");
+          const scaleX = img.naturalWidth / img.width;
+          const scaleY = img.naturalHeight / img.height;
+          canvas.width = completedCrop.width * scaleX;
+          canvas.height = completedCrop.height * scaleY;
+          const ctx = canvas.getContext("2d");
+          if (!ctx) throw new Error("No 2d context");
+          const pixelRatio = window.devicePixelRatio;
+          canvas.width = completedCrop.width * scaleX * pixelRatio;
+          canvas.height = completedCrop.height * scaleY * pixelRatio;
+          ctx.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
+          ctx.imageSmoothingQuality = "high";
+          ctx.drawImage(
+            img,
+            completedCrop.x * scaleX,
+            completedCrop.y * scaleY,
+            completedCrop.width * scaleX,
+            completedCrop.height * scaleY,
+            0,
+            0,
+            completedCrop.width * scaleX,
+            completedCrop.height * scaleY
+          );
+          const dataUrl = canvas.toDataURL("image/jpeg");
+          const target = cropTarget;
+          if (target) {
+            setResumeData(prev => ({
+              ...prev,
+              personalDetails: { ...prev.personalDetails, [target]: dataUrl }
+            }));
+          }
+          setShowCropModal(false);
+          setCropSrc("");
+          if (photoFileInputRef.current) photoFileInputRef.current.value = "";
+          if (logoFileInputRef.current) logoFileInputRef.current.value = "";
+        };
+
+        return jsxs("div", {
+          className: "p-4 bg-white relative",
+          children: [
+            jsx("h1", { className: "text-3xl font-bold text-center mb-8 text-gray-800", children: "Resume Editor" }),
+
+            /* --- Personal Details --- */
+            jsxs(ModernAccordion, {
+              title: "Personal Details",
+              defaultOpen: true,
+              icon: jsx("svg", {
+                xmlns: "http://www.w3.org/2000/svg", className: "h-5 w-5", fill: "none", viewBox: "0 0 24 24", stroke: "currentColor",
+                children: jsx("path", { strokeLinecap: "round", strokeLinejoin: "round", strokeWidth: 2, d: "M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" })
+              }),
+              children: [
+                jsx(ModernTextInput, { label: "Full Name", name: "name", value: resumeData.personalDetails.name, onChange: handlePersonalDetailsChange }),
+                jsx(ModernTextInput, { label: "Title/Degree", name: "degree", value: resumeData.personalDetails.degree, onChange: handlePersonalDetailsChange }),
+                jsxs("div", {
+                  className: "mb-4",
+                  children: [
+                    jsx("label", { className: "block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5 ml-1", children: "Profile Photo" }),
+                    jsx("input", { type: "file", accept: "image/*", onChange: (e) => handleFileChange(e, "photo"), ref: photoFileInputRef, className: "hidden" }),
+                    jsx("button", {
+                      onClick: () => photoFileInputRef.current?.click(),
+                      className: "w-full px-4 py-2.5 border border-dashed border-gray-300 rounded-lg hover:bg-gray-50 hover:border-purple-300 hover:text-purple-600 transition-all bg-white text-gray-600 text-sm font-medium",
+                      children: "Upload Photo"
+                    })
+                  ]
+                }),
+                jsx(ModernTextInput, { label: "Date of Birth", name: "dob", value: resumeData.personalDetails.dob, onChange: handlePersonalDetailsChange }),
+                jsx(ModernTextInput, { label: "Email", name: "email", value: resumeData.personalDetails.email, onChange: handlePersonalDetailsChange }),
+                jsx(ModernTextInput, { label: "Contact", name: "contact", value: resumeData.personalDetails.contact, onChange: handlePersonalDetailsChange }),
+                jsx(ModernTextInput, { label: "LinkedIn URL", name: "linkedin", value: resumeData.personalDetails.linkedin || "", onChange: handlePersonalDetailsChange }),
+                jsx(ModernTextInput, { label: "GitHub URL", name: "github", value: resumeData.personalDetails.github || "", onChange: handlePersonalDetailsChange })
+              ]
+            }),
+
+            /* --- Professional Summary --- */
+            jsxs(ModernAccordion, {
+              title: "Professional Summary",
+              icon: jsx("svg", {
+                xmlns: "http://www.w3.org/2000/svg", className: "h-5 w-5", fill: "none", viewBox: "0 0 24 24", stroke: "currentColor",
+                children: jsx("path", { strokeLinecap: "round", strokeLinejoin: "round", strokeWidth: 2, d: "M4 6h16M4 12h16M4 18h7" })
+              }),
+              children: [
+                jsx(ModernTextArea, { label: "Summary", name: "summary", rows: 5, value: resumeData.summary, onChange: handleSummaryChange }),
+                jsx("p", { className: "text-xs text-gray-400 -mt-2 mb-2 ml-1", children: "Use <b>text</b> to make text bold." })
+              ]
+            }),
+
+            /* --- Education --- */
+            jsxs(ModernAccordion, {
+              title: "Education",
+              icon: jsxs("svg", {
+                xmlns: "http://www.w3.org/2000/svg", className: "h-5 w-5", fill: "none", viewBox: "0 0 24 24", stroke: "currentColor",
+                children: [
+                  jsx("path", { d: "M12 14l9-5-9-5-9 5 9 5z" }),
+                  jsx("path", { d: "M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14zm-4 6v-7.5l4-2.222" })
+                ]
+              }),
+              children: [
+                resumeData.education.map((item) => jsxs("div", {
+                  className: "border-b border-gray-100 pb-4 mb-4 last:border-0 last:pb-0 last:mb-0",
+                  children: [
+                    jsx(ModernTextInput, { label: "Degree", name: "degree", value: item.degree, onChange: e => handleListItemChange("education", item.id, e) }),
+                    jsx(ModernTextInput, { label: "Institution", name: "institution", value: item.institution, onChange: e => handleListItemChange("education", item.id, e) }),
+                    jsx(ModernTextInput, { label: "Year", name: "year", value: item.year, onChange: e => handleListItemChange("education", item.id, e) }),
+                    jsx(ModernTextInput, { label: "Grade", name: "grade", value: item.grade, onChange: e => handleListItemChange("education", item.id, e) }),
+                    jsx("div", {
+                      className: "flex justify-end",
+                      children: jsx("button", {
+                        onClick: () => handleRemoveListItem("education", item.id),
+                        className: "px-3 py-1.5 bg-red-500 text-white rounded-md hover:bg-red-600 text-xs font-semibold",
+                        children: "Remove"
+                      })
+                    })
+                  ]
+                }, item.id)),
+                jsx("button", {
+                  onClick: () => handleAddListItem("education", { id: generateUniqueId(), year: "", degree: "", institution: "", grade: "" }),
+                  className: "mt-4 w-full py-2 border-2 border-dashed border-purple-200 text-purple-600 rounded-lg hover:bg-purple-50 hover:border-purple-300 transition-colors font-semibold text-sm",
+                  children: "+ Add Education"
+                })
+              ]
+            }),
+
+            /* --- Experience --- */
+            jsxs(ModernAccordion, {
+              title: "Experience",
+              icon: jsx("svg", {
+                xmlns: "http://www.w3.org/2000/svg", className: "h-5 w-5", fill: "none", viewBox: "0 0 24 24", stroke: "currentColor",
+                children: jsx("path", { strokeLinecap: "round", strokeLinejoin: "round", strokeWidth: 2, d: "M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" })
+              }),
+              children: [
+                resumeData.internships.map((item) => jsxs("div", {
+                  className: "border-b border-gray-100 pb-4 mb-4 last:border-0 last:pb-0 last:mb-0",
+                  children: [
+                    jsx(ModernTextInput, { label: "Role Title", name: "title", value: item.title, onChange: e => handleListItemChange("internships", item.id, e) }),
+                    jsx(ModernTextInput, { label: "Date", name: "date", value: item.date, onChange: e => handleListItemChange("internships", item.id, e) }),
+                    jsx(ModernTextArea, { label: "Description", name: "description", rows: 4, value: item.description, onChange: e => handleListItemChange("internships", item.id, e) }),
+                    jsx("p", { className: "text-xs text-gray-400 -mt-2 mb-2 ml-1", children: "Use <b>text</b> to make text bold." }),
+                    jsxs("div", {
+                      className: "flex items-center justify-between mt-3",
+                      children: [
+                        jsx("button", {
+                          disabled: isEnhancing === item.id,
+                          onClick: () => handleEnhanceDescription("internships", item.id, item.description),
+                          className: `px-3 py-1.5 text-white rounded text-xs font-semibold shadow-sm transition-colors ${isEnhancing === item.id ? 'bg-purple-400 cursor-wait' : 'bg-purple-600 hover:bg-purple-700'}`,
+                          children: isEnhancing === item.id ? "Enhancing..." : "✨ AI Enhance"
+                        }),
+                        jsx("button", {
+                          onClick: () => handleRemoveListItem("internships", item.id),
+                          className: "px-3 py-1.5 bg-red-500 text-white rounded-md hover:bg-red-600 text-xs font-semibold",
+                          children: "Remove"
+                        })
+                      ]
+                    })
+                  ]
+                }, item.id)),
+                jsx("button", {
+                  onClick: () => handleAddListItem("internships", { id: generateUniqueId(), title: "", date: "", description: "" }),
+                  className: "mt-4 w-full py-2 border-2 border-dashed border-purple-200 text-purple-600 rounded-lg hover:bg-purple-50 hover:border-purple-300 transition-colors font-semibold text-sm",
+                  children: "+ Add Experience"
+                })
+              ]
+            }),
+
+            /* --- Projects --- */
+            jsxs(ModernAccordion, {
+              title: "Projects",
+              icon: jsx("svg", {
+                xmlns: "http://www.w3.org/2000/svg", className: "h-5 w-5", fill: "none", viewBox: "0 0 24 24", stroke: "currentColor",
+                children: jsx("path", { strokeLinecap: "round", strokeLinejoin: "round", strokeWidth: 2, d: "M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" })
+              }),
+              children: [
+                resumeData.projects.map((item) => jsxs("div", {
+                  className: "border-b border-gray-100 pb-4 mb-4 last:border-0 last:pb-0 last:mb-0",
+                  children: [
+                    jsx(ModernTextInput, { label: "Project Name", name: "name", value: item.name, onChange: e => handleListItemChange("projects", item.id, e) }),
+                    jsx(ModernTextInput, { label: "Date", name: "date", value: item.date, onChange: e => handleListItemChange("projects", item.id, e) }),
+                    jsx(ModernTextArea, { label: "Description", name: "description", rows: 4, value: item.description, onChange: e => handleListItemChange("projects", item.id, e) }),
+                    jsx("p", { className: "text-xs text-gray-400 -mt-2 mb-2 ml-1", children: "Use <b>text</b> to make text bold. Use a newline for bullet points." }),
+                    jsxs("div", {
+                      className: "flex items-center justify-between mt-3",
+                      children: [
+                        jsx("button", {
+                          disabled: isEnhancing === item.id,
+                          onClick: () => handleEnhanceDescription("projects", item.id, item.description),
+                          className: `px-3 py-1.5 text-white rounded text-xs font-semibold shadow-sm transition-colors ${isEnhancing === item.id ? 'bg-purple-400 cursor-wait' : 'bg-purple-600 hover:bg-purple-700'}`,
+                          children: isEnhancing === item.id ? "Enhancing..." : "✨ AI Enhance"
+                        }),
+                        jsx("button", {
+                          onClick: () => handleRemoveListItem("projects", item.id),
+                          className: "px-3 py-1.5 bg-red-500 text-white rounded-md hover:bg-red-600 text-xs font-semibold",
+                          children: "Remove"
+                        })
+                      ]
+                    })
+                  ]
+                }, item.id)),
+                jsx("button", {
+                  onClick: () => handleAddListItem("projects", { id: generateUniqueId(), name: "", date: "", description: "" }),
+                  className: "mt-4 w-full py-2 border-2 border-dashed border-purple-200 text-purple-600 rounded-lg hover:bg-purple-50 hover:border-purple-300 transition-colors font-semibold text-sm",
+                  children: "+ Add Project"
+                })
+              ]
+            }),
+
+            /* --- Skills --- */
+            jsxs(ModernAccordion, {
+              title: "Skills",
+              icon: jsx("svg", {
+                xmlns: "http://www.w3.org/2000/svg", className: "h-5 w-5", fill: "none", viewBox: "0 0 24 24", stroke: "currentColor",
+                children: jsx("path", { strokeLinecap: "round", strokeLinejoin: "round", strokeWidth: 2, d: "M13 10V3L4 14h7v7l9-11h-7z" })
+              }),
+              children: [
+                jsx(ModernTextArea, { label: "Skills (Comma separated)", name: "skills", value: resumeData.skills.map(c => c.skills).join(", "), onChange: handleSkillsChange, rows: 4 })
+              ]
+            }),
+
+            /* --- Languages --- */
+            jsxs(ModernAccordion, {
+              title: "Languages",
+              icon: jsx("svg", {
+                xmlns: "http://www.w3.org/2000/svg", className: "h-5 w-5", fill: "none", viewBox: "0 0 24 24", stroke: "currentColor",
+                children: jsx("path", { strokeLinecap: "round", strokeLinejoin: "round", strokeWidth: 2, d: "M3 5h12M9 3v2m1.204 8.845a4 4 0 011.796 3.155H4a8 8 0 011.796-3.155M9 17v-4m0 0V9m0 4l-4-4m4 4l4-4" })
+              }),
+              children: [
+                resumeData.languages.map((item) => jsxs("div", {
+                  className: "border-b border-gray-100 pb-4 mb-4 last:border-0 last:pb-0 last:mb-0",
+                  children: [
+                    jsx(ModernTextInput, { label: "Language", name: "language", value: item.language, onChange: e => handleListItemChange("languages", item.id, e) }),
+                    jsx(ModernTextInput, { label: "Proficiency", name: "proficiency", value: item.proficiency, onChange: e => handleListItemChange("languages", item.id, e) }),
+                    jsx("div", {
+                      className: "flex justify-end",
+                      children: jsx("button", {
+                        onClick: () => handleRemoveListItem("languages", item.id),
+                        className: "px-3 py-1.5 bg-red-500 text-white rounded-md hover:bg-red-600 text-xs font-semibold",
+                        children: "Remove"
+                      })
+                    })
+                  ]
+                }, item.id)),
+                jsx("button", {
+                  onClick: () => handleAddListItem("languages", { id: generateUniqueId(), language: "", proficiency: "" }),
+                  className: "mt-4 w-full py-2 border-2 border-dashed border-purple-200 text-purple-600 rounded-lg hover:bg-purple-50 hover:border-purple-300 transition-colors font-semibold text-sm",
+                  children: "+ Add Language"
+                })
+              ]
+            }),
+
+            /* --- Achievements --- */
+            jsxs(ModernAccordion, {
+              title: "Achievements",
+              icon: jsx("svg", {
+                xmlns: "http://www.w3.org/2000/svg", className: "h-5 w-5", fill: "none", viewBox: "0 0 24 24", stroke: "currentColor",
+                children: jsx("path", { strokeLinecap: "round", strokeLinejoin: "round", strokeWidth: 2, d: "M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" })
+              }),
+              children: [
+                resumeData.achievements.map((item) => jsxs("div", {
+                  className: "border-b border-gray-100 pb-4 mb-4 last:border-0 last:pb-0 last:mb-0",
+                  children: [
+                    jsx(ModernTextArea, { label: "Description", name: "description", value: item.description, onChange: e => handleListItemChange("achievements", item.id, e) }),
+                    jsx("p", { className: "text-xs text-gray-400 -mt-2 mb-2 ml-1", children: "Use <b>text</b> to make text bold." }),
+                    jsx("div", {
+                      className: "flex justify-end",
+                      children: jsx("button", {
+                        onClick: () => handleRemoveListItem("achievements", item.id),
+                        className: "px-3 py-1.5 bg-red-500 text-white rounded-md hover:bg-red-600 text-xs font-semibold",
+                        children: "Remove"
+                      })
+                    })
+                  ]
+                }, item.id)),
+                jsx("button", {
+                  onClick: () => handleAddListItem("achievements", { id: generateUniqueId(), description: "" }),
+                  className: "mt-4 w-full py-2 border-2 border-dashed border-purple-200 text-purple-600 rounded-lg hover:bg-purple-50 hover:border-purple-300 transition-colors font-semibold text-sm",
+                  children: "+ Add Achievement"
+                })
+              ]
+            }),
+
+            /* --- Activities --- */
+            jsxs(ModernAccordion, {
+              title: "Activities",
+              icon: jsx("svg", {
+                xmlns: "http://www.w3.org/2000/svg", className: "h-5 w-5", fill: "none", viewBox: "0 0 24 24", stroke: "currentColor",
+                children: jsx("path", { strokeLinecap: "round", strokeLinejoin: "round", strokeWidth: 2, d: "M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" })
+              }),
+              children: resumeData.activities.map((item) => jsxs("div", {
+                className: "mb-4",
+                children: [
+                  jsx(ModernTextArea, { label: item.title, name: "description", value: item.description, onChange: e => handleListItemChange("activities", item.id, e) }),
+                  jsx("p", { className: "text-xs text-gray-400 -mt-2 mb-2 ml-1", children: "Use <b>text</b> to make text bold." })
+                ]
+              }, item.id))
+            }),
+
+            /* --- Crop Modal overlay --- */
+            showCropModal && jsx("div", {
+              className: "fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50",
+              children: jsxs("div", {
+                className: "bg-white p-4 rounded-lg max-w-2xl w-full",
+                children: [
+                  jsx("h2", { className: "text-xl font-bold mb-4", children: "Crop Your Image" }),
+                  cropSrc && jsx(ReactCrop, {
+                    crop: crop,
+                    onChange: (c, percentCrop) => setCrop(percentCrop),
+                    onComplete: c => setCompletedCrop(c),
+                    aspect: 1,
+                    children: jsx("img", { ref: imageRef, alt: "Crop me", src: cropSrc, onLoad: onImageLoad, style: { maxHeight: "70vh" } })
+                  }),
+                  jsxs("div", {
+                    className: "mt-4 flex justify-end space-x-2",
+                    children: [
+                      jsx("button", { onClick: () => setShowCropModal(false), className: "px-4 py-2 bg-gray-300 text-gray-800 rounded hover:bg-gray-400", children: "Cancel" }),
+                      jsx("button", { onClick: handleCropSave, className: "px-4 py-2 bg-purple-500 text-white rounded hover:bg-purple-600", children: "Crop & Save" })
+                    ]
+                  })
+                ]
+              })
+            })
+          ]
+        });
+      };
+
+      const ModernCreativeResumeLayout = forwardRef(({ resumeData, themeColor }, ref) => {
+        const { personalDetails, education, internships, achievements, projects, skills, activities, summary, languages } = resumeData;
+        const formatBold = text => text ? text.replace(/<b>/g, "<strong>").replace(/<\/b>/g, "</strong>").replace(/\n/g, "<br />") : "";
+
+        const colors = THEME_COLOR_STYLES[themeColor] || THEME_COLOR_STYLES["#0f172a"];
+
+        return jsxs("div", {
+          ref,
+          className: "flex w-full min-h-[297mm] text-black modern-creative-container",
+          style: { fontFamily: "Lato, sans-serif" },
+          children: [
+            /* Sidebar column (35%) */
+            jsxs("div", {
+              className: "w-[35%] px-6 pb-6 flex flex-col min-h-full flex-shrink-0 modern-creative-sidebar",
+              style: { backgroundColor: themeColor },
+              children: [
+                personalDetails.photo && jsx("div", {
+                  className: "mb-8 flex justify-center pt-6",
+                  children: jsx("img", {
+                    src: personalDetails.photo,
+                    alt: "Profile",
+                    className: "h-40 w-40 object-cover rounded-full border-4 shadow-xl",
+                    style: { borderColor: colors.border }
+                  })
+                }),
+                jsxs("div", {
+                  className: "mb-6",
+                  children: [
+                    jsx("h3", {
+                      className: "text-sm font-bold uppercase tracking-widest border-b mb-3",
+                      style: { borderColor: colors.border, color: colors.textSecondary },
+                      children: "Contact"
+                    }),
+                    jsxs("div", {
+                      className: "space-y-3 text-sm",
+                      style: { color: colors.textPrimary },
+                      children: [
+                        personalDetails.email && jsxs("div", {
+                          className: "flex items-center break-all",
+                          children: [
+                            jsx("img", {
+                              src: "assets/images/mail.png", alt: "Email",
+                              className: "w-4 h-4 mr-3 flex-shrink-0 modern-creative-contact-icon"
+                            }),
+                            jsx("span", { children: personalDetails.email })
+                          ]
+                        }),
+                        personalDetails.contact && jsxs("div", {
+                          className: "flex items-center",
+                          children: [
+                            jsx("img", {
+                              src: "assets/images/phone.png", alt: "Phone",
+                              className: "w-4 h-4 mr-3 flex-shrink-0 modern-creative-contact-icon"
+                            }),
+                            jsx("span", { children: personalDetails.contact })
+                          ]
+                        }),
+                        personalDetails.dob && jsxs("div", {
+                          className: "flex items-center",
+                          children: [
+                            jsx("img", {
+                              src: "assets/images/calendar.png", alt: "DOB",
+                              className: "w-4 h-4 mr-3 flex-shrink-0 modern-creative-contact-icon"
+                            }),
+                            jsx("span", { children: personalDetails.dob })
+                          ]
+                        }),
+                        personalDetails.linkedin && jsxs("div", {
+                          className: "flex items-center break-all",
+                          children: [
+                            jsx("img", {
+                              src: "assets/images/linkedin.png", alt: "LinkedIn",
+                              className: "w-4 h-4 mr-3 flex-shrink-0 modern-creative-contact-icon"
+                            }),
+                            jsx("a", {
+                              href: personalDetails.linkedin, target: "_blank", rel: "noopener noreferrer",
+                              className: "hover:text-white transition-colors", style: { color: "inherit" },
+                              children: personalDetails.linkedin
+                            })
+                          ]
+                        }),
+                        personalDetails.github && jsxs("div", {
+                          className: "flex items-center break-all",
+                          children: [
+                            jsx("img", {
+                              src: "assets/images/github.png", alt: "GitHub",
+                              className: "w-4 h-4 mr-3 flex-shrink-0 modern-creative-contact-icon"
+                            }),
+                            jsx("a", {
+                              href: personalDetails.github, target: "_blank", rel: "noopener noreferrer",
+                              className: "hover:text-white transition-colors", style: { color: "inherit" },
+                              children: personalDetails.github
+                            })
+                          ]
+                        })
+                      ]
+                    })
+                  ]
+                }),
+                education && education.length > 0 && jsxs("div", {
+                  className: "mb-6",
+                  children: [
+                    jsx("h3", {
+                      className: "text-sm font-bold uppercase tracking-widest border-b pb-2 mb-3",
+                      style: { borderColor: colors.border, color: colors.textSecondary },
+                      children: "Education"
+                    }),
+                    jsx("div", {
+                      className: "space-y-4",
+                      children: education.map((item, idx) => jsxs("div", {
+                        children: [
+                          jsx("h4", { className: "font-bold text-sm text-white", children: item.degree }),
+                          jsx("p", { className: "text-xs mb-1", style: { color: colors.textPrimary }, children: item.institution }),
+                          jsxs("div", {
+                            className: "flex justify-between text-xs",
+                            style: { color: colors.textSecondary },
+                            children: [
+                              jsx("span", { children: item.year }),
+                              item.grade && jsx("span", { children: item.grade })
+                            ]
+                          })
+                        ]
+                      }, idx))
+                    })
+                  ]
+                }),
+                skills && skills.length > 0 && jsxs("div", {
+                  className: "mb-6",
+                  children: [
+                    jsx("h3", {
+                      className: "text-sm font-bold uppercase tracking-widest border-b pb-2 mb-3",
+                      style: { borderColor: colors.border, color: colors.textSecondary },
+                      children: "Skills"
+                    }),
+                    jsx("div", {
+                      className: "flex flex-wrap gap-2",
+                      children: skills.map((item, keyIdx) => item.skills.split(",").map((sk, skIdx) => sk.trim() && jsx("span", {
+                        className: "inline-flex items-center justify-center px-2 py-1 text-xs rounded-md leading-none h-6 modern-creative-skill-tag",
+                        style: { backgroundColor: colors.tagBg, color: colors.textPrimary },
+                        children: sk.trim()
+                      }, `${keyIdx}-${skIdx}`)))
+                    })
+                  ]
+                }),
+                languages && languages.length > 0 && jsxs("div", {
+                  className: "mb-6",
+                  children: [
+                    jsx("h3", {
+                      className: "text-sm font-bold uppercase tracking-widest border-b pb-2 mb-3",
+                      style: { borderColor: colors.border, color: colors.textSecondary },
+                      children: "Languages"
+                    }),
+                    jsx("div", {
+                      className: "space-y-2",
+                      children: languages.map((item, idx) => jsxs("div", {
+                        className: "flex justify-between text-sm",
+                        children: [
+                          jsx("span", { style: { color: colors.textPrimary }, children: item.language }),
+                          jsx("span", { className: "text-xs", style: { color: colors.textSecondary }, children: item.proficiency })
+                        ]
+                      }, idx))
+                    })
+                  ]
+                })
+              ]
+            }),
+
+            /* Right main column (65%) */
+            jsxs("div", {
+              className: "w-[65%] px-6 pb-6 flex flex-col bg-white modern-creative-right-column pt-10",
+              children: [
+                jsxs("div", {
+                  className: "mb-6",
+                  children: [
+                    jsx("h1", { className: "text-4xl font-black tracking-tight uppercase mb-2", style: { color: themeColor }, children: personalDetails.name }),
+                    jsx("p", { className: "text-xl text-slate-800 font-medium", children: personalDetails.degree })
+                  ]
+                }),
+                summary && jsxs("div", {
+                  className: "mb-5",
+                  children: [
+                    jsxs("div", {
+                      className: "flex items-center mb-3",
+                      children: [
+                        jsx("div", { className: "w-1 h-8 mr-3 flex-shrink-0 modern-creative-section-border", style: { backgroundColor: themeColor, position: "relative", top: "3px" } }),
+                        jsx("h2", { className: "text-lg font-bold uppercase text-slate-800", children: "Professional Summary" })
+                      ]
+                    }),
+                    jsx("p", { className: "text-sm text-slate-600 leading-relaxed", children: summary })
+                  ]
+                }),
+                internships && internships.length > 0 && jsxs("div", {
+                  className: "mb-5",
+                  children: [
+                    jsxs("div", {
+                      className: "flex items-center mb-3",
+                      children: [
+                        jsx("div", { className: "w-1 h-8 mr-3 flex-shrink-0 modern-creative-section-border", style: { backgroundColor: themeColor, position: "relative", top: "3px" } }),
+                        jsx("h2", { className: "text-lg font-bold uppercase text-slate-800", children: "Experience" })
+                      ]
+                    }),
+                    jsx("div", {
+                      className: "space-y-5",
+                      children: internships.map((item, idx) => jsxs("div", {
+                        children: [
+                          jsxs("div", {
+                            className: "flex justify-between items-baseline mb-1",
+                            children: [
+                              jsx("h3", { className: "text-base font-bold", style: { color: themeColor }, children: item.title }),
+                              jsx("span", { className: "inline-flex items-center justify-center text-xs font-semibold text-slate-500 bg-slate-100 px-2 py-1 rounded leading-none h-6 modern-creative-date", children: item.date })
+                            ]
+                          }),
+                          jsx("div", { className: "text-sm text-slate-600 leading-relaxed", dangerouslySetInnerHTML: { __html: formatBold(item.description) } })
+                        ]
+                      }, idx))
+                    })
+                  ]
+                }),
+                projects && projects.length > 0 && jsxs("div", {
+                  className: "mb-5",
+                  children: [
+                    jsxs("div", {
+                      className: "flex items-center mb-3",
+                      children: [
+                        jsx("div", { className: "w-1 h-8 mr-3 flex-shrink-0 modern-creative-section-border", style: { backgroundColor: themeColor, position: "relative", top: "3px" } }),
+                        jsx("h2", { className: "text-lg font-bold uppercase text-slate-800", children: "Projects" })
+                      ]
+                    }),
+                    jsx("div", {
+                      className: "space-y-5",
+                      children: projects.map((item, idx) => jsxs("div", {
+                        children: [
+                          jsxs("div", {
+                            className: "flex justify-between items-baseline mb-1",
+                            children: [
+                              jsx("h3", { className: "text-base font-bold", style: { color: themeColor }, children: item.name }),
+                              jsx("span", { className: "inline-flex items-center justify-center text-xs font-semibold text-slate-500 bg-slate-100 px-2 py-1 rounded leading-none h-6 modern-creative-date", children: item.date })
+                            ]
+                          }),
+                          jsx("div", {
+                            className: "text-sm text-slate-600 leading-relaxed",
+                            children: item.description.includes("\n") ? jsx("div", {
+                              className: "space-y-1",
+                              children: item.description.split("\n").filter(line => line.trim()).map((line, lineIdx) => jsx("div", { dangerouslySetInnerHTML: { __html: line.replace(/<b>/g, "<strong>").replace(/<\/b>/g, "</strong>") } }, lineIdx))
+                            }) : jsx("div", { dangerouslySetInnerHTML: { __html: formatBold(item.description) } })
+                          })
+                        ]
+                      }, idx))
+                    })
+                  ]
+                }),
+                achievements && achievements.length > 0 && jsxs("div", {
+                  className: "mb-5",
+                  children: [
+                    jsxs("div", {
+                      className: "flex items-center mb-3",
+                      children: [
+                        jsx("div", { className: "w-1 h-8 mr-3 flex-shrink-0 modern-creative-section-border", style: { backgroundColor: themeColor, position: "relative", top: "3px" } }),
+                        jsx("h2", { className: "text-lg font-bold uppercase text-slate-800", children: "Achievements" })
+                      ]
+                    }),
+                    jsx("div", {
+                      className: "space-y-2 text-sm text-slate-600",
+                      children: achievements.map((item, idx) => jsx("div", { dangerouslySetInnerHTML: { __html: item.description } }, idx))
+                    })
+                  ]
+                }),
+                activities && activities.some(item => item.description.trim() !== "") && jsxs("div", {
+                  className: "mb-5",
+                  children: [
+                    jsxs("div", {
+                      className: "flex items-center mb-3",
+                      children: [
+                        jsx("div", { className: "w-1 h-8 mr-3 flex-shrink-0 modern-creative-section-border", style: { backgroundColor: themeColor, position: "relative", top: "3px" } }),
+                        jsx("h2", { className: "text-lg font-bold uppercase text-slate-800", children: "Activities" })
+                      ]
+                    }),
+                    jsx("div", {
+                      className: "space-y-3",
+                      children: activities.map((item, idx) => item.description.trim() !== "" && jsxs("div", {
+                        children: [
+                          jsx("h3", { className: "text-sm font-bold text-slate-700 mb-1", children: item.title }),
+                          jsx("div", { className: "text-sm text-slate-600", dangerouslySetInnerHTML: { __html: formatBold(item.description) } })
+                        ]
+                      }, idx))
+                    })
+                  ]
+                })
+              ]
+            })
+          ]
+        });
+      });
+
+      const ModernCreativePreview = forwardRef(({ resumeData, themeColor, onPhotoUploadClick, isDownloading }, ref) => {
+        const pagesContainerRef = useRef(null);
+
+        useImperativeHandle(ref, () => ({
+          getHtmlForPdf: () => pagesContainerRef.current
+        }));
+
+        return jsx("div", {
+          ref: pagesContainerRef,
+          className: "flex flex-col items-center gap-8",
+          children: jsxs("div", {
+            className: "relative",
+            children: [
+              jsx("div", {
+                className: "resume-page-container bg-white shadow-lg w-[210mm] min-h-[297mm] flex overflow-hidden",
+                children: jsx(ModernCreativeResumeLayout, { resumeData: resumeData, themeColor: themeColor })
+              }),
+              jsx("button", {
+                onClick: onPhotoUploadClick,
+                className: `absolute left-[calc(17.5%-5rem)] h-40 w-40 rounded-full bg-black flex items-center justify-center text-white cursor-pointer group transition-opacity duration-300 ${
+                  isPlaceholderImage(resumeData.personalDetails.photo) ? "bg-opacity-50 opacity-100" : "bg-opacity-40 opacity-0 group-hover:opacity-100"
+                }`,
+                style: { marginLeft: "0", top: isDownloading ? "26px" : "32px" },
+                "aria-label": "Upload new photo",
+                children: jsx("svg", {
+                  xmlns: "http://www.w3.org/2000/svg", className: "h-8 w-8 mx-auto", fill: "none", viewBox: "0 0 24 24", stroke: "currentColor", strokeWidth: 2,
+                  children: jsx("path", { strokeLinecap: "round", strokeLinejoin: "round", d: "M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" })
+                })
+              })
+            ]
+          })
+        });
+      });
+
+
+      /* ============================================================
+       *  RESUME FORMAT: CORPORATE MINIMAL
+       *  Editor sidebar layout, Raw preview layout, and PDF preview pagination container.
+       * ============================================================ */
+      const CorporateMinimalEditor = ({ resumeData, setResumeData }) => {
+        const [isEnhancing, setIsEnhancing] = useState(null);
+
+        const handlePersonalDetailsChange = (e) => {
+          const { name, value } = e.target;
+          setResumeData(prev => ({
+            ...prev,
+            personalDetails: { ...prev.personalDetails, [name]: value }
+          }));
+        };
+
+        const handleListItemChange = (section, itemId, e) => {
+          const { name, value } = e.target;
+          setResumeData(prev => {
+            const list = prev[section].map(item => item.id === itemId ? { ...item, [name]: value } : item);
+            return { ...prev, [section]: list };
+          });
+        };
+
+        const handleAddListItem = (section, itemTemplate) => {
+          setResumeData(prev => ({
+            ...prev,
+            [section]: [...prev[section], itemTemplate]
+          }));
+        };
+
+        const handleRemoveListItem = (section, itemId) => {
+          setResumeData(prev => ({
+            ...prev,
+            [section]: prev[section].filter(item => item.id !== itemId)
+          }));
+        };
+
+        const handleEnhanceDescription = async (section, itemId, currentText) => {
+          if (!currentText.trim()) {
+            alert("Please enter a description to enhance.");
+            return;
+          }
+          setIsEnhancing(itemId);
+          try {
+            const response = await fetch("/.netlify/functions/gemini", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                prompt: `Rewrite and enhance the following professional experience description for a resume, making it more impactful, professional, and concise. Focus on action verbs and quantifiable results where possible based on the text. Do not add any new information. Keep the response as a single paragraph. Original description: "${currentText}"`
+              })
+            });
+            if (!response.ok) throw new Error("AI Server Error");
+            const data = await response.json();
+            const enhancedText = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
+            if (enhancedText) {
+              setResumeData(prev => {
+                const list = prev[section].map(item => item.id === itemId ? { ...item, description: enhancedText } : item);
+                return { ...prev, [section]: list };
+              });
+            }
+          } catch (e) {
+            console.error("AI enhancement failed:", e);
+            alert("Failed to enhance the description. Please try again.");
+          } finally {
+            setIsEnhancing(null);
+          }
+        };
+
+        return jsxs("div", {
+          className: "p-4 bg-white relative",
+          children: [
+            jsx("h1", { className: "text-3xl font-bold text-center mb-8 text-gray-800", children: "Resume Editor" }),
+
+            /* --- Personal Details --- */
+            jsxs(CorporateAccordion, {
+              title: "Personal Details",
+              defaultOpen: true,
+              icon: jsx("svg", {
+                xmlns: "http://www.w3.org/2000/svg", className: "h-5 w-5", fill: "none", viewBox: "0 0 24 24", stroke: "currentColor",
+                children: jsx("path", { strokeLinecap: "round", strokeLinejoin: "round", strokeWidth: 2, d: "M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2M15 11h3m-3 4h2" })
+              }),
+              children: [
+                jsx(CorporateTextInput, { label: "Full Name", name: "name", value: resumeData.personalDetails.name, onChange: handlePersonalDetailsChange }),
+                jsx(CorporateTextInput, { label: "Email", name: "email", value: resumeData.personalDetails.email, onChange: handlePersonalDetailsChange }),
+                jsx(CorporateTextInput, { label: "Contact", name: "contact", value: resumeData.personalDetails.contact, onChange: handlePersonalDetailsChange })
+              ]
+            }),
+
+            /* --- Education --- */
+            jsxs(CorporateAccordion, {
+              title: "Education",
+              icon: jsxs("svg", {
+                xmlns: "http://www.w3.org/2000/svg", className: "h-5 w-5", fill: "none", viewBox: "0 0 24 24", stroke: "currentColor",
+                children: [
+                  jsx("path", { d: "M12 14l9-5-9-5-9 5 9 5z" }),
+                  jsx("path", { d: "M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14zm-4 6v-7.5l4-2.222" })
+                ]
+              }),
+              children: [
+                resumeData.education.map((item) => jsxs("div", {
+                  className: "border-b border-gray-100 pb-4 mb-4 last:border-0 last:pb-0 last:mb-0",
+                  children: [
+                    jsx(CorporateTextInput, { label: "Institution", name: "institution", value: item.institution, onChange: e => handleListItemChange("education", item.id, e) }),
+                    jsx(CorporateTextInput, { label: "Degree", name: "degree", value: item.degree, onChange: e => handleListItemChange("education", item.id, e) }),
+                    jsx(CorporateTextInput, { label: "Date / Year", name: "year", value: item.year, onChange: e => handleListItemChange("education", item.id, e) }),
+                    jsx(CorporateTextInput, { label: "Grade / Aggregate", name: "grade", value: item.grade, onChange: e => handleListItemChange("education", item.id, e) }),
+                    jsx("div", {
+                      className: "flex justify-end",
+                      children: jsx("button", {
+                        onClick: () => handleRemoveListItem("education", item.id),
+                        className: "px-3 py-1.5 bg-red-500 text-white rounded-md hover:bg-red-600 text-xs font-semibold shadow-sm transition-colors",
+                        children: "Remove"
+                      })
+                    })
+                  ]
+                }, item.id)),
+                jsx("button", {
+                  onClick: () => handleAddListItem("education", { id: generateUniqueId(), year: "", degree: "", institution: "", grade: "" }),
+                  className: "mt-4 w-full py-2 border-2 border-dashed border-emerald-200 text-emerald-600 rounded-lg hover:bg-emerald-50 hover:border-emerald-300 transition-colors font-semibold text-sm",
+                  children: "+ Add Education"
+                })
+              ]
+            }),
+
+            /* --- Links --- */
+            jsxs(CorporateAccordion, {
+              title: "Links",
+              icon: jsx("svg", {
+                xmlns: "http://www.w3.org/2000/svg", className: "h-5 w-5", fill: "none", viewBox: "0 0 24 24", stroke: "currentColor",
+                children: jsx("path", { strokeLinecap: "round", strokeLinejoin: "round", strokeWidth: 2, d: "M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" })
+              }),
+              children: [
+                resumeData.webLinks.map((item) => jsxs("div", {
+                  className: "border-b border-gray-100 pb-4 mb-4 last:border-0 last:pb-0 last:mb-0",
+                  children: [
+                    jsx(CorporateTextInput, { label: "Name (e.g. Github)", name: "name", value: item.name, onChange: e => handleListItemChange("webLinks", item.id, e) }),
+                    jsx(CorporateTextInput, { label: "URL / Handle", name: "url", value: item.url, onChange: e => handleListItemChange("webLinks", item.id, e) }),
+                    jsx("div", {
+                      className: "flex justify-end",
+                      children: jsx("button", {
+                        onClick: () => handleRemoveListItem("webLinks", item.id),
+                        className: "px-3 py-1.5 bg-red-500 text-white rounded-md hover:bg-red-600 text-xs font-semibold shadow-sm transition-colors",
+                        children: "Remove"
+                      })
+                    })
+                  ]
+                }, item.id)),
+                jsx("button", {
+                  onClick: () => handleAddListItem("webLinks", { id: generateUniqueId(), name: "", url: "" }),
+                  className: "mt-4 w-full py-2 border-2 border-dashed border-emerald-200 text-emerald-600 rounded-lg hover:bg-emerald-50 hover:border-emerald-300 transition-colors font-semibold text-sm",
+                  children: "+ Add Link"
+                })
+              ]
+            }),
+
+            /* --- Coursework --- */
+            jsxs(CorporateAccordion, {
+              title: "Coursework",
+              icon: jsx("svg", {
+                xmlns: "http://www.w3.org/2000/svg", className: "h-5 w-5", fill: "none", viewBox: "0 0 24 24", stroke: "currentColor",
+                children: jsx("path", { strokeLinecap: "round", strokeLinejoin: "round", strokeWidth: 2, d: "M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" })
+              }),
+              children: [
+                resumeData.coursework.map((item) => jsxs("div", {
+                  className: "border-b border-gray-100 pb-4 mb-4 last:border-0 last:pb-0 last:mb-0",
+                  children: [
+                    jsx(CorporateTextInput, { label: "Category (e.g. Undergraduate)", name: "category", value: item.category, onChange: e => handleListItemChange("coursework", item.id, e) }),
+                    jsx(CorporateTextArea, { label: "Subjects (One per line)", name: "subjects", rows: 4, value: item.subjects, onChange: e => handleListItemChange("coursework", item.id, e) }),
+                    jsx("div", {
+                      className: "flex justify-end",
+                      children: jsx("button", {
+                        onClick: () => handleRemoveListItem("coursework", item.id),
+                        className: "px-3 py-1.5 bg-red-500 text-white rounded-md hover:bg-red-600 text-xs font-semibold shadow-sm transition-colors",
+                        children: "Remove"
+                      })
+                    })
+                  ]
+                }, item.id)),
+                jsx("button", {
+                  onClick: () => handleAddListItem("coursework", { id: generateUniqueId(), category: "", subjects: "" }),
+                  className: "mt-4 w-full py-2 border-2 border-dashed border-emerald-200 text-emerald-600 rounded-lg hover:bg-emerald-50 hover:border-emerald-300 transition-colors font-semibold text-sm",
+                  children: "+ Add Coursework"
+                })
+              ]
+            }),
+
+            /* --- Experience --- */
+            jsxs(CorporateAccordion, {
+              title: "Internship Experience",
+              icon: jsx("svg", {
+                xmlns: "http://www.w3.org/2000/svg", className: "h-5 w-5", fill: "none", viewBox: "0 0 24 24", stroke: "currentColor",
+                children: jsx("path", { strokeLinecap: "round", strokeLinejoin: "round", strokeWidth: 2, d: "M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" })
+              }),
+              children: [
+                resumeData.internships.map((item) => jsxs("div", {
+                  className: "border-b border-gray-100 pb-4 mb-4 last:border-0 last:pb-0 last:mb-0",
+                  children: [
+                    jsx(CorporateTextInput, { label: "Role Title", name: "title", value: item.title, onChange: e => handleListItemChange("internships", item.id, e) }),
+                    jsx(CorporateTextInput, { label: "Date", name: "date", value: item.date, onChange: e => handleListItemChange("internships", item.id, e) }),
+                    jsx(CorporateTextArea, { label: "Description", name: "description", rows: 4, value: item.description, onChange: e => handleListItemChange("internships", item.id, e) }),
+                    jsx("p", { className: "text-xs text-gray-400 -mt-2 mb-2 ml-1", children: "Use <b>text</b> to make text bold." }),
+                    jsxs("div", {
+                      className: "flex items-center justify-between mt-3",
+                      children: [
+                        jsx("button", {
+                          disabled: isEnhancing === item.id,
+                          onClick: () => handleEnhanceDescription("internships", item.id, item.description),
+                          className: `px-3 py-1.5 text-white rounded text-xs font-semibold shadow-sm transition-colors ${isEnhancing === item.id ? 'bg-purple-400 cursor-wait' : 'bg-purple-600 hover:bg-purple-700'}`,
+                          children: isEnhancing === item.id ? "Enhancing..." : "✨ AI Enhance"
+                        }),
+                        jsx("button", {
+                          onClick: () => handleRemoveListItem("internships", item.id),
+                          className: "px-3 py-1.5 bg-red-500 text-white rounded-md hover:bg-red-600 text-xs font-semibold shadow-sm transition-colors",
+                          children: "Remove"
+                        })
+                      ]
+                    })
+                  ]
+                }, item.id)),
+                jsx("button", {
+                  onClick: () => handleAddListItem("internships", { id: generateUniqueId(), title: "", date: "", description: "" }),
+                  className: "mt-4 w-full py-2 border-2 border-dashed border-emerald-200 text-emerald-600 rounded-lg hover:bg-emerald-50 hover:border-emerald-300 transition-colors font-semibold text-sm",
+                  children: "+ Add Internship"
+                })
+              ]
+            }),
+
+            /* --- Projects --- */
+            jsxs(CorporateAccordion, {
+              title: "Projects",
+              icon: jsx("svg", {
+                xmlns: "http://www.w3.org/2000/svg", className: "h-5 w-5", fill: "none", viewBox: "0 0 24 24", stroke: "currentColor",
+                children: jsx("path", { strokeLinecap: "round", strokeLinejoin: "round", strokeWidth: 2, d: "M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" })
+              }),
+              children: [
+                resumeData.projects.map((item) => jsxs("div", {
+                  className: "border-b border-gray-100 pb-4 mb-4 last:border-0 last:pb-0 last:mb-0",
+                  children: [
+                    jsx(CorporateTextInput, { label: "Project Name | Tech Stack", name: "name", value: item.name, onChange: e => handleListItemChange("projects", item.id, e) }),
+                    jsx(CorporateTextInput, { label: "Date", name: "date", value: item.date, onChange: e => handleListItemChange("projects", item.id, e) }),
+                    jsx(CorporateTextArea, { label: "Description", name: "description", rows: 4, value: item.description, onChange: e => handleListItemChange("projects", item.id, e) }),
+                    jsx("p", { className: "text-xs text-gray-400 -mt-2 mb-2 ml-1", children: "Use <b>text</b> to make text bold." }),
+                    jsxs("div", {
+                      className: "flex items-center justify-between mt-3",
+                      children: [
+                        jsx("button", {
+                          disabled: isEnhancing === item.id,
+                          onClick: () => handleEnhanceDescription("projects", item.id, item.description),
+                          className: `px-3 py-1.5 text-white rounded text-xs font-semibold shadow-sm transition-colors ${isEnhancing === item.id ? 'bg-purple-400 cursor-wait' : 'bg-purple-600 hover:bg-purple-700'}`,
+                          children: isEnhancing === item.id ? "Enhancing..." : "✨ AI Enhance"
+                        }),
+                        jsx("button", {
+                          onClick: () => handleRemoveListItem("projects", item.id),
+                          className: "px-3 py-1.5 bg-red-500 text-white rounded-md hover:bg-red-600 text-xs font-semibold shadow-sm transition-colors",
+                          children: "Remove"
+                        })
+                      ]
+                    })
+                  ]
+                }, item.id)),
+                jsx("button", {
+                  onClick: () => handleAddListItem("projects", { id: generateUniqueId(), name: "", date: "", description: "" }),
+                  className: "mt-4 w-full py-2 border-2 border-dashed border-emerald-200 text-emerald-600 rounded-lg hover:bg-emerald-50 hover:border-emerald-300 transition-colors font-semibold text-sm",
+                  children: "+ Add Project"
+                })
+              ]
+            }),
+
+            /* --- Achievements & Interests --- */
+            jsxs(CorporateAccordion, {
+              title: "Achievements and Interests",
+              icon: jsx("svg", {
+                xmlns: "http://www.w3.org/2000/svg", className: "h-5 w-5", fill: "none", viewBox: "0 0 24 24", stroke: "currentColor",
+                children: jsx("path", { strokeLinecap: "round", strokeLinejoin: "round", strokeWidth: 2, d: "M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" })
+              }),
+              children: [
+                resumeData.achievements.map((item) => jsxs("div", {
+                  className: "border-b border-gray-100 pb-4 mb-4 last:border-0 last:pb-0 last:mb-0",
+                  children: [
+                    jsx(CorporateTextArea, { label: "Description", name: "description", value: item.description, onChange: e => handleListItemChange("achievements", item.id, e) }),
+                    jsx("p", { className: "text-xs text-gray-400 -mt-2 mb-2 ml-1", children: "Use <b>text</b> to make text bold." }),
+                    jsx("div", {
+                      className: "flex justify-end",
+                      children: jsx("button", {
+                        onClick: () => handleRemoveListItem("achievements", item.id),
+                        className: "px-3 py-1.5 bg-red-500 text-white rounded-md hover:bg-red-600 text-xs font-semibold shadow-sm transition-colors",
+                        children: "Remove"
+                      })
+                    })
+                  ]
+                }, item.id)),
+                jsx("button", {
+                  onClick: () => handleAddListItem("achievements", { id: generateUniqueId(), description: "" }),
+                  className: "mt-4 w-full py-2 border-2 border-dashed border-emerald-200 text-emerald-600 rounded-lg hover:bg-emerald-50 hover:border-emerald-300 transition-colors font-semibold text-sm",
+                  children: "+ Add Achievement"
+                })
+              ]
+            }),
+
+            /* --- Skills --- */
+            jsxs(CorporateAccordion, {
+              title: "Skills",
+              icon: jsx("svg", {
+                xmlns: "http://www.w3.org/2000/svg", className: "h-5 w-5", fill: "none", viewBox: "0 0 24 24", stroke: "currentColor",
+                children: jsx("path", { strokeLinecap: "round", strokeLinejoin: "round", strokeWidth: 2, d: "M13 10V3L4 14h7v7l9-11h-7z" })
+              }),
+              children: [
+                resumeData.skills.map((item) => jsxs("div", {
+                  className: "border-b border-gray-100 pb-4 mb-4 last:border-0 last:pb-0 last:mb-0",
+                  children: [
+                    jsx(CorporateTextInput, { label: "Category (e.g. LANGUAGES)", name: "category", value: item.category, onChange: e => handleListItemChange("skills", item.id, e) }),
+                    jsx(CorporateTextArea, { label: "Details", name: "skills", value: item.skills, onChange: e => handleListItemChange("skills", item.id, e) }),
+                    jsx("div", {
+                      className: "flex justify-end",
+                      children: jsx("button", {
+                        onClick: () => handleRemoveListItem("skills", item.id),
+                        className: "px-3 py-1.5 bg-red-500 text-white rounded-md hover:bg-red-600 text-xs font-semibold shadow-sm transition-colors",
+                        children: "Remove"
+                      })
+                    })
+                  ]
+                }, item.id)),
+                jsx("button", {
+                  onClick: () => handleAddListItem("skills", { id: generateUniqueId(), category: "", skills: "" }),
+                  className: "mt-4 w-full py-2 border-2 border-dashed border-emerald-200 text-emerald-600 rounded-lg hover:bg-emerald-50 hover:border-emerald-300 transition-colors font-semibold text-sm",
+                  children: "+ Add Skill"
+                })
+              ]
+            }),
+
+            /* --- Positions of Responsibility --- */
+            jsxs(CorporateAccordion, {
+              title: "Positions of Responsibility",
+              icon: jsx("svg", {
+                xmlns: "http://www.w3.org/2000/svg", className: "h-5 w-5", fill: "none", viewBox: "0 0 24 24", stroke: "currentColor",
+                children: jsx("path", { strokeLinecap: "round", strokeLinejoin: "round", strokeWidth: 2, d: "M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" })
+              }),
+              children: [
+                resumeData.positions.map((item) => jsxs("div", {
+                  className: "border-b border-gray-100 pb-4 mb-4 last:border-0 last:pb-0 last:mb-0",
+                  children: [
+                    jsx(CorporateTextArea, { label: "Description", name: "description", value: item.description, onChange: e => handleListItemChange("positions", item.id, e) }),
+                    jsx("p", { className: "text-xs text-gray-400 -mt-2 mb-2 ml-1", children: "Use <b>text</b> to make text bold." }),
+                    jsx("div", {
+                      className: "flex justify-end",
+                      children: jsx("button", {
+                        onClick: () => handleRemoveListItem("positions", item.id),
+                        className: "px-3 py-1.5 bg-red-500 text-white rounded-md hover:bg-red-600 text-xs font-semibold shadow-sm transition-colors",
+                        children: "Remove"
+                      })
+                    })
+                  ]
+                }, item.id)),
+                jsx("button", {
+                  onClick: () => handleAddListItem("positions", { id: generateUniqueId(), title: "", date: "", description: "" }),
+                  className: "mt-4 w-full py-2 border-2 border-dashed border-emerald-200 text-emerald-600 rounded-lg hover:bg-emerald-50 hover:border-emerald-300 transition-colors font-semibold text-sm",
+                  children: "+ Add Position"
+                })
+              ]
+            }),
+
+            /* --- Extracurriculars --- */
+            jsxs(CorporateAccordion, {
+              title: "Extracurricular Activities",
+              icon: jsx("svg", {
+                xmlns: "http://www.w3.org/2000/svg", className: "h-5 w-5", fill: "none", viewBox: "0 0 24 24", stroke: "currentColor",
+                children: jsx("path", { strokeLinecap: "round", strokeLinejoin: "round", strokeWidth: 2, d: "M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" })
+              }),
+              children: [
+                resumeData.activities.map((item) => item.title === "EXTRACURRICULAR ACTIVITIES" && jsxs("div", {
+                  children: [
+                    jsx(CorporateTextArea, { label: "Description (One per line)", name: "description", rows: 5, value: item.description, onChange: e => handleListItemChange("activities", item.id, e) }),
+                    jsx("p", { className: "text-xs text-gray-400 -mt-2 mb-2 ml-1", children: "Use <b>text</b> to make text bold." })
+                  ]
+                }, item.id)),
+                !resumeData.activities.some(item => item.title === "EXTRACURRICULAR ACTIVITIES") && jsx("button", {
+                  onClick: () => handleAddListItem("activities", { id: generateUniqueId(), title: "EXTRACURRICULAR ACTIVITIES", description: "" }),
+                  className: "mt-4 w-full py-2 border-2 border-dashed border-emerald-200 text-emerald-600 rounded-lg hover:bg-emerald-50 hover:border-emerald-300 transition-colors font-semibold text-sm",
+                  children: "+ Add Extracurricular Section"
+                })
+              ]
+            })
+          ]
+        });
+      };
+
+      const CorporateMinimalBulletItem = ({ children }) => jsx("li", {
+        className: "relative pl-5 mb-1 last:mb-0 before:content-[''] before:absolute before:left-0 before:top-[0.55em] before:w-1.5 before:h-1.5 before:bg-gray-600 before:rounded-full leading-relaxed corporate-minimal-list-item",
+        children
+      });
+
+      const CorporateMinimalResumeLayout = forwardRef(({ resumeData }, ref) => {
+        const { personalDetails, education, projects, internships, achievements, skills, positions, activities, webLinks, coursework } = resumeData;
+        const formatBold = text => text ? text.replace(/<b>/g, "<strong>").replace(/<\/b>/g, "</strong>").replace(/\n/g, "<br />") : "";
+
+        const SectionHeader = ({ title }) => jsx("h3", { className: "text-lg font-bold tracking-widest text-gray-800 uppercase mb-1", children: title });
+
+        return jsxs("div", {
+          ref,
+          className: "bg-white min-h-[297mm] w-full px-8 pt-5 pb-8 text-gray-800",
+          style: { fontFamily: "Lato, sans-serif" },
+          children: [
+            jsxs("header", {
+              className: "text-center mb-2",
+              children: [
+                jsx("h1", { className: "text-4xl font-light text-gray-900 mb-3 tracking-wide", children: personalDetails.name }),
+                jsxs("div", {
+                  className: "text-sm text-gray-600 flex justify-center items-center gap-2 mt-1 font-medium",
+                  children: [
+                    personalDetails.email && jsx("span", { children: personalDetails.email }),
+                    personalDetails.email && personalDetails.contact && jsx("span", { className: "text-gray-400", children: "|" }),
+                    personalDetails.contact && jsx("span", { children: personalDetails.contact })
+                  ]
+                })
+              ]
+            }),
+            jsx("hr", { className: "border-t border-gray-300 mb-5 -mx-8" }),
+            jsxs("div", {
+              className: "flex flex-row gap-6",
+              children: [
+                /* Left Column */
+                jsxs("div", {
+                  className: "w-[35%] flex-shrink-0 flex flex-col gap-5",
+                  children: [
+                    education && education.length > 0 && jsxs("section", {
+                      children: [
+                        jsx(SectionHeader, { title: "Education" }),
+                        jsx("div", {
+                          className: "space-y-4",
+                          children: education.map(item => jsxs("div", {
+                            children: [
+                              jsx("div", { className: "font-bold text-base uppercase text-gray-900", children: item.institution }),
+                              jsx("div", { className: "font-bold text-sm text-gray-700", children: item.degree }),
+                              jsx("div", { className: "text-sm text-gray-600 italic", children: item.year }),
+                              jsx("div", { className: "text-sm text-gray-600", children: item.grade })
+                            ]
+                          }, item.id))
+                        })
+                      ]
+                    }),
+                    webLinks && webLinks.length > 0 && jsxs("section", {
+                      children: [
+                        jsx(SectionHeader, { title: "Links" }),
+                        jsx("div", {
+                          className: "space-y-1 text-sm",
+                          children: webLinks.map(item => jsxs("div", {
+                            children: [
+                              jsxs("span", { className: "text-gray-600", children: [item.name, "://"] }),
+                              " ",
+                              jsx("span", { className: "font-medium text-gray-700", children: item.url })
+                            ]
+                          }, item.id))
+                        })
+                      ]
+                    }),
+                    coursework && coursework.length > 0 && jsxs("section", {
+                      children: [
+                        jsx(SectionHeader, { title: "Coursework" }),
+                        jsx("div", {
+                          className: "space-y-3",
+                          children: coursework.map(item => jsxs("div", {
+                            children: [
+                              jsx("div", { className: "font-bold text-sm uppercase mb-1 text-gray-800", children: item.category }),
+                              jsx("div", {
+                                className: "text-sm text-gray-700 leading-relaxed",
+                                children: item.subjects.split('\n').map((line, idx) => jsx("div", { children: line }, idx))
+                              })
+                            ]
+                          }, item.id))
+                        })
+                      ]
+                    }),
+                    skills && skills.length > 0 && jsxs("section", {
+                      children: [
+                        jsx(SectionHeader, { title: "Skills" }),
+                        jsx("div", {
+                          className: "space-y-3",
+                          children: skills.map(item => jsxs("div", {
+                            children: [
+                              jsx("div", { className: "font-bold text-sm uppercase mb-1 text-gray-800", children: item.category }),
+                              jsx("div", { className: "text-sm text-gray-700 whitespace-pre-line leading-relaxed", children: item.skills })
+                            ]
+                          }, item.id))
+                        })
+                      ]
+                    })
+                  ]
+                }),
+
+                /* Right Column */
+                jsxs("div", {
+                  className: "flex-grow flex flex-col gap-5",
+                  children: [
+                    internships && internships.length > 0 && jsxs("section", {
+                      children: [
+                        jsx(SectionHeader, { title: "Internship Experience" }),
+                        jsx("div", {
+                          className: "space-y-4",
+                          children: internships.map(item => jsxs("div", {
+                            children: [
+                              jsxs("div", {
+                                className: "flex justify-between items-baseline mb-1",
+                                children: [
+                                  jsx("div", { className: "font-bold text-base uppercase text-gray-900", children: item.title }),
+                                  jsx("div", { className: "text-sm text-gray-500 italic font-medium", children: item.date })
+                                ]
+                              }),
+                              jsx("div", { className: "text-sm text-gray-700 leading-relaxed", dangerouslySetInnerHTML: { __html: formatBold(item.description) } })
+                            ]
+                          }, item.id))
+                        })
+                      ]
+                    }),
+                    projects && projects.length > 0 && jsxs("section", {
+                      children: [
+                        jsx(SectionHeader, { title: "Projects" }),
+                        jsx("div", {
+                          className: "space-y-4",
+                          children: projects.map(item => jsxs("div", {
+                            children: [
+                              jsxs("div", {
+                                className: "flex justify-between items-baseline mb-1",
+                                children: [
+                                  jsx("div", { className: "font-bold text-base uppercase text-gray-900", children: item.name }),
+                                  jsx("div", { className: "text-sm text-gray-500 italic font-medium", children: item.date })
+                                ]
+                              }),
+                              jsx("div", { className: "text-sm text-gray-700 leading-relaxed", dangerouslySetInnerHTML: { __html: formatBold(item.description) } })
+                            ]
+                          }, item.id))
+                        })
+                      ]
+                    }),
+                    achievements && achievements.length > 0 && jsxs("section", {
+                      children: [
+                        jsx(SectionHeader, { title: "Achievements and Interests" }),
+                        jsx("ul", {
+                          className: "text-sm text-gray-700",
+                          children: achievements.map(item => jsx(CorporateMinimalBulletItem, { children: jsx("span", { dangerouslySetInnerHTML: { __html: item.description } }) }, item.id))
+                        })
+                      ]
+                    }),
+                    positions && positions.length > 0 && jsxs("section", {
+                      children: [
+                        jsx(SectionHeader, { title: "Positions of Responsibility" }),
+                        jsx("ul", {
+                          className: "text-sm text-gray-700",
+                          children: positions.map(item => jsx(CorporateMinimalBulletItem, { children: jsx("span", { dangerouslySetInnerHTML: { __html: formatBold(item.description) } }) }, item.id))
+                        })
+                      ]
+                    }),
+                    activities && activities.map(item => item.title.includes("EXTRA") && item.description && jsxs("section", {
+                      children: [
+                        jsx(SectionHeader, { title: "Extracurricular Activities" }),
+                        jsx("ul", {
+                          className: "text-sm text-gray-700",
+                          children: item.description.split('\n').map((line, idx) => line.trim() && jsx(CorporateMinimalBulletItem, { children: jsx("span", { dangerouslySetInnerHTML: { __html: line.replace(/<b>/g, "<strong>").replace(/<\/b>/g, "</strong>") } }) }, idx))
+                        })
+                      ],
+                      key: item.id
+                    }))
+                  ]
+                })
+              ]
+            })
+          ]
+        });
+      });
+
+      const CorporateMinimalPreview = forwardRef(({ resumeData }, ref) => {
+        const pagesContainerRef = useRef(null);
+
+        useImperativeHandle(ref, () => ({
+          getHtmlForPdf: () => pagesContainerRef.current
+        }));
+
+        return jsx("div", {
+          ref: pagesContainerRef,
+          className: "flex flex-col items-center gap-8",
+          children: jsx("div", {
+            className: "relative",
+            children: jsx("div", {
+              className: "resume-page-container bg-white shadow-lg w-[210mm] min-h-[297mm] flex overflow-hidden",
+              children: jsx(CorporateMinimalResumeLayout, { resumeData: resumeData })
+            })
+          })
+        });
+      });
+
+
+      /* ============================================================
+       *  SECTION: WEBSITE / APP CODE
+       *  Builder toolbar, layout switcher shell, PDF generation, zoom controls.
+       * ============================================================ */
+      function ResumeBuilder({ onBack, initialData, selectedTemplate }) {
+        const [resumeData, setResumeData] = useState(() => {
+          const uploaded = sessionStorage.getItem('uploadedResumeData');
+          if (uploaded) {
+            try {
+              const data = JSON.parse(uploaded);
+              sessionStorage.removeItem('uploadedResumeData');
+              return data;
+            } catch (e) {
+              console.error("Failed to parse uploaded resume data:", e);
+            }
+          }
+          return initialData || (selectedTemplate === "modern-creative" ? MODERN_CREATIVE_SAMPLE_DATA : selectedTemplate === "corporate-minimal" ? CORPORATE_MINIMAL_SAMPLE_DATA : DEFAULT_RESUME_DATA);
+        });
+
+        const [isEditorExpanded, setIsEditorExpanded] = useState(true);
+        const [zoomLevel, setZoomLevel] = useState(1);
+        const [zoomInputVal, setZoomInputVal] = useState("100%");
+        const [isDownloading, setIsDownloading] = useState(false);
+        const [themeColor, setThemeColor] = useState("#0f172a");
+        const [showColorPicker, setShowColorPicker] = useState(false);
+        const [showLogoSelectionModal, setShowLogoSelectionModal] = useState(false);
+        const [errorMessage, setErrorMessage] = useState(null);
+
+        const resumePreviewRef = useRef(null);
+        const photoFileInputRef = useRef(null);
+        const logoFileInputRef = useRef(null);
+        const errorTimeoutRef = useRef(null);
+
+        useEffect(() => {
+          setZoomInputVal(`${Math.round(zoomLevel * 100)}%`);
+        }, [zoomLevel]);
+
+        useEffect(() => {
+          const isMobile = typeof navigator !== "undefined" && /Mobi|Android|iPhone|iPad|iPod|Windows Phone/.test(navigator.userAgent) || typeof window !== "undefined" && window.innerWidth < 800;
+          if (isMobile) {
+            setZoomLevel(0.45);
+            setZoomInputVal("45%");
+          }
+        }, []);
+
+        const triggerPhotoUpload = () => photoFileInputRef.current?.click();
+        const openLogoSelection = () => setShowLogoSelectionModal(true);
+        const selectDefaultLogo = () => {
+          const defaultLogo = "assets/images/NITTLogo.png";
+          setResumeData(prev => ({
+            ...prev,
+            personalDetails: { ...prev.personalDetails, logo: defaultLogo }
+          }));
+          setShowLogoSelectionModal(false);
+        };
+        const triggerLogoUpload = () => {
+          logoFileInputRef.current?.click();
+          setShowLogoSelectionModal(false);
+        };
+
+        const validateUploads = () => {
+          const isPhotoPlaceholder = isPlaceholderImage(resumeData.personalDetails.photo);
+          const isLogoPlaceholder = isPlaceholderImage(resumeData.personalDetails.logo);
+          if (selectedTemplate === "on-campus") {
+            if (isPhotoPlaceholder && isLogoPlaceholder) return "Please upload a profile photo and the institute logo before downloading.";
+            if (isPhotoPlaceholder) return "Please upload a profile photo before downloading.";
+            if (isLogoPlaceholder) return "Please upload the institute logo before downloading.";
+          } else if (selectedTemplate === "modern-creative" && isPhotoPlaceholder) {
+            return "Please upload a profile photo before downloading.";
+          }
+          return null;
+        };
+
+        const showBannerError = (msg) => {
+          if (errorTimeoutRef.current) clearTimeout(errorTimeoutRef.current);
+          setErrorMessage(msg);
+          errorTimeoutRef.current = window.setTimeout(() => {
+            setErrorMessage(null);
+            errorTimeoutRef.current = null;
+          }, 6000);
+        };
+
+        const handleDownloadPdf = async () => {
+          const validationError = validateUploads();
+          if (validationError) {
+            showBannerError(validationError);
+            return;
+          }
+
+          const previewEl = resumePreviewRef.current?.getHtmlForPdf();
+          if (!previewEl) {
+            console.error("Resume container not found for PDF generation.");
+            showBannerError("Could not generate PDF. Please try again.");
+            return;
+          }
+
+          const pages = previewEl.querySelectorAll(".resume-page-container");
+          if (pages.length === 0) {
+            console.error("No pages found to download.");
+            showBannerError("There is no content to download as a PDF.");
+            return;
+          }
+
+          setIsDownloading(true);
+          try {
+            const doc = new jspdf.jsPDF({
+              orientation: "portrait",
+              unit: "mm",
+              format: "a4"
+            });
+
+            let customStyleTag = null;
+            const fontStyleId = "pdf-generation-fonts";
+            const existingStyle = document.getElementById(fontStyleId);
+            if (existingStyle) existingStyle.remove();
+
+            const loadFontAsBase64 = async (url) => {
+              try {
+                const response = await fetch(url);
+                if (!response.ok) return null;
+                const blob = await response.blob();
+                if (blob.size === 0) return null;
+                return new Promise((resolve, reject) => {
+                  const reader = new FileReader();
+                  reader.onloadend = () => {
+                    const base64data = reader.result;
+                    resolve(base64data.split(",")[1]);
+                  };
+                  reader.onerror = reject;
+                  reader.readAsDataURL(blob);
+                });
+              } catch {
+                return null;
+              }
+            };
+
+            let baseRegular, baseBold, baseCambria;
+            try {
+              baseRegular = await loadFontAsBase64("https://cdn.jsdelivr.net/gh/google/fonts@main/ofl/lato/Lato-Regular.ttf");
+              baseBold = await loadFontAsBase64("https://cdn.jsdelivr.net/gh/google/fonts@main/ofl/lato/Lato-Bold.ttf");
+            } catch (e) {
+              console.error("Lato font VFS loading failed:", e);
+            }
+            try {
+              baseCambria = await loadFontAsBase64("https://cdn.jsdelivr.net/gh/serendipious/every-font@master/Cambria%20-%20Regular.ttf");
+            } catch (e) {
+              console.error("Cambria font VFS loading failed:", e);
+            }
+
+            if (baseRegular) {
+              doc.addFileToVFS("Lato-Regular.ttf", baseRegular);
+              doc.addFont("Lato-Regular.ttf", "Lato", "normal");
+              doc.addFont("Lato-Regular.ttf", "Lato", "400");
+            }
+            if (baseBold) {
+              doc.addFileToVFS("Lato-Bold.ttf", baseBold);
+              doc.addFont("Lato-Bold.ttf", "Lato", "bold");
+              doc.addFont("Lato-Bold.ttf", "Lato", "700");
+            }
+            if (baseCambria) {
+              doc.addFileToVFS("Cambria.ttf", baseCambria);
+              doc.addFont("Cambria.ttf", "Cambria", "normal");
+              doc.addFont("Cambria.ttf", "Cambria", "400");
+            }
+
+            customStyleTag = document.createElement("style");
+            customStyleTag.id = fontStyleId;
+            let cssText = "";
+            if (baseRegular) {
+              cssText += `
+                @font-face {
+                  font-family: 'Lato';
+                  src: url(data:font/ttf;base64,${baseRegular}) format('truetype');
+                  font-weight: normal;
+                  font-style: normal;
+                }
+                @font-face {
+                  font-family: 'Lato';
+                  src: url(data:font/ttf;base64,${baseRegular}) format('truetype');
+                  font-weight: 400;
+                  font-style: normal;
+                }
+              `;
+            }
+            if (baseBold) {
+              cssText += `
+                @font-face {
+                  font-family: 'Lato';
+                  src: url(data:font/ttf;base64,${baseBold}) format('truetype');
+                  font-weight: bold;
+                  font-style: normal;
+                }
+                @font-face {
+                  font-family: 'Lato';
+                  src: url(data:font/ttf;base64,${baseBold}) format('truetype');
+                  font-weight: 700;
+                  font-style: normal;
+                }
+              `;
+            }
+            if (baseCambria) {
+              cssText += `
+                @font-face {
+                  font-family: 'Cambria';
+                  src: url(data:font/ttf;base64,${baseCambria}) format('truetype');
+                  font-weight: normal;
+                  font-style: normal;
+                }
+              `;
+            }
+
+            let styleOverrides = `
+              .section-header-flex {
+                align-items: flex-end !important;
+              }
+              .section-header-line {
+                margin-bottom: 4px !important;
+              }
+              .resume-section-container {
+                margin-bottom: 1.1rem !important;
+              }
+              .custom-square-list li::before {
+                width: 3px !important;
+                height: 3px !important;
+                top: 0.6em !important;
+              }
+            `;
+
+            if (selectedTemplate === "modern-creative") {
+              styleOverrides += `
+                .modern-creative-skill-tag {
+                  position: relative;
+                  top: -5px;
+                }
+                .modern-creative-date {
+                  position: relative;
+                  top: -2px;
+                }
+                .modern-creative-contact-icon {
+                  position: relative;
+                  top: 4px;
+                }
+                .modern-creative-section-border {
+                  position: relative;
+                  top: 3px;
+                }
+              `;
+            } else if (selectedTemplate === "corporate-minimal") {
+              styleOverrides += `
+                .corporate-minimal-list-item::before {
+                  top: 15px !important;
+                }
+              `;
+            }
+
+            customStyleTag.innerHTML = cssText + styleOverrides;
+            document.head.appendChild(customStyleTag);
+
+            if (baseRegular) {
+              doc.setFont("Lato", "normal");
+            }
+
+            const isMobile = /Mobi|Android|iPhone|iPad|iPod|Windows Phone/.test(navigator.userAgent) || window.innerWidth < 800;
+            let wasFallbackUsed = false;
+
+            for (let i = 0; i < pages.length; i++) {
+              const pageEl = pages[i];
+              const uploadButtons = pageEl.parentElement?.querySelectorAll('button[aria-label^="Upload"]');
+              if (uploadButtons) {
+                uploadButtons.forEach(btn => btn.style.visibility = "hidden");
+              }
+
+              if (isMobile) {
+                try {
+                  if (i > 0) doc.addPage();
+                  await doc.html(pageEl, {
+                    callback: () => {},
+                    x: 0, y: 0, width: 210, windowWidth: 794,
+                    html2canvas: { scale: 0.26458, useCORS: true, logging: false, letterRendering: false, allowTaint: true },
+                    autoPaging: false
+                  });
+                  wasFallbackUsed = true;
+                } catch (err) {
+                  console.warn("pdf.html failed on mobile, falling back to html2canvas rendering", err);
+                  const clone = pageEl.cloneNode(true);
+                  clone.querySelectorAll('button[aria-label^="Upload"]').forEach(btn => btn.style.visibility = "hidden");
+                  const devW = 794;
+                  const devH = 1122;
+                  const tempContainer = document.createElement("div");
+                  tempContainer.style.position = "absolute";
+                  tempContainer.style.left = "-9999px";
+                  tempContainer.style.top = "0";
+                  tempContainer.style.width = `${devW}px`;
+                  tempContainer.style.height = `${devH}px`;
+                  tempContainer.style.overflow = "visible";
+                  tempContainer.appendChild(clone);
+                  document.body.appendChild(tempContainer);
+
+                  try {
+                    const canvas = await html2canvas(tempContainer, {
+                      scale: 2, useCORS: true, logging: false, letterRendering: false, allowTaint: true,
+                      width: devW, height: devH, windowWidth: devW, windowHeight: devH
+                    });
+                    const imgData = canvas.toDataURL("image/png", 1);
+                    if (i > 0) doc.addPage();
+                    doc.addImage(imgData, "PNG", 0, 0, 210, 297);
+                  } catch (canvasErr) {
+                    console.error("html2canvas fallback failed", canvasErr);
+                    showBannerError("Could not render page for PDF. Please try again.");
+                  } finally {
+                    if (tempContainer.parentElement) document.body.removeChild(tempContainer);
+                    if (uploadButtons) {
+                      uploadButtons.forEach(btn => btn.style.visibility = "visible");
+                    }
+                  }
+                }
+              } else {
+                if (i > 0) doc.addPage();
+                try {
+                  await doc.html(pageEl, {
+                    callback: () => {},
+                    x: 0, y: 0, width: 210, windowWidth: 794,
+                    html2canvas: { scale: 0.26458, useCORS: true, logging: false, letterRendering: false, allowTaint: true },
+                    autoPaging: false
+                  });
+                } catch (err) {
+                  console.error("pdf.html error", err);
+                  showBannerError("Could not render page for PDF. Please try again.");
+                } finally {
+                  if (uploadButtons) {
+                    uploadButtons.forEach(btn => btn.style.visibility = "visible");
+                  }
+                }
+              }
+            }
+
+            if (customStyleTag) customStyleTag.remove();
+
+            if ((!isMobile || (isMobile && wasFallbackUsed)) && doc.getNumberOfPages() > 1) {
+              try {
+                // Delete empty first page if generated accidentally
+                doc.deletePage(1);
+              } catch (delErr) {
+                console.warn("Could not delete first PDF page:", delErr);
+              }
+            }
+
+            doc.save(`${resumeData.personalDetails.name.replace(/\s/g, "_")}_Resume.pdf`);
+          } catch (e) {
+            console.error("PDF Generation failed", e);
+            showBannerError(e.message || "An error occurred while generating the PDF.");
+          } finally {
+            setIsDownloading(false);
+          }
+        };
+
+        const handleZoomInputChange = (e) => setZoomInputVal(e.target.value);
+
+        const applyZoomInput = () => {
+          let val = parseFloat(zoomInputVal.replace(/%/g, "").trim());
+          if (isNaN(val)) {
+            setZoomInputVal(`${Math.round(zoomLevel * 100)}%`);
+          } else {
+            val = Math.max(20, Math.min(500, val));
+            setZoomLevel(val / 100);
+          }
+        };
+
+        const handleZoomInputBlur = () => applyZoomInput();
+
+        const handleZoomInputKeyDown = (e) => {
+          if (e.key === "Enter") {
+            applyZoomInput();
+            e.target.blur();
+          } else if (e.key === "Escape") {
+            setZoomInputVal(`${Math.round(zoomLevel * 100)}%`);
+            e.target.blur();
+          }
+        };
+
+        return jsxs("div", {
+          className: "flex h-screen bg-gray-200 overflow-hidden",
+          children: [
+            /* --- Sidebar layout container --- */
+            jsx("aside", {
+              className: `transition-all duration-300 ease-in-out bg-white shadow-lg flex-shrink-0 relative ${isEditorExpanded ? "w-full md:w-[500px]" : "w-0"} overflow-hidden`,
+              children: jsx("div", {
+                className: "h-screen overflow-y-auto",
+                children: selectedTemplate === "on-campus" ? jsx(OnCampusEditor, {
+                  resumeData, setResumeData, photoFileInputRef, logoFileInputRef
+                }) : selectedTemplate === "modern-creative" ? jsx(ModernCreativeEditor, {
+                  resumeData, setResumeData, photoFileInputRef, logoFileInputRef
+                }) : jsx(CorporateMinimalEditor, {
+                  resumeData, setResumeData
+                })
+              })
+            }),
+
+            /* --- Main live preview pane --- */
+            jsxs("main", {
+              className: "flex-1 p-4 sm:p-6 md:p-8 overflow-y-auto flex flex-col items-center",
+              children: [
+                /* --- Action toolbar --- */
+                jsxs("div", {
+                  className: "mb-4 bg-white p-1 sm:p-2 rounded-md sm:rounded-lg shadow-md flex items-center space-x-2 sticky top-0 z-10",
+                  children: [
+                    jsxs("button", {
+                      onClick: onBack,
+                      className: "h-7 sm:h-8 px-2 sm:px-3 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm flex items-center justify-center space-x-1.5 mr-2",
+                      title: "Back",
+                      children: [
+                        jsx("svg", {
+                          xmlns: "http://www.w3.org/2000/svg", className: "h-3.5 w-3.5 sm:h-4 sm:w-4", fill: "none", viewBox: "0 0 24 24", stroke: "currentColor", strokeWidth: 2,
+                          children: jsx("path", { strokeLinecap: "round", strokeLinejoin: "round", d: "M10 19l-7-7m0 0l7-7m-7 7h18" })
+                        }),
+                        jsx("span", { children: "Back" })
+                      ]
+                    }),
+                    jsx("div", { className: "h-8 w-px bg-gray-200 mx-2" }),
+                    jsx("button", { onClick: () => setZoomLevel(z => Math.max(0.2, z - 0.1)), className: "h-7 sm:h-8 px-2 sm:px-3 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 font-bold flex items-center justify-center", children: "-" }),
+                    jsx("button", { onClick: () => setZoomLevel(1), className: "h-7 sm:h-8 px-2 sm:px-3 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 text-sm flex items-center justify-center", children: "Reset" }),
+                    jsx("button", { onClick: () => setZoomLevel(z => z + 0.1), className: "h-7 sm:h-8 px-2 sm:px-3 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 font-bold flex items-center justify-center", children: "+" }),
+                    jsx("input", {
+                      type: "text", value: zoomInputVal, onChange: handleZoomInputChange, onBlur: handleZoomInputBlur, onKeyDown: handleZoomInputKeyDown,
+                      className: "h-7 sm:h-8 text-sm text-gray-600 w-14 sm:w-16 text-center bg-gray-50 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500",
+                      "aria-label": "Zoom percentage"
+                    }),
+
+                    /* --- Color picker for Modern layout only --- */
+                    selectedTemplate === "modern-creative" && jsxs("div", {
+                      className: "relative ml-2",
+                      children: [
+                        jsx("button", {
+                          onClick: () => setShowColorPicker(!showColorPicker),
+                          className: "w-7 h-7 sm:w-8 sm:h-8 rounded-full border-2 border-white shadow-sm focus:outline-none ring-1 ring-gray-300 transition-transform hover:scale-105",
+                          style: { backgroundColor: themeColor },
+                          title: "Change Base Color", "aria-label": "Change Color"
+                        }),
+                        showColorPicker && jsxs(Fragment, {
+                          children: [
+                            jsx("div", { className: "fixed inset-0 z-10", onClick: () => setShowColorPicker(false) }),
+                            jsx("div", {
+                              className: "absolute top-full mt-3 left-1/2 -translate-x-1/2 bg-white p-3 rounded-xl shadow-xl border border-gray-100 flex gap-2 z-20 animate-fade-in",
+                              children: THEME_COLOR_OPTIONS.map(opt => jsx("button", {
+                                onClick: () => { setThemeColor(opt.hex); setShowColorPicker(false); },
+                                className: "w-8 h-8 rounded-full hover:scale-110 transition-transform ring-1 ring-gray-200 border-2 border-white shadow-sm",
+                                style: { backgroundColor: opt.hex }, title: opt.name
+                              }, opt.name))
+                            })
+                          ]
+                        })
+                      ]
+                    }),
+
+                    /* --- PDF Generation Button --- */
+                    jsxs("button", {
+                      onClick: handleDownloadPdf,
+                      disabled: isDownloading,
+                      className: `h-7 sm:h-8 px-2 sm:px-3 text-white rounded text-sm flex items-center justify-center space-x-1.5 ml-2 transition-colors ${
+                        isDownloading ? "bg-green-400 cursor-wait" : "bg-green-500 hover:bg-green-600"
+                      }`,
+                      children: [
+                        isDownloading ? jsxs("svg", {
+                          className: "animate-spin h-3.5 w-3.5 sm:h-4 sm:w-4 text-white", xmlns: "http://www.w3.org/2000/svg", fill: "none", viewBox: "0 0 24 24",
+                          children: [
+                            jsx("circle", { className: "opacity-25", cx: "12", cy: "12", r: "10", stroke: "currentColor", strokeWidth: "4" }),
+                            jsx("path", { className: "opacity-75", fill: "currentColor", d: "M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" })
+                          ]
+                        }) : jsx("svg", {
+                          xmlns: "http://www.w3.org/2000/svg", className: "h-3.5 w-3.5 sm:h-4 sm:w-4", fill: "none", viewBox: "0 0 24 24", stroke: "currentColor", strokeWidth: 2,
+                          children: jsx("path", { strokeLinecap: "round", strokeLinejoin: "round", d: "M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" })
+                        }),
+                        jsx("span", { children: isDownloading ? "Generating..." : "PDF" })
+                      ]
+                    })
+                  ]
+                }),
+
+                /* --- Scalable Preview Container --- */
+                jsx("div", {
+                  style: { transform: `scale(${zoomLevel})`, transformOrigin: "top" },
+                  className: "transition-transform duration-200",
+                  children: selectedTemplate === "on-campus" ? jsx(OnCampusPreview, {
+                    ref: resumePreviewRef, resumeData, onPhotoUploadClick: triggerPhotoUpload, onLogoUploadClick: openLogoSelection
+                  }) : selectedTemplate === "modern-creative" ? jsx(ModernCreativePreview, {
+                    ref: resumePreviewRef, resumeData, themeColor, onPhotoUploadClick: triggerPhotoUpload, isDownloading
+                  }) : jsx(CorporateMinimalPreview, {
+                    ref: resumePreviewRef, resumeData
+                  })
+                })
+              ]
+            }),
+
+            /* --- Drawer Toggle Buttons --- */
+            !isEditorExpanded && jsx("button", {
+              onClick: () => setIsEditorExpanded(true),
+              className: "fixed left-0 top-1/2 -translate-y-1/2 z-30 bg-blue-600 text-white rounded-r-lg px-2 py-4 shadow-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-300 ease-in-out",
+              "aria-label": "Show Editor",
+              children: jsx("svg", { xmlns: "http://www.w3.org/2000/svg", className: "h-6 w-6", fill: "none", viewBox: "0 0 24 24", stroke: "currentColor", strokeWidth: 2, children: jsx("path", { strokeLinecap: "round", strokeLinejoin: "round", d: "M9 5l7 7-7 7" }) })
+            }),
+            isEditorExpanded && jsx("button", {
+              onClick: () => setIsEditorExpanded(false),
+              className: "fixed top-1/2 -translate-y-1/2 z-30 bg-blue-600 text-white rounded-l-lg px-2 py-4 shadow-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-300 ease-in-out left-full md:left-[500px] -translate-x-full",
+              "aria-label": "Hide Editor",
+              children: jsx("svg", { xmlns: "http://www.w3.org/2000/svg", className: "h-6 w-6", fill: "none", viewBox: "0 0 24 24", stroke: "currentColor", strokeWidth: 2, children: jsx("path", { strokeLinecap: "round", strokeLinejoin: "round", d: "M15 19l-7-7 7-7" }) })
+            }),
+
+            /* --- Error message banner --- */
+            errorMessage && jsxs("div", {
+              className: "fixed bottom-10 left-1/2 -translate-x-1/2 bg-red-500 text-white px-6 py-3 rounded-lg shadow-lg z-50 animate-fade-in flex items-center gap-3",
+              children: [
+                jsx("svg", {
+                  xmlns: "http://www.w3.org/2000/svg", className: "h-6 w-6", fill: "none", viewBox: "0 0 24 24", stroke: "currentColor",
+                  children: jsx("path", { strokeLinecap: "round", strokeLinejoin: "round", strokeWidth: 2, d: "M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" })
+                }),
+                jsx("span", { children: errorMessage })
+              ]
+            }),
+
+            /* --- Logo Upload / Select Choice Dialog --- */
+            showLogoSelectionModal && jsx("div", {
+              className: "fixed inset-0 z-[60] flex items-center justify-center p-4",
+              children: jsxs("div", {
+                className: "bg-white rounded-xl shadow-2xl p-6 w-full max-w-sm transform transition-all scale-100 border border-gray-200",
+                children: [
+                  jsx("h3", { className: "text-xl font-bold text-gray-900 mb-6 text-center", children: "Select Institute Logo" }),
+                  jsxs("div", {
+                    className: "space-y-3",
+                    children: [
+                      jsx("button", {
+                        onClick: selectDefaultLogo,
+                        className: "w-full flex items-center justify-center gap-3 px-4 py-3 bg-blue-50 text-blue-700 hover:bg-blue-100 rounded-lg font-semibold transition-colors border border-blue-200",
+                        children: "NITT Logo"
+                      }),
+                      jsxs("div", {
+                        className: "relative",
+                        children: [
+                          jsx("div", { className: "absolute inset-0 flex items-center", children: jsx("div", { className: "w-full border-t border-gray-200" }) }),
+                          jsx("div", { className: "relative flex justify-center text-sm", children: jsx("span", { className: "px-2 bg-white text-gray-500", children: "Or" }) })
+                        ]
+                      }),
+                      jsxs("button", {
+                        onClick: triggerLogoUpload,
+                        className: "w-full flex items-center justify-center gap-3 px-4 py-3 bg-white text-gray-700 hover:bg-gray-50 rounded-lg font-semibold transition-colors border border-gray-300",
+                        children: [
+                          jsx("svg", {
+                            xmlns: "http://www.w3.org/2000/svg", className: "h-5 w-5 text-gray-400", fill: "none", viewBox: "0 0 24 24", stroke: "currentColor",
+                            children: jsx("path", { strokeLinecap: "round", strokeLinejoin: "round", strokeWidth: 2, d: "M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" })
+                          }),
+                          "Upload Logo"
+                        ]
+                      })
+                    ]
+                  }),
+                  jsx("button", { onClick: () => setShowLogoSelectionModal(false), className: "mt-6 w-full text-center text-gray-400 hover:text-gray-600 text-sm font-medium", children: "Cancel" })
+                ]
+              })
+            })
+          ]
+        });
+      }
+
+      /* --- Mount --- */
+      const rootElement = document.getElementById('root');
+      const root = createRoot(rootElement);
+      const urlParams = new URLSearchParams(window.location.search);
+      const selectedTemplate = urlParams.get('template') || 'on-campus';
+
+      const handleBack = () => {
+        window.location.href = '/templates.html';
+      };
+
+      root.render(
+        jsx(React.StrictMode, {
+          children: jsx(ResumeBuilder, {
+            onBack: handleBack,
+            selectedTemplate: selectedTemplate
+          })
+        })
+      );
+    </script>
+  </body>
+</html>
