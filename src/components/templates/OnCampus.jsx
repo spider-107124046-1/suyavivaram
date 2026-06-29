@@ -18,7 +18,7 @@ import {
   isPlaceholderImage
 } from '../../utils/helpers';
 
-export const OnCampusEditor = ({ resumeData, setResumeData, photoFileInputRef, logoFileInputRef }) => {
+export const OnCampusEditor = ({ resumeData, setResumeData, photoFileInputRef, logoFileInputRef, unlockTableBorders, setUnlockTableBorders }) => {
   const [cropSrc, setCropSrc] = useState("");
   const [crop, setCrop] = useState();
   const [completedCrop, setCompletedCrop] = useState();
@@ -260,6 +260,48 @@ export const OnCampusEditor = ({ resumeData, setResumeData, photoFileInputRef, l
         >
           + Add Education
         </button>
+
+        {/* Unlock table layout controls */}
+        <div className="mt-4 p-3 bg-amber-50/70 border border-amber-100 rounded-xl shadow-sm">
+          <div className="flex items-center gap-2.5">
+            <input
+              type="checkbox"
+              id="edu-unlock-table"
+              checked={!!unlockTableBorders}
+              onChange={(e) => {
+                setUnlockTableBorders(e.target.checked);
+                if (!e.target.checked) {
+                  // Re-lock: clear sizes so table goes back to auto layout
+                  setResumeData(prev => ({
+                    ...prev,
+                    educationColWidths: null,
+                    educationRowHeights: null,
+                  }));
+                }
+              }}
+              className="w-3.5 h-3.5 accent-amber-600 cursor-pointer"
+            />
+            <label htmlFor="edu-unlock-table" className="text-xs font-semibold text-amber-800 cursor-pointer select-none flex-1">
+              Unlock table layout
+              <span className="block font-normal text-amber-600 mt-0.5">Drag column/row dividers on the preview to resize</span>
+            </label>
+            {unlockTableBorders && (
+              <button
+                onClick={() => {
+                  setResumeData(prev => ({
+                    ...prev,
+                    educationColWidths: null,
+                    educationRowHeights: null,
+                  }));
+                }}
+                className="text-xs font-bold text-amber-700 hover:text-amber-900 transition-colors px-2 py-1 rounded bg-amber-100 hover:bg-amber-200 shrink-0"
+                title="Reset column and row sizes to automatic (content-driven)"
+              >
+                Reset sizes
+              </button>
+            )}
+          </div>
+        </div>
       </OnCampusAccordion>
 
       {/* --- Academic Achievements accordion --- */}
@@ -493,7 +535,253 @@ export const OnCampusEditor = ({ resumeData, setResumeData, photoFileInputRef, l
   );
 };
 
-export const OnCampusResumeLayout = forwardRef(({ resumeData }, ref) => {
+// ─── Resizable Education Table ───────────────────────────────────────────────
+const MIN_COL_PX = 16; // ≈ 2ch
+const MIN_ROW_PX = 2;  // 2 px
+
+const ResizableEduTable = ({ education, unlocked, colWidths, rowHeights, onTableChange }) => {
+  const tableRef = useRef(null);
+  const dragStateRef = useRef(null);
+
+  // ── Column drag ──────────────────────────────────────────────────────────
+  const handleColDragStart = (e, colIdx) => {
+    if (!unlocked) return;
+    e.preventDefault();
+    e.stopPropagation();
+
+    const table = tableRef.current;
+    const totalWidth = table.getBoundingClientRect().width;
+
+    // Resolve current column widths as percentages
+    let startPcts;
+    if (colWidths) {
+      startPcts = [...colWidths];
+    } else {
+      const headerCells = Array.from(table.querySelectorAll('thead tr:not(.edu-rh-tr) th'));
+      const pxWidths = headerCells.map(th => th.getBoundingClientRect().width);
+      const total = pxWidths.reduce((a, b) => a + b, 0) || totalWidth;
+      startPcts = pxWidths.map(w => (w / total) * 100);
+    }
+
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    dragStateRef.current = { type: 'col', colIdx, startX: clientX, startPcts, totalWidth };
+
+    const onMove = (me) => {
+      if (!dragStateRef.current) return;
+      if (me.cancelable) me.preventDefault();
+      const cx = me.touches ? me.touches[0].clientX : me.clientX;
+      const dxPx = cx - dragStateRef.current.startX;
+      const dxPct = (dxPx / dragStateRef.current.totalWidth) * 100;
+      const minPct = (MIN_COL_PX / dragStateRef.current.totalWidth) * 100;
+      const { startPcts: sp, colIdx: ci } = dragStateRef.current;
+      const newPcts = [...sp];
+      const sumLR = sp[ci] + sp[ci + 1];
+      newPcts[ci] = Math.max(minPct, Math.min(sumLR - minPct, sp[ci] + dxPct));
+      newPcts[ci + 1] = sumLR - newPcts[ci];
+      onTableChange(newPcts, rowHeights);
+    };
+
+    const onUp = () => {
+      dragStateRef.current = null;
+      document.removeEventListener('mousemove', onMove);
+      document.removeEventListener('touchmove', onMove);
+      document.removeEventListener('mouseup', onUp);
+      document.removeEventListener('touchend', onUp);
+      document.body.style.userSelect = '';
+      document.body.style.cursor = '';
+    };
+
+    document.body.style.userSelect = 'none';
+    document.body.style.cursor = 'col-resize';
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('touchmove', onMove, { passive: false });
+    document.addEventListener('mouseup', onUp);
+    document.addEventListener('touchend', onUp);
+  };
+
+  // ── Row drag ─────────────────────────────────────────────────────────────
+  // rowIdx = index into the heights array (0 = header, 1..N = data rows)
+  // The handle between row[rowIdx] and row[rowIdx+1] resizes row[rowIdx].
+  const handleRowDragStart = (e, rowIdx) => {
+    if (!unlocked) return;
+    e.preventDefault();
+    e.stopPropagation();
+
+    const table = tableRef.current;
+    // Collect real data rows (exclude handle rows)
+    const allRealTrs = Array.from(table.querySelectorAll('tr:not(.edu-rh-tr)'));
+    let startHeights;
+    if (rowHeights) {
+      startHeights = [...rowHeights];
+    } else {
+      startHeights = allRealTrs.map(tr => tr.getBoundingClientRect().height);
+    }
+
+    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+    dragStateRef.current = { type: 'row', rowIdx, startY: clientY, startHeights };
+
+    const onMove = (me) => {
+      if (!dragStateRef.current) return;
+      if (me.cancelable) me.preventDefault();
+      const cy = me.touches ? me.touches[0].clientY : me.clientY;
+      const dy = cy - dragStateRef.current.startY;
+      const { startHeights: sh, rowIdx: ri } = dragStateRef.current;
+      const newHeights = [...sh];
+      newHeights[ri] = Math.max(MIN_ROW_PX, sh[ri] + dy);
+      onTableChange(colWidths, newHeights);
+    };
+
+    const onUp = () => {
+      dragStateRef.current = null;
+      document.removeEventListener('mousemove', onMove);
+      document.removeEventListener('touchmove', onMove);
+      document.removeEventListener('mouseup', onUp);
+      document.removeEventListener('touchend', onUp);
+      document.body.style.userSelect = '';
+      document.body.style.cursor = '';
+    };
+
+    document.body.style.userSelect = 'none';
+    document.body.style.cursor = 'row-resize';
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('touchmove', onMove, { passive: false });
+    document.addEventListener('mouseup', onUp);
+    document.addEventListener('touchend', onUp);
+  };
+
+  const columns = ['Year', 'Degree/Examination', 'Institution/Board', 'CGPA/Percentage'];
+  const dataKeys = ['year', 'degree', 'institution', 'grade'];
+
+  // Shared style for column-resize drag handles (placed on right border of each inner column)
+  const colHandleStyle = {
+    position: 'absolute',
+    top: 0,
+    right: -3,
+    bottom: 0,
+    width: 6,
+    cursor: 'col-resize',
+    zIndex: 10,
+    background: 'transparent',
+    touchAction: 'none',
+  };
+
+  // Shared style for row-resize drag handles (placed on bottom border of each non-last row)
+  const rowHandleStyle = {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: -3,
+    height: 6,
+    cursor: 'row-resize',
+    zIndex: 10,
+    background: 'transparent',
+    touchAction: 'none',
+  };
+
+  const numDataRows = education.length;
+
+  return (
+    <table
+      ref={tableRef}
+      className="w-full border-collapse border border-black text-black text-center text-[15px]"
+      style={{ tableLayout: unlocked && colWidths ? 'fixed' : 'auto', width: '100%' }}
+    >
+      {/* Column width hints when fixed layout is active */}
+      {unlocked && colWidths && (
+        <colgroup>
+          {columns.map((_, i) => (
+            <col key={i} style={{ width: `${colWidths[i]}%` }} />
+          ))}
+        </colgroup>
+      )}
+
+      <thead>
+        {/* ── Header row ── */}
+        <tr>
+          {columns.map((col, colIdx) => {
+            const cellHeight = rowHeights?.[0];
+            return (
+              <th
+                key={colIdx}
+                className="border border-black p-2 font-bold"
+                style={{
+                  position: 'relative',
+                  textAlign: 'center',
+                  ...(unlocked && cellHeight ? { height: cellHeight, minHeight: cellHeight } : { height: '0.5in' }),
+                }}
+              >
+                {col}
+                {/* Column resize handle on the right edge of inner columns */}
+                {unlocked && colIdx < 3 && (
+                  <div
+                    style={colHandleStyle}
+                    onMouseDown={(e) => handleColDragStart(e, colIdx)}
+                    onTouchStart={(e) => handleColDragStart(e, colIdx)}
+                    aria-hidden="true"
+                  />
+                )}
+                {/* Row resize handle on the bottom edge of the header row (not after last row) */}
+                {unlocked && numDataRows > 0 && (
+                  <div
+                    style={rowHandleStyle}
+                    onMouseDown={(e) => handleRowDragStart(e, 0)}
+                    onTouchStart={(e) => handleRowDragStart(e, 0)}
+                    aria-hidden="true"
+                  />
+                )}
+              </th>
+            );
+          })}
+        </tr>
+      </thead>
+
+      <tbody>
+        {education.map((item, rowIdx) => {
+          const cellHeight = rowHeights?.[rowIdx + 1];
+          const isLastRow = rowIdx === numDataRows - 1;
+          return (
+            <tr key={item.id}>
+              {dataKeys.map((key, colIdx) => (
+                <td
+                  key={colIdx}
+                  className="border border-black p-2"
+                  style={{
+                    position: 'relative',
+                    textAlign: 'center',
+                    ...(unlocked && cellHeight ? { height: cellHeight, minHeight: cellHeight } : { height: '0.5in' }),
+                  }}
+                >
+                  {item[key]}
+                  {/* Column resize handle */}
+                  {unlocked && colIdx < 3 && (
+                    <div
+                      style={colHandleStyle}
+                      onMouseDown={(e) => handleColDragStart(e, colIdx)}
+                      onTouchStart={(e) => handleColDragStart(e, colIdx)}
+                      aria-hidden="true"
+                    />
+                  )}
+                  {/* Row resize handle on the bottom edge of each non-last row */}
+                  {unlocked && !isLastRow && (
+                    <div
+                      style={rowHandleStyle}
+                      onMouseDown={(e) => handleRowDragStart(e, rowIdx + 1)}
+                      onTouchStart={(e) => handleRowDragStart(e, rowIdx + 1)}
+                      aria-hidden="true"
+                    />
+                  )}
+                </td>
+              ))}
+            </tr>
+          );
+        })}
+      </tbody>
+    </table>
+  );
+};
+// ─────────────────────────────────────────────────────────────────────────────
+
+export const OnCampusResumeLayout = forwardRef(({ resumeData, onTableChange }, ref) => {
   const { personalDetails, education, internships, achievements, projects, skills, positions, activities } = resumeData;
 
   const formatDates = text => {
@@ -595,26 +883,13 @@ export const OnCampusResumeLayout = forwardRef(({ resumeData }, ref) => {
         {education && education.length > 0 && (
           <ResumeSection title="Educational Qualification">
             <div className="mt-3.5">
-              <table className="w-full border-collapse border border-black text-black text-center text-[15px]">
-                <thead>
-                  <tr>
-                    <th className="border border-black p-2 font-bold h-[0.5in]">Year</th>
-                    <th className="border border-black p-2 font-bold h-[0.5in]">Degree/Examination</th>
-                    <th className="border border-black p-2 font-bold h-[0.5in]">Institution/Board</th>
-                    <th className="border border-black p-2 font-bold h-[0.5in]">CGPA/Percentage</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {education.map(item => (
-                    <tr key={item.id}>
-                      <td className="border border-black p-2 h-[0.5in]">{item.year}</td>
-                      <td className="border border-black p-2 h-[0.5in]">{item.degree}</td>
-                      <td className="border border-black p-2 h-[0.5in]">{item.institution}</td>
-                      <td className="border border-black p-2 h-[0.5in]">{item.grade}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+              <ResizableEduTable
+                education={education}
+                unlocked={!!onTableChange}
+                colWidths={resumeData.educationColWidths}
+                rowHeights={resumeData.educationRowHeights}
+                onTableChange={onTableChange || (() => {})}
+              />
             </div>
           </ResumeSection>
         )}
@@ -735,7 +1010,7 @@ export const OnCampusResumeLayout = forwardRef(({ resumeData }, ref) => {
 
 OnCampusResumeLayout.displayName = "OnCampusResumeLayout";
 
-export const OnCampusPreview = forwardRef(({ resumeData, onPhotoUploadClick, onLogoUploadClick }, ref) => {
+export const OnCampusPreview = forwardRef(({ resumeData, onPhotoUploadClick, onLogoUploadClick, setResumeData, unlockTableBorders }, ref) => {
   const rawLayoutRef = useRef(null);
   const pagesContainerRef = useRef(null);
   const [pagesHtml, setPagesHtml] = useState([]);
@@ -901,10 +1176,29 @@ export const OnCampusPreview = forwardRef(({ resumeData, onPhotoUploadClick, onL
 
   return (
     <div ref={pagesContainerRef} className="flex flex-col items-center gap-8">
-      <div className="absolute top-0 left-[-9999px] opacity-0" aria-hidden="true">
-        <OnCampusResumeLayout resumeData={resumeData} ref={rawLayoutRef} />
+      {/* Hidden off-screen raw layout — used for pagination measurement only.
+          When unlocked, also wires onTableChange to update resumeData. */}
+      <div
+        aria-hidden={!unlockTableBorders}
+        style={{
+          position: 'absolute',
+          top: 0,
+          left: -9999,
+          opacity: 0,
+          pointerEvents: 'none',
+          ...(unlockTableBorders ? { opacity: 1, left: 'auto', position: 'relative', pointerEvents: 'auto' } : {})
+        }}
+      >
+        <OnCampusResumeLayout
+          resumeData={resumeData}
+          ref={rawLayoutRef}
+          onTableChange={setResumeData && unlockTableBorders ? (colWidths, rowHeights) => {
+            setResumeData(prev => ({ ...prev, educationColWidths: colWidths, educationRowHeights: rowHeights }));
+          } : undefined}
+        />
       </div>
-      {pagesHtml.length > 0 ? (
+      {/* Paginated pages — hidden when unlocked so the interactive layout is visible */}
+      {!unlockTableBorders && pagesHtml.length > 0 ? (
         pagesHtml.map((pageContent, idx) => (
           <div key={idx} className="relative">
             <div className={`resume-page-container overflow-hidden bg-white shadow-lg px-10 pb-2 w-[210mm] h-[297mm] flex flex-col text-black leading-relaxed relative ${idx === 0 ? "pt-14" : "pt-10"}`}>
@@ -949,11 +1243,11 @@ export const OnCampusPreview = forwardRef(({ resumeData, onPhotoUploadClick, onL
             )}
           </div>
         ))
-      ) : (
+      ) : !unlockTableBorders ? (
         <div className="bg-white shadow-lg w-[210mm] h-[297mm] flex items-center justify-center">
           <p className="text-center p-8 text-gray-500">Generating preview...</p>
         </div>
-      )}
+      ) : null}
     </div>
   );
 });

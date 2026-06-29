@@ -71,6 +71,8 @@ export const DEFAULT_RESUME_DATA = {
     { id: "act2", title: "Cultural Activities", description: "Secured 1st position in Pixel Pirates event of Pragyan in 2023.\nDAN 1 - Black Belt Holder in Karate" },
     { id: "act3", title: "Sports Activities", description: "Participated in 10K sportsfete marathon" }
   ],
+  educationColWidths: null,
+  educationRowHeights: null,
   languages: [],
   webLinks: [],
   coursework: [],
