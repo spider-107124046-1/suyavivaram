@@ -12,7 +12,7 @@ const IOSInstallModal = ({ isOpen, onClose }) => {
       />
 
       {/* Modal Card */}
-      <div className="relative w-full max-w-md transform overflow-hidden rounded-2xl bg-white p-6 shadow-2xl transition-all border border-slate-100 animate-fade-in text-slate-800">
+      <div className="relative w-full max-w-md transform overflow-hidden rounded-2xl bg-white p-6 shadow-2xl transition-all border border-slate-100 animate-modal-in text-slate-800">
         {/* Header */}
         <div className="flex items-center justify-between pb-4 border-b border-slate-100">
           <h3 className="text-xl font-bold text-slate-950 flex items-center gap-2">

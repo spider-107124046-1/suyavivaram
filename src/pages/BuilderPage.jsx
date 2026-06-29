@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, Fragment } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
+import { ArrowLeft, Save, Printer, Download } from 'lucide-react';
 import { usePWA } from '../components/PWAContext';
 import {
   OnCampusEditor,
@@ -23,6 +24,96 @@ import {
   isPlaceholderImage
 } from '../utils/helpers';
 
+const ActionButton = ({
+  onClick,
+  className,
+  label,
+  children,
+  disabled,
+  showTooltipOnHover = false
+}) => {
+  const [showTooltip, setShowTooltip] = useState(false);
+  const timerRef = useRef(null);
+  const hasLongPressed = useRef(false);
+
+  const startPress = (e) => {
+    if (e.type === 'mousedown' && e.button !== 0) return;
+
+    hasLongPressed.current = false;
+    timerRef.current = setTimeout(() => {
+      hasLongPressed.current = true;
+      setShowTooltip(true);
+      if (navigator.vibrate) {
+        try {
+          navigator.vibrate(50);
+        } catch (err) { }
+      }
+    }, 500);
+  };
+
+  const endPress = (e) => {
+    if (timerRef.current) {
+      clearTimeout(timerRef.current);
+      timerRef.current = null;
+    }
+
+    setShowTooltip(false);
+
+    if (hasLongPressed.current) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+  };
+
+  const handleMouseEnter = () => {
+    if (showTooltipOnHover) {
+      setShowTooltip(true);
+    }
+  };
+
+  const handleMouseLeave = () => {
+    if (timerRef.current) {
+      clearTimeout(timerRef.current);
+      timerRef.current = null;
+    }
+    setShowTooltip(false);
+  };
+
+  const handleClick = (e) => {
+    if (hasLongPressed.current) {
+      e.preventDefault();
+      e.stopPropagation();
+      return;
+    }
+    if (onClick && !disabled) {
+      onClick(e);
+    }
+  };
+
+  return (
+    <button
+      onClick={handleClick}
+      onMouseDown={startPress}
+      onMouseUp={endPress}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
+      onTouchStart={startPress}
+      onTouchEnd={endPress}
+      onTouchMove={endPress}
+      onTouchCancel={endPress}
+      disabled={disabled}
+      className={`relative ${className}`}
+    >
+      {children}
+      {showTooltip && (
+        <span className="absolute top-full left-1/2 mt-2 bg-slate-900 text-white text-xs px-2.5 py-1 rounded shadow-lg whitespace-nowrap z-50 animate-fade-in font-medium pointer-events-none">
+          {label}
+        </span>
+      )}
+    </button>
+  );
+};
+
 const BuilderPage = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
@@ -43,8 +134,8 @@ const BuilderPage = () => {
     return selectedTemplate === "modern-creative"
       ? MODERN_CREATIVE_SAMPLE_DATA
       : selectedTemplate === "corporate-minimal"
-      ? CORPORATE_MINIMAL_SAMPLE_DATA
-      : DEFAULT_RESUME_DATA;
+        ? CORPORATE_MINIMAL_SAMPLE_DATA
+        : DEFAULT_RESUME_DATA;
   });
 
   const [isEditorExpanded, setIsEditorExpanded] = useState(true);
@@ -261,12 +352,12 @@ const BuilderPage = () => {
       Promise.all([...imagePromises, printWindow.document.fonts.ready]).then(() => {
         setTimeout(() => {
           printWindow.focus();
-          
+
           // Automatically close the window after printing is accepted or cancelled
           printWindow.onafterprint = () => {
             printWindow.close();
           };
-          
+
           printWindow.print();
         }, 300);
       }).catch(err => {
@@ -297,7 +388,7 @@ const BuilderPage = () => {
           images.photo = clonedResumeData.personalDetails.photo;
           clonedResumeData.personalDetails.photo = "uploaded-photo";
         }
-        
+
         // Extract base64 logo / handle NITT logo
         if (clonedResumeData.personalDetails.logo) {
           if (clonedResumeData.personalDetails.logo === "assets/images/NITTLogo.png") {
@@ -396,23 +487,40 @@ const BuilderPage = () => {
       {/* --- Main live preview pane --- */}
       <main className="flex-1 p-4 sm:p-6 md:p-8 overflow-y-auto flex flex-col items-center">
         {/* --- Action toolbar --- */}
-        <div className="mb-4 bg-white p-1 sm:p-2 rounded-md sm:rounded-lg shadow-md flex items-center space-x-2 sticky top-0 z-10">
-          <button
+        <div className="mb-4 bg-white p-1 sm:p-2 rounded-md sm:rounded-lg shadow-md flex items-center gap-2 sticky top-0 z-10">
+          <ActionButton
             onClick={handleBack}
-            className="h-7 sm:h-8 px-2 sm:px-3 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm flex items-center justify-center space-x-1.5 mr-2"
-            title="Back"
+            label="Back"
+            className="h-7 sm:h-8 px-2 sm:px-3 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm flex items-center justify-center gap-1.5 mr-2"
           >
-            <svg
-              xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 sm:h-4 sm:w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-            </svg>
-            <span>Back</span>
-          </button>
+            <ArrowLeft className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+            <span className="hidden sm:inline">Back</span>
+          </ActionButton>
           <div className="h-8 w-px bg-gray-200 mx-2" />
-          <button onClick={() => setZoomLevel(z => Math.max(0.2, z - 0.1))} className="h-7 sm:h-8 px-2 sm:px-3 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 font-bold flex items-center justify-center">-</button>
-          <button onClick={() => setZoomLevel(1)} className="h-7 sm:h-8 px-2 sm:px-3 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 text-sm flex items-center justify-center">Reset</button>
-          <button onClick={() => setZoomLevel(z => z + 0.1)} className="h-7 sm:h-8 px-2 sm:px-3 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 font-bold flex items-center justify-center">+</button>
+          <ActionButton
+            onClick={() => setZoomLevel(z => Math.max(0.2, z - 0.1))}
+            label="Zoom Out"
+            showTooltipOnHover={true}
+            className="h-7 sm:h-8 px-2 sm:px-3 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 font-bold flex items-center justify-center"
+          >
+            -
+          </ActionButton>
+          <ActionButton
+            onClick={() => setZoomLevel(1)}
+            label="Reset Zoom"
+            showTooltipOnHover={true}
+            className="h-7 sm:h-8 px-2 sm:px-3 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 text-sm flex items-center justify-center"
+          >
+            Reset
+          </ActionButton>
+          <ActionButton
+            onClick={() => setZoomLevel(z => z + 0.1)}
+            label="Zoom In"
+            showTooltipOnHover={true}
+            className="h-7 sm:h-8 px-2 sm:px-3 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 font-bold flex items-center justify-center"
+          >
+            +
+          </ActionButton>
           <input
             type="text" value={zoomInputVal} onChange={handleZoomInputChange} onBlur={handleZoomInputBlur} onKeyDown={handleZoomInputKeyDown}
             className="h-7 sm:h-8 text-sm text-gray-600 w-14 sm:w-16 text-center bg-gray-50 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
@@ -422,12 +530,12 @@ const BuilderPage = () => {
           {/* --- Color picker for Modern layout only --- */}
           {selectedTemplate === "modern-creative" && (
             <div className="relative ml-2">
-              <button
+              <ActionButton
                 onClick={() => setShowColorPicker(!showColorPicker)}
                 className="w-7 h-7 sm:w-8 sm:h-8 rounded-full border-2 border-white shadow-sm focus:outline-none ring-1 ring-gray-300 transition-transform hover:scale-105"
                 style={{ backgroundColor: themeColor }}
-                title="Change Base Color"
-                aria-label="Change Color"
+                label="Change Theme Color"
+                showTooltipOnHover={true}
               />
               {showColorPicker && (
                 <Fragment>
@@ -449,37 +557,33 @@ const BuilderPage = () => {
 
           {/* --- Install App Button --- */}
           {isInstallable && (
-            <button
+            <ActionButton
               onClick={installApp}
-              className="h-7 sm:h-8 px-2 sm:px-3 bg-teal-600 hover:bg-teal-700 text-white rounded text-sm flex items-center justify-center space-x-1.5 ml-2 transition-colors animate-pulse"
-              title="Install as an App"
+              label="Install as an App"
+              className="h-7 sm:h-8 px-2 sm:px-3 bg-teal-600 hover:bg-teal-700 text-white rounded text-sm flex items-center justify-center gap-1.5 ml-2 transition-colors animate-pulse"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 sm:h-4 sm:w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-              </svg>
-              <span>Install App</span>
-            </button>
+              <Download className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+              <span>Install</span>
+            </ActionButton>
           )}
 
           {/* --- Save Configuration Button --- */}
-          <button
+          <ActionButton
             onClick={handleSaveConfig}
-            className="h-7 sm:h-8 px-2 sm:px-3 bg-slate-700 hover:bg-slate-800 text-white rounded text-sm flex items-center justify-center space-x-1.5 ml-2 transition-colors"
-            title="Save configuration to JSON"
+            label="Save Config"
+            className="h-7 sm:h-8 px-2 sm:px-3 bg-slate-700 hover:bg-slate-800 text-white rounded text-sm flex items-center justify-center gap-1.5 ml-2 transition-colors"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 sm:h-4 sm:w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
-            </svg>
-            <span>Save Config</span>
-          </button>
+            <Save className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+            <span className="hidden sm:inline">Save Config</span>
+          </ActionButton>
 
           {/* --- PDF Generation Button --- */}
-          <button
+          <ActionButton
             onClick={handleDownloadPdf}
             disabled={isDownloading}
-            className={`h-7 sm:h-8 px-2 sm:px-3 text-white rounded text-sm flex items-center justify-center space-x-1.5 ml-2 transition-colors ${
-              isDownloading ? "bg-green-400 cursor-wait" : "bg-green-500 hover:bg-green-600"
-            }`}
+            label={isDownloading ? "Generating..." : "Save as PDF"}
+            className={`h-7 sm:h-8 px-2 sm:px-3 text-white rounded text-sm flex items-center justify-center gap-1.5 ml-2 transition-colors ${isDownloading ? "bg-green-400 cursor-wait" : "bg-green-500 hover:bg-green-600"
+              }`}
           >
             {isDownloading ? (
               <svg className="animate-spin h-3.5 w-3.5 sm:h-4 sm:w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -487,12 +591,10 @@ const BuilderPage = () => {
                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
               </svg>
             ) : (
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 sm:h-4 sm:w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-              </svg>
+              <Printer className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
             )}
-            <span>{isDownloading ? "Generating..." : "PDF"}</span>
-          </button>
+            <span className="hidden sm:inline">{isDownloading ? "Generating..." : "PDF"}</span>
+          </ActionButton>
         </div>
 
         {/* --- Scalable Preview Container --- */}

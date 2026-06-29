@@ -43,6 +43,22 @@ body {
   transform: translateX(-50%);
 }
 
+/* Fade-in and scale-up animation for modals */
+@keyframes modalIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95) translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.animate-modal-in {
+  animation: modalIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
 /* Resume list styles (used in On-Campus template) */
 .custom-bullet-list {
   list-style: none;
