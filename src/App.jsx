@@ -12,8 +12,6 @@ function App() {
         <Route path="/templates" element={<TemplatesPage />} />
         <Route path="/builder" element={<BuilderPage />} />
         <Route path="/faq" element={<FAQPage />} />
-        {/* Fallback route */}
-        <Route path="*" element={<LandingPage />} />
       </Routes>
     </Router>
   );
