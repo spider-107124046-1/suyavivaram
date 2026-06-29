@@ -1,4 +1,4 @@
-const CACHE_NAME = 'suyavivaram-cache-v1';
+const CACHE_NAME = 'suyavivaram-cache-v2';
 const ASSETS_TO_CACHE = [
   '/',
   '/index.html',
@@ -7,7 +7,11 @@ const ASSETS_TO_CACHE = [
   '/icons/icon-512.png',
   '/icons/icon-maskable-192.png',
   '/icons/icon-maskable-512.png',
-  '/icons/apple-touch-icon.png'
+  '/icons/apple-touch-icon.png',
+  '/fonts/lato-300.woff2',
+  '/fonts/lato-400.woff2',
+  '/fonts/lato-700.woff2',
+  '/fonts/lato-900.woff2'
 ];
 
 self.addEventListener('install', (event) => {
