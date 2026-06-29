@@ -444,9 +444,9 @@ export const OnCampusResumeLayout = forwardRef(({ resumeData }, ref) => {
             </div>
           </div>
         </div>
-        {personalDetails.photo && <img src={personalDetails.photo} alt="Profile" className="h-[140px] w-[130px] object-cover border-2 border-black ml-4 flex-shrink-0" />}
+        {personalDetails.photo && <img src={personalDetails.photo} alt="Profile" className="h-[140px] w-[130px] object-cover border border-black ml-4 flex-shrink-0" />}
       </header>
-      <hr className="border-t-[3px] border-black mt-4 mb-2 -mx-10" />
+      <hr className="border-t-[2px] border-black mt-4 mb-2 -mx-10" />
       <main className="text-[15px] pt-2">
         {education && education.length > 0 && (
           <ResumeSection title="Educational Qualification">
@@ -758,7 +758,7 @@ export const OnCampusPreview = forwardRef(({ resumeData, onPhotoUploadClick, onL
               {idx === 0 && (
                 <Fragment>
                   <div dangerouslySetInnerHTML={{ __html: headerHtml }} />
-                  <hr className="border-t-[3px] border-black mt-4 mb-2 -mx-10" />
+                  <hr className="border-t-[2px] border-black mt-4 mb-2 -mx-10" />
                 </Fragment>
               )}
               <main
@@ -775,18 +775,16 @@ export const OnCampusPreview = forwardRef(({ resumeData, onPhotoUploadClick, onL
               <Fragment>
                 <button
                   onClick={onLogoUploadClick}
-                  className={`absolute top-[56px] left-[40px] h-36 w-36 bg-black flex items-center justify-center text-white cursor-pointer group transition-opacity duration-300 ${
-                    isPlaceholderImage(resumeData.personalDetails.logo) ? "bg-opacity-50 opacity-100" : "bg-opacity-40 opacity-50 group-hover:opacity-100"
-                  }`}
+                  className={`absolute top-[56px] left-[40px] h-36 w-36 bg-black flex items-center justify-center text-white cursor-pointer group transition-opacity duration-300 ${isPlaceholderImage(resumeData.personalDetails.logo) ? "bg-opacity-50 opacity-100" : "bg-opacity-40 opacity-50 group-hover:opacity-100"
+                    }`}
                   aria-label="Upload new logo"
                 >
                   <UploadPromptIcon />
                 </button>
                 <button
                   onClick={onPhotoUploadClick}
-                  className={`absolute top-[56px] right-[40px] h-[140px] w-[130px] bg-black flex items-center justify-center text-white cursor-pointer group transition-opacity duration-300 ${
-                    isPlaceholderImage(resumeData.personalDetails.photo) ? "bg-opacity-50 opacity-100" : "bg-opacity-40 opacity-50 group-hover:opacity-100"
-                  }`}
+                  className={`absolute top-[56px] right-[40px] h-[140px] w-[130px] bg-black flex items-center justify-center text-white cursor-pointer group transition-opacity duration-300 ${isPlaceholderImage(resumeData.personalDetails.photo) ? "bg-opacity-50 opacity-100" : "bg-opacity-40 opacity-50 group-hover:opacity-100"
+                    }`}
                   aria-label="Upload new photo"
                 >
                   <UploadPromptIcon />

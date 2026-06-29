@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, Fragment } from 'react';
+import { createPortal } from 'react-dom';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Save, Printer, Download } from 'lucide-react';
 import { usePWA } from '../components/PWAContext';
@@ -148,7 +149,7 @@ const BuilderPage = () => {
       sessionStorage.removeItem('uploadedThemeColor');
       return uploadedColor;
     }
-    return "#0f172a";
+    return "#2274a5";
   });
   const [showColorPicker, setShowColorPicker] = useState(false);
   const [showLogoSelectionModal, setShowLogoSelectionModal] = useState(false);
@@ -158,6 +159,134 @@ const BuilderPage = () => {
   const photoFileInputRef = useRef(null);
   const logoFileInputRef = useRef(null);
   const errorTimeoutRef = useRef(null);
+
+  const [hasChanges, setHasChanges] = useState(false);
+  const [saveStatus, setSaveStatus] = useState("Saved");
+  const [draftAvailable, setDraftAvailable] = useState(false);
+  const [showRestoreModal, setShowRestoreModal] = useState(false);
+  const isInitialMount = useRef(true);
+
+  // Check draft existence and query param
+  useEffect(() => {
+    const draft = localStorage.getItem(`suyavivaram_resume_${selectedTemplate}`);
+    if (draft) {
+      setDraftAvailable(true);
+    }
+
+    const draftParam = searchParams.get('draft');
+    const uploaded = sessionStorage.getItem('uploadedResumeData');
+
+    if (draftParam === 'true' && draft) {
+      try {
+        const parsed = JSON.parse(draft);
+        isInitialMount.current = true;
+        setResumeData(parsed);
+        const savedTheme = localStorage.getItem(`suyavivaram_theme_${selectedTemplate}`);
+        if (savedTheme) {
+          setThemeColor(savedTheme);
+        }
+        setDraftAvailable(false);
+        setSaveStatus("Saved");
+        setHasChanges(false);
+      } catch (e) {
+        console.error("Failed to parse draft from localStorage:", e);
+      }
+    } else if (draft && !uploaded) {
+      setShowRestoreModal(true);
+    }
+  }, [selectedTemplate, searchParams]);
+
+  // Set initial mount to false after 200ms to ignore initial react-state render updates
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      isInitialMount.current = false;
+    }, 200);
+    return () => clearTimeout(timer);
+  }, []);
+
+  // Track user edits/changes
+  useEffect(() => {
+    if (isInitialMount.current) {
+      return;
+    }
+    if (!showRestoreModal) {
+      setHasChanges(true);
+    }
+  }, [resumeData, themeColor, showRestoreModal]);
+
+  // Autosave
+  useEffect(() => {
+    if (!hasChanges || showRestoreModal) {
+      return;
+    }
+
+    setSaveStatus("Saving...");
+
+    const timer = setTimeout(() => {
+      try {
+        localStorage.setItem(`suyavivaram_resume_${selectedTemplate}`, JSON.stringify(resumeData));
+        localStorage.setItem(`suyavivaram_theme_${selectedTemplate}`, themeColor);
+        localStorage.setItem(`suyavivaram_timestamp_${selectedTemplate}`, Date.now().toString());
+        setSaveStatus("Saved");
+        setDraftAvailable(false);
+      } catch (e) {
+        console.error("Failed to autosave draft:", e);
+        setSaveStatus("Error saving");
+      }
+    }, 1000);
+
+    return () => clearTimeout(timer);
+  }, [resumeData, themeColor, selectedTemplate, hasChanges, showRestoreModal]);
+
+  const loadDraftData = () => {
+    const draft = localStorage.getItem(`suyavivaram_resume_${selectedTemplate}`);
+    if (draft) {
+      try {
+        const parsed = JSON.parse(draft);
+        isInitialMount.current = true;
+        setResumeData(parsed);
+        const savedTheme = localStorage.getItem(`suyavivaram_theme_${selectedTemplate}`);
+        if (savedTheme) {
+          setThemeColor(savedTheme);
+        }
+        setDraftAvailable(false);
+        setSaveStatus("Saved");
+        setHasChanges(false);
+        setTimeout(() => {
+          isInitialMount.current = false;
+        }, 100);
+      } catch (e) {
+        console.error("Failed to load draft:", e);
+      }
+    }
+  };
+
+  const handleRestoreDraft = () => {
+    loadDraftData();
+    setShowRestoreModal(false);
+  };
+
+  const handleStartFresh = () => {
+    setShowRestoreModal(false);
+    setHasChanges(false);
+    setSaveStatus("Saved");
+  };
+
+
+  // beforeunload warning
+  useEffect(() => {
+    const handleBeforeUnload = (e) => {
+      if (hasChanges) {
+        e.preventDefault();
+        e.returnValue = 'You have unsaved changes. Are you sure you want to discard them?';
+        return e.returnValue;
+      }
+    };
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, [hasChanges]);
 
   useEffect(() => {
     setZoomInputVal(`${Math.round(zoomLevel * 100)}%`);
@@ -457,213 +586,237 @@ const BuilderPage = () => {
   };
 
   return (
-    <div className="flex h-screen bg-gray-200 overflow-hidden w-full">
-      {/* --- Sidebar layout container --- */}
-      <aside className={`transition-all duration-300 ease-in-out bg-white shadow-lg flex-shrink-0 relative ${isEditorExpanded ? "w-full md:w-[500px]" : "w-0"} overflow-hidden`}>
-        <div className="h-screen overflow-y-auto">
-          {selectedTemplate === "on-campus" ? (
-            <OnCampusEditor
-              resumeData={resumeData}
-              setResumeData={setResumeData}
-              photoFileInputRef={photoFileInputRef}
-              logoFileInputRef={logoFileInputRef}
-            />
-          ) : selectedTemplate === "modern-creative" ? (
-            <ModernCreativeEditor
-              resumeData={resumeData}
-              setResumeData={setResumeData}
-              photoFileInputRef={photoFileInputRef}
-              logoFileInputRef={logoFileInputRef}
-            />
-          ) : (
-            <CorporateMinimalEditor
-              resumeData={resumeData}
-              setResumeData={setResumeData}
-            />
-          )}
-        </div>
-      </aside>
-
-      {/* --- Main live preview pane --- */}
-      <main className="flex-1 p-4 sm:p-6 md:p-8 overflow-y-auto flex flex-col items-center">
-        {/* --- Action toolbar --- */}
-        <div className="mb-4 bg-white p-1 sm:p-2 rounded-md sm:rounded-lg shadow-md flex items-center gap-2 sticky top-0 z-10">
-          <ActionButton
-            onClick={handleBack}
-            label="Back"
-            className="h-7 sm:h-8 px-2 sm:px-3 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm flex items-center justify-center gap-1.5 mr-2"
-          >
-            <ArrowLeft className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-            <span className="hidden sm:inline">Back</span>
-          </ActionButton>
-          <div className="h-8 w-px bg-gray-200 mx-2" />
-          <ActionButton
-            onClick={() => setZoomLevel(z => Math.max(0.2, z - 0.1))}
-            label="Zoom Out"
-            showTooltipOnHover={true}
-            className="h-7 sm:h-8 px-2 sm:px-3 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 font-bold flex items-center justify-center"
-          >
-            -
-          </ActionButton>
-          <ActionButton
-            onClick={() => setZoomLevel(1)}
-            label="Reset Zoom"
-            showTooltipOnHover={true}
-            className="h-7 sm:h-8 px-2 sm:px-3 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 text-sm flex items-center justify-center"
-          >
-            Reset
-          </ActionButton>
-          <ActionButton
-            onClick={() => setZoomLevel(z => z + 0.1)}
-            label="Zoom In"
-            showTooltipOnHover={true}
-            className="h-7 sm:h-8 px-2 sm:px-3 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 font-bold flex items-center justify-center"
-          >
-            +
-          </ActionButton>
-          <input
-            type="text" value={zoomInputVal} onChange={handleZoomInputChange} onBlur={handleZoomInputBlur} onKeyDown={handleZoomInputKeyDown}
-            className="h-7 sm:h-8 text-sm text-gray-600 w-14 sm:w-16 text-center bg-gray-50 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
-            aria-label="Zoom percentage"
-          />
-
-          {/* --- Color picker for Modern layout only --- */}
-          {selectedTemplate === "modern-creative" && (
-            <div className="relative ml-2">
-              <ActionButton
-                onClick={() => setShowColorPicker(!showColorPicker)}
-                className="w-7 h-7 sm:w-8 sm:h-8 rounded-full border-2 border-white shadow-sm focus:outline-none ring-1 ring-gray-300 transition-transform hover:scale-105"
-                style={{ backgroundColor: themeColor }}
-                label="Change Theme Color"
-                showTooltipOnHover={true}
-              />
-              {showColorPicker && (
-                <Fragment>
-                  <div className="fixed inset-0 z-10" onClick={() => setShowColorPicker(false)} />
-                  <div className="absolute top-full mt-3 left-1/2 -translate-x-1/2 bg-white p-3 rounded-xl shadow-xl border border-gray-100 flex gap-2 z-20 animate-fade-in">
-                    {THEME_COLOR_OPTIONS.map(opt => (
-                      <button
-                        key={opt.name}
-                        onClick={() => { setThemeColor(opt.hex); setShowColorPicker(false); }}
-                        className="w-8 h-8 rounded-full hover:scale-110 transition-transform ring-1 ring-gray-200 border-2 border-white shadow-sm"
-                        style={{ backgroundColor: opt.hex }} title={opt.name}
-                      />
-                    ))}
-                  </div>
-                </Fragment>
+    <>
+      <div className="flex h-screen bg-gray-200 overflow-hidden w-full">
+        {/* --- Sidebar layout container --- */}
+        <aside className={`transition-all duration-300 ease-in-out bg-white shadow-lg flex-shrink-0 relative ${isEditorExpanded ? "w-full md:w-[500px]" : "w-0"} overflow-hidden`}>
+          <div className="h-screen overflow-y-auto flex flex-col">
+            {/* Status bar */}
+            <div className="sticky top-0 z-20 bg-slate-50 border-b border-gray-100 px-4 py-3 flex items-center justify-between shadow-sm backdrop-blur-md">
+              <div className="flex items-center gap-2">
+                <span className={`w-2 h-2 rounded-full ${saveStatus === "Saving..." ? "bg-amber animate-ping" : saveStatus === "Saved" ? "bg-emerald" : "bg-paprika"}`} />
+                <span className="text-xs font-semibold text-dimgrey">
+                  {saveStatus === "Saving..." ? "Saving draft..." : saveStatus === "Saved" ? "Draft saved to local storage" : "Changes not saved"}
+                </span>
+              </div>
+              {draftAvailable && (
+                <button
+                  onClick={loadDraftData}
+                  className="text-xs bg-cerulean text-white px-2.5 py-1 rounded font-bold hover:bg-cerulean/90 shadow-sm transition-all"
+                >
+                  Continue Editing
+                </button>
               )}
             </div>
-          )}
+            <div className="flex-1">
+              {selectedTemplate === "on-campus" ? (
+                <OnCampusEditor
+                  resumeData={resumeData}
+                  setResumeData={setResumeData}
+                  photoFileInputRef={photoFileInputRef}
+                  logoFileInputRef={logoFileInputRef}
+                />
+              ) : selectedTemplate === "modern-creative" ? (
+                <ModernCreativeEditor
+                  resumeData={resumeData}
+                  setResumeData={setResumeData}
+                  photoFileInputRef={photoFileInputRef}
+                  logoFileInputRef={logoFileInputRef}
+                />
+              ) : (
+                <CorporateMinimalEditor
+                  resumeData={resumeData}
+                  setResumeData={setResumeData}
+                />
+              )}
+            </div>
+          </div>
+        </aside>
 
-          {/* --- Install App Button --- */}
-          {isInstallable && (
+        {/* --- Main live preview pane --- */}
+        <main className="flex-1 p-4 sm:p-6 md:p-8 overflow-y-auto flex flex-col items-center">
+          {/* --- Action toolbar --- */}
+          <div className="mb-4 bg-white p-1 sm:p-2 rounded-md sm:rounded-lg shadow-md flex items-center gap-2 sticky top-0 z-10">
             <ActionButton
-              onClick={installApp}
-              label="Install as an App"
-              className="h-7 sm:h-8 px-2 sm:px-3 bg-teal-600 hover:bg-teal-700 text-white rounded text-sm flex items-center justify-center gap-1.5 ml-2 transition-colors animate-pulse"
+              onClick={handleBack}
+              label="Back"
+              className="h-7 sm:h-8 px-2 sm:px-3 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm flex items-center justify-center gap-1.5 mr-2"
             >
-              <Download className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-              <span>Install</span>
+              <ArrowLeft className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+              <span className="hidden sm:inline">Back</span>
             </ActionButton>
-          )}
+            <div className="h-8 w-px bg-gray-200 mx-2" />
+            <ActionButton
+              onClick={() => setZoomLevel(z => Math.max(0.2, z - 0.1))}
+              label="Zoom Out"
+              showTooltipOnHover={true}
+              className="h-7 sm:h-8 px-2 sm:px-3 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 font-bold flex items-center justify-center"
+            >
+              -
+            </ActionButton>
+            <ActionButton
+              onClick={() => setZoomLevel(1)}
+              label="Reset Zoom"
+              showTooltipOnHover={true}
+              className="h-7 sm:h-8 px-2 sm:px-3 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 text-sm flex items-center justify-center"
+            >
+              Reset
+            </ActionButton>
+            <ActionButton
+              onClick={() => setZoomLevel(z => z + 0.1)}
+              label="Zoom In"
+              showTooltipOnHover={true}
+              className="h-7 sm:h-8 px-2 sm:px-3 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 font-bold flex items-center justify-center"
+            >
+              +
+            </ActionButton>
+            <input
+              type="text" value={zoomInputVal} onChange={handleZoomInputChange} onBlur={handleZoomInputBlur} onKeyDown={handleZoomInputKeyDown}
+              className="h-7 sm:h-8 text-sm text-gray-600 w-14 sm:w-16 text-center bg-gray-50 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+              aria-label="Zoom percentage"
+            />
 
-          {/* --- Save Configuration Button --- */}
-          <ActionButton
-            onClick={handleSaveConfig}
-            label="Save Config"
-            className="h-7 sm:h-8 px-2 sm:px-3 bg-slate-700 hover:bg-slate-800 text-white rounded text-sm flex items-center justify-center gap-1.5 ml-2 transition-colors"
-          >
-            <Save className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-            <span className="hidden sm:inline">Save Config</span>
-          </ActionButton>
-
-          {/* --- PDF Generation Button --- */}
-          <ActionButton
-            onClick={handleDownloadPdf}
-            disabled={isDownloading}
-            label={isDownloading ? "Generating..." : "Save as PDF"}
-            className={`h-7 sm:h-8 px-2 sm:px-3 text-white rounded text-sm flex items-center justify-center gap-1.5 ml-2 transition-colors ${isDownloading ? "bg-green-400 cursor-wait" : "bg-green-500 hover:bg-green-600"
-              }`}
-          >
-            {isDownloading ? (
-              <svg className="animate-spin h-3.5 w-3.5 sm:h-4 sm:w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-              </svg>
-            ) : (
-              <Printer className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+            {/* --- Color picker for Modern layout only --- */}
+            {selectedTemplate === "modern-creative" && (
+              <div className="relative ml-2">
+                <ActionButton
+                  onClick={() => setShowColorPicker(!showColorPicker)}
+                  className="w-7 h-7 sm:w-8 sm:h-8 rounded-full border-2 border-white shadow-sm focus:outline-none ring-1 ring-gray-300 transition-transform hover:scale-105"
+                  style={{ backgroundColor: themeColor }}
+                  label="Change Theme Color"
+                  showTooltipOnHover={true}
+                />
+                {showColorPicker && (
+                  <Fragment>
+                    <div className="fixed inset-0 z-10" onClick={() => setShowColorPicker(false)} />
+                    <div className="absolute top-full mt-3 left-1/2 -translate-x-1/2 bg-white p-3 rounded-xl shadow-xl border border-gray-100 flex gap-2 z-20 animate-fade-in">
+                      {THEME_COLOR_OPTIONS.map(opt => (
+                        <button
+                          key={opt.name}
+                          onClick={() => { setThemeColor(opt.hex); setShowColorPicker(false); }}
+                          className="w-8 h-8 rounded-full hover:scale-110 transition-transform ring-1 ring-gray-200 border-2 border-white shadow-sm"
+                          style={{ backgroundColor: opt.hex }} title={opt.name}
+                        />
+                      ))}
+                    </div>
+                  </Fragment>
+                )}
+              </div>
             )}
-            <span className="hidden sm:inline">{isDownloading ? "Generating..." : "PDF"}</span>
-          </ActionButton>
-        </div>
 
-        {/* --- Scalable Preview Container --- */}
-        <div
-          style={{ transform: `scale(${zoomLevel})`, transformOrigin: "top" }}
-          className="transition-transform duration-200"
-        >
-          {selectedTemplate === "on-campus" ? (
-            <OnCampusPreview
-              ref={resumePreviewRef}
-              resumeData={resumeData}
-              onPhotoUploadClick={triggerPhotoUpload}
-              onLogoUploadClick={openLogoSelection}
-            />
-          ) : selectedTemplate === "modern-creative" ? (
-            <ModernCreativePreview
-              ref={resumePreviewRef}
-              resumeData={resumeData}
-              themeColor={themeColor}
-              onPhotoUploadClick={triggerPhotoUpload}
-              isDownloading={isDownloading}
-            />
-          ) : (
-            <CorporateMinimalPreview
-              ref={resumePreviewRef}
-              resumeData={resumeData}
-            />
-          )}
-        </div>
-      </main>
+            {/* --- Install App Button --- */}
+            {isInstallable && (
+              <ActionButton
+                onClick={installApp}
+                label="Install as an App"
+                className="h-7 sm:h-8 px-2 sm:px-3 bg-teal-600 hover:bg-teal-700 text-white rounded text-sm flex items-center justify-center gap-1.5 ml-2 transition-colors animate-pulse"
+              >
+                <Download className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                <span>Install</span>
+              </ActionButton>
+            )}
 
-      {/* --- Drawer Toggle Buttons --- */}
-      {!isEditorExpanded && (
-        <button
-          onClick={() => setIsEditorExpanded(true)}
-          className="fixed left-0 top-1/2 -translate-y-1/2 z-30 bg-blue-600 text-white rounded-r-lg px-2 py-4 shadow-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-300 ease-in-out"
-          aria-label="Show Editor"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-          </svg>
-        </button>
-      )}
-      {isEditorExpanded && (
-        <button
-          onClick={() => setIsEditorExpanded(false)}
-          className="fixed top-1/2 -translate-y-1/2 z-30 bg-blue-600 text-white rounded-l-lg px-2 py-4 shadow-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-300 ease-in-out left-full md:left-[500px] -translate-x-full"
-          aria-label="Hide Editor"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-          </svg>
-        </button>
-      )}
+            {/* --- Save Configuration Button --- */}
+            <ActionButton
+              onClick={handleSaveConfig}
+              label="Save Config"
+              className="h-7 sm:h-8 px-2 sm:px-3 bg-slate-700 hover:bg-slate-800 text-white rounded text-sm flex items-center justify-center gap-1.5 ml-2 transition-colors"
+            >
+              <Save className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+              <span className="hidden sm:inline">Save Config</span>
+            </ActionButton>
 
-      {/* --- Error message banner --- */}
-      {errorMessage && (
-        <div className="fixed bottom-10 left-1/2 -translate-x-1/2 bg-red-500 text-white px-6 py-3 rounded-lg shadow-lg z-50 animate-fade-in flex items-center gap-3">
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-          <span>{errorMessage}</span>
-        </div>
-      )}
+            {/* --- PDF Generation Button --- */}
+            <ActionButton
+              onClick={handleDownloadPdf}
+              disabled={isDownloading}
+              label={isDownloading ? "Generating..." : "Save as PDF"}
+              className={`h-7 sm:h-8 px-2 sm:px-3 text-white rounded text-sm flex items-center justify-center gap-1.5 ml-2 transition-colors ${isDownloading ? "bg-green-400 cursor-wait" : "bg-green-500 hover:bg-green-600"
+                }`}
+            >
+              {isDownloading ? (
+                <svg className="animate-spin h-3.5 w-3.5 sm:h-4 sm:w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                </svg>
+              ) : (
+                <Printer className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+              )}
+              <span className="hidden sm:inline">{isDownloading ? "Generating..." : "PDF"}</span>
+            </ActionButton>
+          </div>
+
+          {/* --- Scalable Preview Container --- */}
+          <div
+            style={{ transform: `scale(${zoomLevel})`, transformOrigin: "top" }}
+            className="transition-transform duration-200"
+          >
+            {selectedTemplate === "on-campus" ? (
+              <OnCampusPreview
+                ref={resumePreviewRef}
+                resumeData={resumeData}
+                onPhotoUploadClick={triggerPhotoUpload}
+                onLogoUploadClick={openLogoSelection}
+                unlockTableBorders={unlockTableBorders}
+                setResumeData={setResumeData}
+              />
+            ) : selectedTemplate === "modern-creative" ? (
+              <ModernCreativePreview
+                ref={resumePreviewRef}
+                resumeData={resumeData}
+                themeColor={themeColor}
+                onPhotoUploadClick={triggerPhotoUpload}
+                isDownloading={isDownloading}
+              />
+            ) : (
+              <CorporateMinimalPreview
+                ref={resumePreviewRef}
+                resumeData={resumeData}
+              />
+            )}
+          </div>
+        </main>
+
+        {/* --- Drawer Toggle Buttons --- */}
+        {!isEditorExpanded && (
+          <button
+            onClick={() => setIsEditorExpanded(true)}
+            className="fixed left-0 top-1/2 -translate-y-1/2 z-30 bg-blue-600 text-white rounded-r-lg px-2 py-4 shadow-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-300 ease-in-out"
+            aria-label="Show Editor"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+            </svg>
+          </button>
+        )}
+        {isEditorExpanded && (
+          <button
+            onClick={() => setIsEditorExpanded(false)}
+            className="fixed top-1/2 -translate-y-1/2 z-30 bg-blue-600 text-white rounded-l-lg px-2 py-4 shadow-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-300 ease-in-out left-full md:left-[500px] -translate-x-full"
+            aria-label="Hide Editor"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+            </svg>
+          </button>
+        )}
+
+        {/* --- Error message banner --- */}
+        {errorMessage && (
+          <div className="fixed bottom-10 left-1/2 -translate-x-1/2 bg-red-500 text-white px-6 py-3 rounded-lg shadow-lg z-50 animate-fade-in flex items-center gap-3">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <span>{errorMessage}</span>
+          </div>
+        )}
+
+      </div>
 
       {/* --- Logo Upload / Select Choice Dialog --- */}
-      {showLogoSelectionModal && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
-          <div className="bg-white rounded-xl shadow-2xl p-6 w-full max-w-sm transform transition-all scale-100 border border-gray-200">
+      {showLogoSelectionModal && createPortal(
+        <div className="fixed top-0 left-0 w-screen h-screen z-[60] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-fade-in">
+          <div className="bg-white rounded-xl shadow-2xl p-6 w-full max-w-sm border border-gray-200">
             <h3 className="text-xl font-bold text-gray-900 mb-6 text-center">Select Institute Logo</h3>
             <div className="space-y-3">
               <button
@@ -688,9 +841,46 @@ const BuilderPage = () => {
             </div>
             <button onClick={() => setShowLogoSelectionModal(false)} className="mt-6 w-full text-center text-gray-400 hover:text-gray-600 text-sm font-medium">Cancel</button>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
-    </div>
+
+      {/* --- Restore Draft Modal --- */}
+      {showRestoreModal && createPortal(
+        <div className="fixed top-0 left-0 w-screen h-screen z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in">
+          <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-md border border-slate-100">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="p-2 bg-cerulean/10 text-cerulean rounded-lg">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <h3 className="text-xl font-bold text-slate-900">Restore Autosaved Draft?</h3>
+            </div>
+
+            <p className="text-slate-600 text-sm mb-6 leading-relaxed">
+              We found a previously saved draft for the <strong className="text-slate-800">{selectedTemplate === 'on-campus' ? 'OnCampus' : selectedTemplate === 'modern-creative' ? 'Modern Creative' : 'Corporate Minimal'}</strong> layout. Would you like to restore it and continue editing, or start fresh with default sample data?
+            </p>
+
+            <div className="flex gap-3">
+              <button
+                onClick={handleRestoreDraft}
+                className="flex-1 px-4 py-3 bg-cerulean hover:bg-cerulean/90 text-white rounded-lg font-bold text-sm shadow-md transition-all hover:shadow-lg flex items-center justify-center gap-2"
+              >
+                Restore Draft
+              </button>
+              <button
+                onClick={handleStartFresh}
+                className="flex-1 px-4 py-3 bg-dimgrey hover:bg-dimgrey/90 text-white rounded-lg font-bold text-sm shadow-md transition-all hover:shadow-lg flex items-center justify-center gap-2"
+              >
+                Start Fresh
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
+    </>
   );
 };
 

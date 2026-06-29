@@ -178,7 +178,7 @@ export const ResumeSection = ({ title, children, splittable = false }) => (
   <div className="mb-6 break-inside-avoid resume-section-container" data-splittable={splittable}>
     <div className="flex items-center mb-1 section-header-flex">
       <h2 className="text-xl font-bold pr-4 flex-shrink-0" style={{ paddingBottom: "4px" }}>{title}</h2>
-      <div className="flex-grow border-t-[4px] section-header-line" style={{ borderColor: "#C00000" }} />
+      <div className="flex-grow border-t-[2px] section-header-line" style={{ borderColor: "#C00000" }} />
     </div>
     {children}
   </div>

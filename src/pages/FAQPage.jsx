@@ -16,14 +16,14 @@ const FAQItem = ({ question, answer }) => {
       >
         <h3
           className={`text-lg font-bold pr-8 transition-colors ${
-            isOpen ? 'text-blue-600' : 'text-slate-900 group-hover:text-slate-800'
+            isOpen ? 'text-cerulean' : 'text-slate-900 group-hover:text-slate-800'
           }`}
         >
           {question}
         </h3>
         <div
           className={`flex-shrink-0 ml-4 p-2 rounded-full transition-all duration-300 ${
-            isOpen ? 'bg-blue-100 text-blue-600 rotate-180' : 'bg-slate-100 text-slate-500 group-hover:bg-slate-200'
+            isOpen ? 'bg-cerulean/10 text-cerulean rotate-180' : 'bg-dimgrey/10 text-dimgrey group-hover:bg-dimgrey/20'
           }`}
         >
           <svg
@@ -87,11 +87,11 @@ const FAQPage = () => {
   ];
 
   return (
-    <div className="relative min-h-screen bg-white overflow-hidden font-sans selection:bg-teal-100 flex flex-col">
+    <div className="relative min-h-screen bg-white overflow-hidden font-sans selection:bg-cerulean/20 flex flex-col">
       {/* Background Blobs */}
-      <div className="absolute top-[-10%] left-[-5%] w-[50vw] h-[50vw] bg-[#FDF6B2] rounded-full mix-blend-multiply filter blur-[100px] opacity-70 animate-blob" />
-      <div className="absolute top-[-10%] right-[-10%] w-[50vw] h-[50vw] bg-[#99F6E4] rounded-full mix-blend-multiply filter blur-[100px] opacity-70 animate-blob animation-delay-2000" />
-      <div className="absolute bottom-[-20%] left-[10%] w-[50vw] h-[50vw] bg-[#FF7E67] rounded-full mix-blend-multiply filter blur-[100px] opacity-40 animate-blob animation-delay-4000" />
+      <div className="absolute top-[-10%] left-[-5%] w-[50vw] h-[50vw] bg-amber/25 rounded-full mix-blend-multiply filter blur-[100px] opacity-70 animate-blob" />
+      <div className="absolute top-[-10%] right-[-10%] w-[50vw] h-[50vw] bg-cerulean/25 rounded-full mix-blend-multiply filter blur-[100px] opacity-70 animate-blob animation-delay-2000" />
+      <div className="absolute bottom-[-20%] left-[10%] w-[50vw] h-[50vw] bg-paprika/20 rounded-full mix-blend-multiply filter blur-[100px] opacity-40 animate-blob animation-delay-4000" />
 
       {/* Main Container */}
       <div className="relative z-10 flex-grow flex flex-col p-6 md:p-12 max-w-4xl mx-auto w-full">
@@ -99,7 +99,7 @@ const FAQPage = () => {
         <div className="w-full mb-8">
           <button
             onClick={navigateBack}
-            className="flex items-center text-slate-600 hover:text-slate-900 transition-colors font-medium"
+            className="flex items-center text-dimgrey hover:text-cerulean transition-colors font-medium"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"

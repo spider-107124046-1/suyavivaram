@@ -12,14 +12,14 @@ const TemplatesPage = () => {
       id: 'on-campus',
       title: 'OnCampus Resume',
       description: 'A clean, professional format optimized for academic institutions. Perfect for engineering and research roles.',
-      color: 'blue',
+      color: 'cerulean',
       iconPath: 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z'
     },
     {
       id: 'modern-creative',
       title: 'Modern Creative',
       description: 'A vibrant layout with accent colors and a sidebar. Ideal for creative professionals, designers, and developers.',
-      color: 'purple',
+      color: 'berry',
       iconPath: 'M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01'
     },
     {
@@ -33,23 +33,23 @@ const TemplatesPage = () => {
 
   const renderTemplateCard = (template) => {
     const colorClasses = {
-      blue: {
-        border: 'hover:border-blue-500',
-        iconBg: 'bg-blue-100',
-        iconText: 'text-blue-600',
-        ctaText: 'text-blue-600 font-bold group-hover:text-blue-700'
+      cerulean: {
+        border: 'hover:border-cerulean',
+        iconBg: 'bg-cerulean/10',
+        iconText: 'text-cerulean',
+        ctaText: 'text-cerulean font-bold group-hover:text-cerulean/80'
       },
-      purple: {
-        border: 'hover:border-purple-500',
-        iconBg: 'bg-purple-100',
-        iconText: 'text-purple-600',
-        ctaText: 'text-purple-600 font-bold group-hover:text-purple-700'
+      berry: {
+        border: 'hover:border-berry',
+        iconBg: 'bg-berry/10',
+        iconText: 'text-berry',
+        ctaText: 'text-berry font-bold group-hover:text-berry/80'
       },
       emerald: {
-        border: 'hover:border-emerald-500',
-        iconBg: 'bg-emerald-100',
-        iconText: 'text-emerald-600',
-        ctaText: 'text-emerald-600 font-bold group-hover:text-emerald-700'
+        border: 'hover:border-emerald',
+        iconBg: 'bg-emerald/10',
+        iconText: 'text-emerald',
+        ctaText: 'text-emerald font-bold group-hover:text-emerald/80'
       }
     };
     const colors = colorClasses[template.color];
@@ -90,11 +90,11 @@ const TemplatesPage = () => {
   };
 
   return (
-    <div className="relative min-h-screen bg-white overflow-hidden font-sans selection:bg-teal-100 flex flex-col">
+    <div className="relative min-h-screen bg-white overflow-hidden font-sans selection:bg-cerulean/20 flex flex-col">
       {/* Background Blobs */}
-      <div className="absolute top-[-10%] left-[-5%] w-[50vw] h-[50vw] bg-[#FDF6B2] rounded-full mix-blend-multiply filter blur-[100px] opacity-70 animate-blob" />
-      <div className="absolute top-[-10%] right-[-10%] w-[50vw] h-[50vw] bg-[#99F6E4] rounded-full mix-blend-multiply filter blur-[100px] opacity-70 animate-blob animation-delay-2000" />
-      <div className="absolute bottom-[-20%] left-[10%] w-[50vw] h-[50vw] bg-[#FF7E67] rounded-full mix-blend-multiply filter blur-[100px] opacity-40 animate-blob animation-delay-4000" />
+      <div className="absolute top-[-10%] left-[-5%] w-[50vw] h-[50vw] bg-amber/25 rounded-full mix-blend-multiply filter blur-[100px] opacity-70 animate-blob" />
+      <div className="absolute top-[-10%] right-[-10%] w-[50vw] h-[50vw] bg-cerulean/25 rounded-full mix-blend-multiply filter blur-[100px] opacity-70 animate-blob animation-delay-2000" />
+      <div className="absolute bottom-[-20%] left-[10%] w-[50vw] h-[50vw] bg-paprika/20 rounded-full mix-blend-multiply filter blur-[100px] opacity-40 animate-blob animation-delay-4000" />
       <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-white rounded-full blur-[80px] opacity-60 z-0 pointer-events-none" />
 
       {/* Main Content */}
@@ -136,6 +136,7 @@ const TemplatesPage = () => {
 
       {/* Footer */}
       <footer className="relative z-10 py-6 text-center text-slate-500 text-sm font-medium">
+        Sorry Product Folks!
       </footer>
     </div>
   );

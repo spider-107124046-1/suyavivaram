@@ -92,7 +92,7 @@ export function reconstructResumeData(config) {
   return {
     resumeData,
     layout: config.layout || "on-campus",
-    themeColor: config.themeColor || "#0f172a"
+    themeColor: config.themeColor || "#2274a5"
   };
 }
 

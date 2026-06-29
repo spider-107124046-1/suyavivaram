@@ -1,21 +1,25 @@
 export const PAGE_HEIGHT_PX = 1122;
 
 export const THEME_COLOR_OPTIONS = [
-  { name: "Slate", hex: "#0f172a" },
-  { name: "Maroon", hex: "#7f1d1d" },
-  { name: "Dark Blue", hex: "#1e3a8a" },
-  { name: "Purple", hex: "#581c87" },
-  { name: "Teal", hex: "#134e4a" },
-  { name: "Black", hex: "#000000" }
+  { name: "Rich Cerulean", hex: "#2274a5" },
+  { name: "Blaze Orange", hex: "#f75c03" },
+  { name: "Carrot Orange", hex: "#f49009" },
+  { name: "Bright Amber", hex: "#f1c40f" },
+  { name: "Spicy Paprika", hex: "#e5643c" },
+  { name: "Berry Lipstick", hex: "#d90368" },
+  { name: "Dim Grey", hex: "#6d6867" },
+  { name: "Emerald", hex: "#00cc66" }
 ];
 
 export const THEME_COLOR_STYLES = {
-  "#0f172a": { textPrimary: "#E7E8EA", textSecondary: "#9FA2A9", border: "#3F4554", tagBg: "#272E3F" },
-  "#7f1d1d": { textPrimary: "#F2E8E8", textSecondary: "#CBA4A4", border: "#984A4A", tagBg: "#8B3333" },
-  "#1e3a8a": { textPrimary: "#E8EBF3", textSecondary: "#A5B0D0", border: "#4B61A1", tagBg: "#344D95" },
-  "#581c87": { textPrimary: "#EEE8F3", textSecondary: "#BCA4CF", border: "#79499F", tagBg: "#683293" },
-  "#134e4a": { textPrimary: "#E7EDEC", textSecondary: "#A0B8B6", border: "#42716E", tagBg: "#2A5F5C" },
-  "#000000": { textPrimary: "#E5E5E5", textSecondary: "#999999", border: "#333333", tagBg: "#191919" }
+  "#2274a5": { textPrimary: "#FFFFFF", textSecondary: "#D0E1FD", border: "#3c8dbc", tagBg: "#175276" },
+  "#f75c03": { textPrimary: "#FFFFFF", textSecondary: "#FFE1D0", border: "#d44f02", tagBg: "#b34202" },
+  "#f49009": { textPrimary: "#FFFFFF", textSecondary: "#FFF2D0", border: "#d37c07", tagBg: "#b36806" },
+  "#f1c40f": { textPrimary: "#1e293b", textSecondary: "#475569", border: "#d4ad0c", tagBg: "#dfb50e" },
+  "#e5643c": { textPrimary: "#FFFFFF", textSecondary: "#FFE5DD", border: "#c45432", tagBg: "#a44629" },
+  "#d90368": { textPrimary: "#FFFFFF", textSecondary: "#FFD0E5", border: "#b80257", tagBg: "#9a0149" },
+  "#6d6867": { textPrimary: "#FFFFFF", textSecondary: "#E2DDDD", border: "#5c5756", tagBg: "#4e4a49" },
+  "#00cc66": { textPrimary: "#FFFFFF", textSecondary: "#D0FDE5", border: "#00ab55", tagBg: "#009148" }
 };
 
 export const DEFAULT_RESUME_DATA = {
@@ -176,3 +180,5 @@ export const CORPORATE_MINIMAL_SAMPLE_DATA = {
   ],
   technicalAchievements: []
 };
+
+export const SOURCE_CODE_URL = "https://git.ilamparithi.dev/ilamparithi-in/suyavivaram";

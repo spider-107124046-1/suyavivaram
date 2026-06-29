@@ -397,7 +397,7 @@ export const ModernCreativeResumeLayout = forwardRef(({ resumeData, themeColor }
   const { personalDetails, education, internships, achievements, projects, skills, activities, summary, languages } = resumeData;
   const formatBold = text => text ? text.replace(/<b>/g, "<strong>").replace(/<\/b>/g, "</strong>").replace(/\n/g, "<br />") : "";
 
-  const colors = THEME_COLOR_STYLES[themeColor] || THEME_COLOR_STYLES["#0f172a"];
+  const colors = THEME_COLOR_STYLES[themeColor] || THEME_COLOR_STYLES["#2274a5"];
 
   return (
     <div
