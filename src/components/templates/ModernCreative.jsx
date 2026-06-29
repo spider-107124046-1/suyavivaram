@@ -395,7 +395,30 @@ export const ModernCreativeEditor = ({ resumeData, setResumeData, photoFileInput
 
 export const ModernCreativeResumeLayout = forwardRef(({ resumeData, themeColor }, ref) => {
   const { personalDetails, education, internships, achievements, projects, skills, activities, summary, languages } = resumeData;
-  const formatBold = text => text ? text.replace(/<b>/g, "<strong>").replace(/<\/b>/g, "</strong>").replace(/\n/g, "<br />") : "";
+
+  const formatDates = text => {
+    if (!text) return "";
+    return text.replace(/<date\b([^>]*)\/?>/gi, (match, attrs) => {
+      const fromMatch = attrs.match(/from="([^"]*)"/i);
+      const toMatch = attrs.match(/to="([^"]*)"/i);
+      const from = fromMatch ? fromMatch[1] : "";
+      const to = toMatch ? toMatch[1] : "";
+      let dateText = "";
+      if (from && to) {
+        dateText = `${from} – ${to}`;
+      } else {
+        dateText = from || to || "";
+      }
+      if (!dateText) return "";
+      return `<span class="subpoint-date" style="float: right; font-style: italic; font-weight: normal; font-size: inherit;">${dateText}</span>`;
+    });
+  };
+
+  const formatBold = text => {
+    if (!text) return "";
+    let processed = formatDates(text);
+    return processed.replace(/<b>/g, "<strong>").replace(/<\/b>/g, "</strong>").replace(/\n/g, "<br />");
+  };
 
   const colors = THEME_COLOR_STYLES[themeColor] || THEME_COLOR_STYLES["#2274a5"];
 
@@ -599,7 +622,7 @@ export const ModernCreativeResumeLayout = forwardRef(({ resumeData, themeColor }
                     {item.description.includes("\n") ? (
                       <div className="space-y-1">
                         {item.description.split("\n").filter(line => line.trim()).map((line, lineIdx) => (
-                          <div key={lineIdx} dangerouslySetInnerHTML={{ __html: line.replace(/<b>/g, "<strong>").replace(/<\/b>/g, "</strong>") }} />
+                          <div key={lineIdx} dangerouslySetInnerHTML={{ __html: formatBold(line) }} />
                         ))}
                       </div>
                     ) : (
@@ -618,7 +641,7 @@ export const ModernCreativeResumeLayout = forwardRef(({ resumeData, themeColor }
               <h2 className="text-lg font-bold uppercase text-slate-800">Achievements</h2>
             </div>
             <div className="space-y-2 text-sm text-slate-600">
-              {achievements.map((item, idx) => <div key={idx} dangerouslySetInnerHTML={{ __html: item.description }} />)}
+              {achievements.map((item, idx) => <div key={idx} dangerouslySetInnerHTML={{ __html: formatBold(item.description) }} />)}
             </div>
           </div>
         )}

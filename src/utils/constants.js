@@ -36,6 +36,7 @@ export const DEFAULT_RESUME_DATA = {
     github: ""
   },
   summary: "",
+  lineSpacing: 1.625,
   education: [
     { id: "edu1", year: "2023-Present", degree: "B.Tech- CSE", institution: "NIT, Trichy", grade: "9.2" },
     { id: "edu2", year: "2023", degree: "Class XII", institution: "Delhi Public School, R. K. Puram", grade: "97.2%" },

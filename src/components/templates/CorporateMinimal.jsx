@@ -351,7 +351,30 @@ const SectionHeader = ({ title }) => <h3 className="text-lg font-bold tracking-w
 
 export const CorporateMinimalResumeLayout = forwardRef(({ resumeData }, ref) => {
   const { personalDetails, education, projects, internships, achievements, skills, positions, activities, webLinks, coursework } = resumeData;
-  const formatBold = text => text ? text.replace(/<b>/g, "<strong>").replace(/<\/b>/g, "</strong>").replace(/\n/g, "<br />") : "";
+
+  const formatDates = text => {
+    if (!text) return "";
+    return text.replace(/<date\b([^>]*)\/?>/gi, (match, attrs) => {
+      const fromMatch = attrs.match(/from="([^"]*)"/i);
+      const toMatch = attrs.match(/to="([^"]*)"/i);
+      const from = fromMatch ? fromMatch[1] : "";
+      const to = toMatch ? toMatch[1] : "";
+      let dateText = "";
+      if (from && to) {
+        dateText = `${from} – ${to}`;
+      } else {
+        dateText = from || to || "";
+      }
+      if (!dateText) return "";
+      return `<span class="subpoint-date" style="float: right; font-style: italic; font-weight: normal; font-size: inherit;">${dateText}</span>`;
+    });
+  };
+
+  const formatBold = text => {
+    if (!text) return "";
+    let processed = formatDates(text);
+    return processed.replace(/<b>/g, "<strong>").replace(/<\/b>/g, "</strong>").replace(/\n/g, "<br />");
+  };
 
   return (
     <div
@@ -422,7 +445,7 @@ export const CorporateMinimalResumeLayout = forwardRef(({ resumeData }, ref) => 
                 {skills.map(item => (
                   <div key={item.id}>
                     <div className="font-bold text-sm uppercase mb-1 text-gray-800">{item.category}</div>
-                    <div className="text-sm text-gray-700 whitespace-pre-line leading-relaxed">{item.skills}</div>
+                    <div className="text-sm text-gray-700 whitespace-pre-line leading-relaxed" dangerouslySetInnerHTML={{ __html: formatBold(item.skills) }} />
                   </div>
                 ))}
               </div>
@@ -470,7 +493,7 @@ export const CorporateMinimalResumeLayout = forwardRef(({ resumeData }, ref) => 
               <ul className="text-sm text-gray-700">
                 {achievements.map(item => (
                   <CorporateMinimalBulletItem key={item.id}>
-                    <span dangerouslySetInnerHTML={{ __html: item.description }} />
+                    <span dangerouslySetInnerHTML={{ __html: formatBold(item.description) }} />
                   </CorporateMinimalBulletItem>
                 ))}
               </ul>
@@ -494,7 +517,7 @@ export const CorporateMinimalResumeLayout = forwardRef(({ resumeData }, ref) => 
               <ul className="text-sm text-gray-700">
                 {item.description.split('\n').map((line, idx) => line.trim() && (
                   <CorporateMinimalBulletItem key={idx}>
-                    <span dangerouslySetInnerHTML={{ __html: line.replace(/<b>/g, "<strong>").replace(/<\/b>/g, "</strong>") }} />
+                    <span dangerouslySetInnerHTML={{ __html: formatBold(line) }} />
                   </CorporateMinimalBulletItem>
                 ))}
               </ul>

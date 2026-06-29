@@ -129,6 +129,54 @@ export const OnCampusEditor = ({ resumeData, setResumeData, photoFileInputRef, l
     <div className="p-4 bg-white relative">
       <h1 className="text-3xl font-bold text-center mb-8 text-gray-800">Resume Editor</h1>
 
+      {/* --- Line Spacing Slider --- */}
+      <div className="mb-6 p-4 bg-blue-50/50 border border-blue-100 rounded-xl shadow-sm">
+        <div className="flex items-center justify-between mb-3">
+          <label htmlFor="line-spacing-slider" className="text-xs font-bold text-gray-500 uppercase tracking-wide flex items-center gap-1.5 select-none">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+            Line Spacing
+          </label>
+          <span className="text-xs font-bold px-2.5 py-1 bg-blue-100 text-blue-700 rounded-lg select-none">
+            {(resumeData.lineSpacing || 1.625).toFixed(2)}x
+          </span>
+        </div>
+        <div className="flex items-center gap-3">
+          <input
+            id="line-spacing-slider"
+            type="range"
+            min="1.4"
+            max="1.8"
+            step="0.01"
+            value={resumeData.lineSpacing || 1.625}
+            onChange={(e) => {
+              const val = parseFloat(parseFloat(e.target.value).toFixed(3));
+              setResumeData(prev => ({
+                ...prev,
+                lineSpacing: val
+              }));
+            }}
+            className="w-full accent-blue-600 h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+          />
+          <button
+            onClick={() => {
+              setResumeData(prev => ({
+                ...prev,
+                lineSpacing: 1.625
+              }));
+            }}
+            className="text-xs font-bold text-blue-600 hover:text-blue-800 transition-colors shrink-0 focus:outline-none focus:underline"
+            title="Reset to default line spacing"
+          >
+            Reset
+          </button>
+        </div>
+        <p className="text-[11px] text-gray-400 mt-2 ml-1 select-none">
+          Adjust the content line height to fit your text perfectly on the pages.
+        </p>
+      </div>
+
       {/* --- Personal Details accordion --- */}
       <OnCampusAccordion
         title="Personal Details"
@@ -442,7 +490,30 @@ export const OnCampusEditor = ({ resumeData, setResumeData, photoFileInputRef, l
 
 export const OnCampusResumeLayout = forwardRef(({ resumeData }, ref) => {
   const { personalDetails, education, internships, achievements, projects, skills, positions, activities } = resumeData;
-  const formatBold = text => text ? text.replace(/<b>/g, "<strong>").replace(/<\/b>/g, "</strong>").replace(/\n/g, "<br />") : "";
+
+  const formatDates = text => {
+    if (!text) return "";
+    return text.replace(/<date\b([^>]*)\/?>/gi, (match, attrs) => {
+      const fromMatch = attrs.match(/from="([^"]*)"/i);
+      const toMatch = attrs.match(/to="([^"]*)"/i);
+      const from = fromMatch ? fromMatch[1] : "";
+      const to = toMatch ? toMatch[1] : "";
+      let dateText = "";
+      if (from && to) {
+        dateText = `${from} – ${to}`;
+      } else {
+        dateText = from || to || "";
+      }
+      if (!dateText) return "";
+      return `<span class="subpoint-date" style="float: right; font-style: italic; font-weight: normal; font-size: inherit;">${dateText}</span>`;
+    });
+  };
+
+  const formatBold = text => {
+    if (!text) return "";
+    let processed = formatDates(text);
+    return processed.replace(/<b>/g, "<strong>").replace(/<\/b>/g, "</strong>").replace(/\n/g, "<br />");
+  };
 
   const renderParsedDescription = (description) => {
     if (!description) return null;
@@ -515,7 +586,7 @@ export const OnCampusResumeLayout = forwardRef(({ resumeData }, ref) => {
         {personalDetails.photo && <img src={personalDetails.photo} alt="Profile" className="h-[140px] w-[130px] object-cover border border-black ml-4 flex-shrink-0" />}
       </header>
       <hr className="border-t-[2px] border-black mt-4 mb-2 -mx-10" />
-      <main className="text-[15px] pt-2">
+      <main className="text-[15px] pt-2" style={{ lineHeight: resumeData.lineSpacing || 1.625 }}>
         {education && education.length > 0 && (
           <ResumeSection title="Educational Qualification">
             <div className="mt-3.5">
@@ -545,7 +616,7 @@ export const OnCampusResumeLayout = forwardRef(({ resumeData }, ref) => {
         {achievements && achievements.length > 0 && (
           <ResumeSection title="Academic Achievements" splittable={true}>
             <ul className="custom-bullet-list technical-skills-list space-y-1 text-[15px]">
-              {achievements.map(item => <li key={item.id} dangerouslySetInnerHTML={{ __html: item.description }} />)}
+              {achievements.map(item => <li key={item.id} dangerouslySetInnerHTML={{ __html: formatBold(item.description) }} />)}
             </ul>
           </ResumeSection>
         )}
@@ -598,7 +669,7 @@ export const OnCampusResumeLayout = forwardRef(({ resumeData }, ref) => {
                 <li key={item.id} className="flex items-start">
                   <span className="w-56 flex-shrink-0 break-words">{item.category}</span>
                   <span className="mx-2 flex-shrink-0">:</span>
-                  <span className="flex-1 break-words text-justify">{item.skills}</span>
+                  <span className="flex-1 break-words text-justify" dangerouslySetInnerHTML={{ __html: formatBold(item.skills) }} />
                 </li>
               ))}
             </ul>
@@ -633,7 +704,7 @@ export const OnCampusResumeLayout = forwardRef(({ resumeData }, ref) => {
                   <h3 className="font-bold text-[15px]">{item.title}</h3>
                   <ul className="custom-bullet-list technical-skills-list mt-1">
                     {item.description.split("\n").map((line, idx) => line.trim() !== "" && (
-                      <li key={idx} dangerouslySetInnerHTML={{ __html: line }} />
+                      <li key={idx} dangerouslySetInnerHTML={{ __html: formatBold(line) }} />
                     ))}
                   </ul>
                 </div>
@@ -840,7 +911,10 @@ export const OnCampusPreview = forwardRef(({ resumeData, onPhotoUploadClick, onL
               )}
               <main
                 className={`text-[15px] flex-grow ${idx === 0 ? "pt-2" : "pt-0"}`}
-                style={isMobileOrSmallScreen ? { paddingBottom: `${footerHeight + 8}px` } : undefined}
+                style={{
+                  lineHeight: resumeData.lineSpacing || 1.625,
+                  ...(isMobileOrSmallScreen ? { paddingBottom: `${footerHeight + 8}px` } : {})
+                }}
                 dangerouslySetInnerHTML={{ __html: pageContent }}
               />
               <div
