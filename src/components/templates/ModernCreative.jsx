@@ -1,4 +1,5 @@
 import { useState, useRef, useImperativeHandle, forwardRef } from 'react';
+import { createPortal } from 'react-dom';
 import ReactCrop from 'react-image-crop';
 import 'react-image-crop/dist/ReactCrop.css';
 import {
@@ -105,6 +106,9 @@ export const ModernCreativeEditor = ({ resumeData, setResumeData, photoFileInput
     canvas.height = completedCrop.height * scaleY * pixelRatio;
     ctx.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
     ctx.imageSmoothingQuality = "high";
+    // Fill white background so transparent areas don't render as black
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(0, 0, completedCrop.width * scaleX, completedCrop.height * scaleY);
     ctx.drawImage(
       img,
       completedCrop.x * scaleX,
@@ -148,12 +152,12 @@ export const ModernCreativeEditor = ({ resumeData, setResumeData, photoFileInput
         <ModernTextInput label="Title/Degree" name="degree" value={resumeData.personalDetails.degree} onChange={handlePersonalDetailsChange} />
         <div className="mb-4">
           <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5 ml-1">Profile Photo</label>
-          <input type="file" accept="image/*" onChange={(e) => handleFileChange(e, "photo")} ref={photoFileInputRef} className="hidden" />
+          <input type="file" accept="image/jpeg,image/png,image/gif,image/webp,image/svg+xml,image/bmp" onChange={(e) => handleFileChange(e, "photo")} ref={photoFileInputRef} className="hidden" />
           <button
             onClick={() => photoFileInputRef.current?.click()}
             className="w-full px-4 py-2.5 border border-dashed border-gray-300 rounded-lg hover:bg-gray-50 hover:border-purple-300 hover:text-purple-600 transition-all bg-white text-gray-600 text-sm font-medium"
           >
-            Upload Photo
+            Select Photo
           </button>
         </div>
         <ModernTextInput label="Date of Birth" name="dob" value={resumeData.personalDetails.dob} onChange={handlePersonalDetailsChange} />
@@ -367,11 +371,11 @@ export const ModernCreativeEditor = ({ resumeData, setResumeData, photoFileInput
         ))}
       </ModernAccordion>
 
-      {/* --- Crop Modal overlay --- */}
-      {showCropModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50">
-          <div className="bg-white p-4 rounded-lg max-w-2xl w-full">
-            <h2 className="text-xl font-bold mb-4">Crop Your Image</h2>
+      {/* --- Crop Modal overlay (portal) --- */}
+      {showCropModal && createPortal(
+        <div className="fixed top-0 left-0 w-screen h-screen z-[60] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-fade-in">
+          <div className="bg-white rounded-xl shadow-2xl p-6 w-full max-w-2xl border border-gray-200">
+            <h2 className="text-xl font-bold mb-4 text-gray-900">Crop Your Image</h2>
             {cropSrc && (
               <ReactCrop
                 crop={crop}
@@ -382,12 +386,13 @@ export const ModernCreativeEditor = ({ resumeData, setResumeData, photoFileInput
                 <img ref={imageRef} alt="Crop me" src={cropSrc} onLoad={onImageLoad} style={{ maxHeight: "70vh" }} />
               </ReactCrop>
             )}
-            <div className="mt-4 flex justify-end space-x-2">
-              <button onClick={() => { setShowCropModal(false); setCropSrc(""); }} className="px-4 py-2 bg-gray-300 text-gray-800 rounded hover:bg-gray-400">Cancel</button>
-              <button onClick={handleCropSave} className="px-4 py-2 bg-purple-500 text-white rounded hover:bg-purple-600">Crop & Save</button>
+            <div className="mt-6 flex justify-end gap-3">
+              <button onClick={() => { setShowCropModal(false); setCropSrc(""); }} className="px-4 py-2 bg-gray-100 text-gray-800 rounded-lg font-semibold hover:bg-gray-200 transition-colors">Cancel</button>
+              <button onClick={handleCropSave} className="px-4 py-2 bg-purple-600 text-white rounded-lg font-semibold hover:bg-purple-700 transition-colors">Crop & Save</button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );
@@ -687,7 +692,7 @@ export const ModernCreativePreview = forwardRef(({ resumeData, themeColor, onPho
             isPlaceholderImage(resumeData.personalDetails.photo) ? "bg-opacity-50 opacity-100" : "bg-opacity-40 opacity-0 group-hover:opacity-100"
           }`}
           style={{ marginLeft: "0", top: isDownloading ? "26px" : "32px" }}
-          aria-label="Upload new photo"
+          aria-label="Select new photo"
         >
           <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />

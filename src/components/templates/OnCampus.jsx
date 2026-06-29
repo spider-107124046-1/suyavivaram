@@ -1,4 +1,5 @@
 import { useState, useRef, useLayoutEffect, useImperativeHandle, forwardRef, Fragment } from 'react';
+import { createPortal } from 'react-dom';
 import ReactCrop from 'react-image-crop';
 import 'react-image-crop/dist/ReactCrop.css';
 import {
@@ -100,6 +101,9 @@ export const OnCampusEditor = ({ resumeData, setResumeData, photoFileInputRef, l
     canvas.height = completedCrop.height * scaleY * pixelRatio;
     ctx.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
     ctx.imageSmoothingQuality = "high";
+    // Fill white background so transparent areas don't render as black
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(0, 0, completedCrop.width * scaleX, completedCrop.height * scaleY);
     ctx.drawImage(
       img,
       completedCrop.x * scaleX,
@@ -190,17 +194,17 @@ export const OnCampusEditor = ({ resumeData, setResumeData, photoFileInputRef, l
         <OnCampusTextInput label="Full Name" name="name" value={resumeData.personalDetails.name} onChange={handlePersonalDetailsChange} />
         <div className="mb-4">
           <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5 ml-1">Profile Photo</label>
-          <input type="file" accept="image/*" onChange={(e) => handleFileChange(e, "photo")} ref={photoFileInputRef} className="hidden" />
+          <input type="file" accept="image/jpeg,image/png,image/gif,image/webp,image/svg+xml,image/bmp" onChange={(e) => handleFileChange(e, "photo")} ref={photoFileInputRef} className="hidden" />
           <button
             onClick={() => photoFileInputRef.current?.click()}
             className="w-full px-4 py-2.5 border border-dashed border-gray-300 rounded-lg hover:bg-gray-50 hover:border-blue-300 hover:text-blue-600 transition-all bg-white text-gray-600 text-sm font-medium"
           >
-            Upload Photo
+            Select Photo
           </button>
         </div>
         <div className="mb-4">
           <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5 ml-1">Institute Logo</label>
-          <input type="file" accept="image/*" onChange={(e) => handleFileChange(e, "logo")} ref={logoFileInputRef} className="hidden" />
+          <input type="file" accept="image/jpeg,image/png,image/gif,image/webp,image/svg+xml,image/bmp" onChange={(e) => handleFileChange(e, "logo")} ref={logoFileInputRef} className="hidden" />
           <div className="flex gap-2">
             <button
               onClick={handleUseDefaultLogo}
@@ -212,7 +216,7 @@ export const OnCampusEditor = ({ resumeData, setResumeData, photoFileInputRef, l
               onClick={() => logoFileInputRef.current?.click()}
               className="w-1/2 px-4 py-2.5 border border-dashed border-gray-300 rounded-lg hover:bg-gray-50 hover:border-blue-300 hover:text-blue-600 transition-all bg-white text-gray-600 text-sm font-medium"
             >
-              Upload Logo
+              Select Logo
             </button>
           </div>
         </div>
@@ -462,11 +466,11 @@ export const OnCampusEditor = ({ resumeData, setResumeData, photoFileInputRef, l
         ))}
       </OnCampusAccordion>
 
-      {/* --- Crop Modal overlay --- */}
-      {showCropModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50">
-          <div className="bg-white p-4 rounded-lg max-w-2xl w-full">
-            <h2 className="text-xl font-bold mb-4">Crop Your Image</h2>
+      {/* --- Crop Modal overlay (portal) --- */}
+      {showCropModal && createPortal(
+        <div className="fixed top-0 left-0 w-screen h-screen z-[60] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-fade-in">
+          <div className="bg-white rounded-xl shadow-2xl p-6 w-full max-w-2xl border border-gray-200">
+            <h2 className="text-xl font-bold mb-4 text-gray-900">Crop Your Image</h2>
             {cropSrc && (
               <ReactCrop
                 crop={crop}
@@ -477,12 +481,13 @@ export const OnCampusEditor = ({ resumeData, setResumeData, photoFileInputRef, l
                 <img ref={imageRef} alt="Crop me" src={cropSrc} onLoad={onImageLoad} style={{ maxHeight: "70vh" }} />
               </ReactCrop>
             )}
-            <div className="mt-4 flex justify-end space-x-2">
-              <button onClick={() => { setShowCropModal(false); setCropSrc(""); }} className="px-4 py-2 bg-gray-300 text-gray-800 rounded hover:bg-gray-400">Cancel</button>
-              <button onClick={handleCropSave} className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">Crop & Save</button>
+            <div className="mt-6 flex justify-end gap-3">
+              <button onClick={() => { setShowCropModal(false); setCropSrc(""); }} className="px-4 py-2 bg-gray-100 text-gray-800 rounded-lg font-semibold hover:bg-gray-200 transition-colors">Cancel</button>
+              <button onClick={handleCropSave} className="px-4 py-2 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors">Crop & Save</button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );
@@ -928,7 +933,7 @@ export const OnCampusPreview = forwardRef(({ resumeData, onPhotoUploadClick, onL
                   onClick={onLogoUploadClick}
                   className={`absolute top-[56px] left-[40px] h-36 w-36 bg-black flex items-center justify-center text-white cursor-pointer group transition-opacity duration-300 ${isPlaceholderImage(resumeData.personalDetails.logo) ? "bg-opacity-50 opacity-100" : "bg-opacity-40 opacity-50 group-hover:opacity-100"
                     }`}
-                  aria-label="Upload new logo"
+                  aria-label="Select new logo"
                 >
                   <UploadPromptIcon />
                 </button>
@@ -936,7 +941,7 @@ export const OnCampusPreview = forwardRef(({ resumeData, onPhotoUploadClick, onL
                   onClick={onPhotoUploadClick}
                   className={`absolute top-[56px] right-[40px] h-[140px] w-[130px] bg-black flex items-center justify-center text-white cursor-pointer group transition-opacity duration-300 ${isPlaceholderImage(resumeData.personalDetails.photo) ? "bg-opacity-50 opacity-100" : "bg-opacity-40 opacity-50 group-hover:opacity-100"
                     }`}
-                  aria-label="Upload new photo"
+                  aria-label="Select new photo"
                 >
                   <UploadPromptIcon />
                 </button>

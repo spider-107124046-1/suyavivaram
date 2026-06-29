@@ -335,11 +335,11 @@ const BuilderPage = () => {
     const isPhotoPlaceholder = isPlaceholderImage(resumeData.personalDetails.photo);
     const isLogoPlaceholder = isPlaceholderImage(resumeData.personalDetails.logo);
     if (selectedTemplate === "on-campus") {
-      if (isPhotoPlaceholder && isLogoPlaceholder) return "Please upload a profile photo and the institute logo before downloading.";
-      if (isPhotoPlaceholder) return "Please upload a profile photo before downloading.";
-      if (isLogoPlaceholder) return "Please upload the institute logo before downloading.";
+      if (isPhotoPlaceholder && isLogoPlaceholder) return "Please select a profile photo and the institute logo before saving as PDF.";
+      if (isPhotoPlaceholder) return "Please select a profile photo before saving as PDF.";
+      if (isLogoPlaceholder) return "Please select the institute logo before saving as PDF.";
     } else if (selectedTemplate === "modern-creative" && isPhotoPlaceholder) {
-      return "Please upload a profile photo before downloading.";
+      return "Please select a profile photo before saving as PDF.";
     }
     return null;
   };
@@ -370,7 +370,7 @@ const BuilderPage = () => {
     const pages = previewEl.querySelectorAll(".resume-page-container");
     if (pages.length === 0) {
       console.error("No pages found to download.");
-      showBannerError("There is no content to download as a PDF.");
+      showBannerError("There is no content to save as a PDF.");
       return;
     }
 
@@ -379,7 +379,7 @@ const BuilderPage = () => {
     try {
       const printWindow = window.open("", "_blank");
       if (!printWindow) {
-        showBannerError("Popup blocked. Please allow popups for this website to download your resume.");
+        showBannerError("Popup blocked. Please allow popups for this website to save your resume as PDF.");
         setIsDownloading(false);
         return;
       }
@@ -440,9 +440,9 @@ const BuilderPage = () => {
             box-sizing: border-box !important;
             position: relative !important;
           }
-          /* Hide helper button overlays, upload triggers, and interactive components */
+          /* Hide helper button overlays, select triggers, and interactive components */
           button,
-          [aria-label^="Upload"],
+          [aria-label^="Select"],
           [class*="upload-btn"],
           .no-print {
             display: none !important;
@@ -466,7 +466,7 @@ const BuilderPage = () => {
             position: relative;
           }
           button,
-          [aria-label^="Upload"],
+          [aria-label^="Select"],
           [class*="upload-btn"],
           .no-print {
             display: none !important;
@@ -478,8 +478,8 @@ const BuilderPage = () => {
       const container = doc.getElementById('print-container');
       pages.forEach(page => {
         const clone = page.cloneNode(true);
-        // Clean up buttons and upload prompts in the cloned pages
-        clone.querySelectorAll('button, [aria-label^="Upload"], .no-print').forEach(el => el.remove());
+        // Clean up buttons and select prompts in the cloned pages
+        clone.querySelectorAll('button, [aria-label^="Select"], .no-print').forEach(el => el.remove());
         container.appendChild(clone);
       });
 
@@ -871,7 +871,7 @@ const BuilderPage = () => {
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                 </svg>
-                Upload Logo
+                Select Logo
               </button>
             </div>
             <button onClick={() => setShowLogoSelectionModal(false)} className="mt-6 w-full text-center text-gray-400 hover:text-gray-600 text-sm font-medium">Cancel</button>
