@@ -1,7 +1,7 @@
-import React, { useState, useEffect, useRef, Fragment } from 'react';
+import { useState, useEffect, useRef, Fragment } from 'react';
 import { createPortal } from 'react-dom';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Save, Printer, Download } from 'lucide-react';
+import { ArrowLeft, Save, Printer, Download, Copy, Check } from 'lucide-react';
 import { usePWA } from '../components/PWAContext';
 import {
   OnCampusEditor,
@@ -47,7 +47,9 @@ const ActionButton = ({
       if (navigator.vibrate) {
         try {
           navigator.vibrate(50);
-        } catch (err) { }
+        } catch (err) {
+          void err;
+        }
       }
     }, 500);
   };
@@ -166,6 +168,19 @@ const BuilderPage = () => {
   const [draftAvailable, setDraftAvailable] = useState(false);
   const [showRestoreModal, setShowRestoreModal] = useState(false);
   const isInitialMount = useRef(true);
+  const [copiedEmDash, setCopiedEmDash] = useState(false);
+  const emDashTimeoutRef = useRef(null);
+
+  const handleCopyEmDash = () => {
+    navigator.clipboard.writeText("–");
+    setCopiedEmDash(true);
+    if (emDashTimeoutRef.current) {
+      clearTimeout(emDashTimeoutRef.current);
+    }
+    emDashTimeoutRef.current = setTimeout(() => {
+      setCopiedEmDash(false);
+    }, 1500);
+  };
 
   // Check draft existence and query param
   useEffect(() => {
@@ -600,14 +615,31 @@ const BuilderPage = () => {
                   {saveStatus === "Saving..." ? "Saving draft..." : saveStatus === "Saved" ? "Draft saved to local storage" : "Changes not saved"}
                 </span>
               </div>
-              {draftAvailable && (
+              <div className="flex items-center gap-2">
                 <button
-                  onClick={loadDraftData}
-                  className="text-xs bg-cerulean text-white px-2.5 py-1 rounded font-bold hover:bg-cerulean/90 shadow-sm transition-all"
+                  onClick={handleCopyEmDash}
+                  className={`text-xs px-2.5 py-1 rounded font-semibold border transition-all flex items-center gap-1 active:scale-95 ${copiedEmDash
+                    ? "bg-green-50 border-green-200 text-green-600 shadow-sm"
+                    : "bg-slate-100 border-slate-200 hover:bg-slate-200 text-slate-700 hover:border-slate-300"
+                    }`}
+                  title="Copy em dash (–) to clipboard"
                 >
-                  Continue Editing
+                  {copiedEmDash ? (
+                    <Check className="h-3.5 w-3.5 text-green-600" />
+                  ) : (
+                    <Copy className="h-3.5 w-3.5 text-slate-500" />
+                  )}
+                  <span>{copiedEmDash ? "Copied!" : "Copy"}: –</span>
                 </button>
-              )}
+                {draftAvailable && (
+                  <button
+                    onClick={loadDraftData}
+                    className="text-xs bg-cerulean text-white px-2.5 py-1 rounded font-bold hover:bg-cerulean/90 shadow-sm transition-all"
+                  >
+                    Continue Editing
+                  </button>
+                )}
+              </div>
             </div>
             <div className="flex-1">
               {selectedTemplate === "on-campus" ? (

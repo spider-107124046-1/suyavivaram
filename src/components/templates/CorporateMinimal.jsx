@@ -1,4 +1,4 @@
-import React, { useState, useRef, useImperativeHandle, forwardRef } from 'react';
+import { useRef, useImperativeHandle, forwardRef } from 'react';
 import {
   CorporateAccordion,
   CorporateTextInput,
@@ -347,11 +347,11 @@ const CorporateMinimalBulletItem = ({ children }) => (
   </li>
 );
 
+const SectionHeader = ({ title }) => <h3 className="text-lg font-bold tracking-widest text-gray-800 uppercase mb-1">{title}</h3>;
+
 export const CorporateMinimalResumeLayout = forwardRef(({ resumeData }, ref) => {
   const { personalDetails, education, projects, internships, achievements, skills, positions, activities, webLinks, coursework } = resumeData;
   const formatBold = text => text ? text.replace(/<b>/g, "<strong>").replace(/<\/b>/g, "</strong>").replace(/\n/g, "<br />") : "";
-
-  const SectionHeader = ({ title }) => <h3 className="text-lg font-bold tracking-widest text-gray-800 uppercase mb-1">{title}</h3>;
 
   return (
     <div
@@ -468,7 +468,11 @@ export const CorporateMinimalResumeLayout = forwardRef(({ resumeData }, ref) => 
             <section>
               <SectionHeader title="Achievements and Interests" />
               <ul className="text-sm text-gray-700">
-                {achievements.map(item => <CorporateMinimalBulletItem key={item.id} children={<span dangerouslySetInnerHTML={{ __html: item.description }} />} />)}
+                {achievements.map(item => (
+                  <CorporateMinimalBulletItem key={item.id}>
+                    <span dangerouslySetInnerHTML={{ __html: item.description }} />
+                  </CorporateMinimalBulletItem>
+                ))}
               </ul>
             </section>
           )}
@@ -476,7 +480,11 @@ export const CorporateMinimalResumeLayout = forwardRef(({ resumeData }, ref) => 
             <section>
               <SectionHeader title="Positions of Responsibility" />
               <ul className="text-sm text-gray-700">
-                {positions.map(item => <CorporateMinimalBulletItem key={item.id} children={<span dangerouslySetInnerHTML={{ __html: formatBold(item.description) }} />} />)}
+                {positions.map(item => (
+                  <CorporateMinimalBulletItem key={item.id}>
+                    <span dangerouslySetInnerHTML={{ __html: formatBold(item.description) }} />
+                  </CorporateMinimalBulletItem>
+                ))}
               </ul>
             </section>
           )}
@@ -484,7 +492,11 @@ export const CorporateMinimalResumeLayout = forwardRef(({ resumeData }, ref) => 
             <section key={item.id}>
               <SectionHeader title="Extracurricular Activities" />
               <ul className="text-sm text-gray-700">
-                {item.description.split('\n').map((line, idx) => line.trim() && <CorporateMinimalBulletItem key={idx} children={<span dangerouslySetInnerHTML={{ __html: line.replace(/<b>/g, "<strong>").replace(/<\/b>/g, "</strong>") }} />} />)}
+                {item.description.split('\n').map((line, idx) => line.trim() && (
+                  <CorporateMinimalBulletItem key={idx}>
+                    <span dangerouslySetInnerHTML={{ __html: line.replace(/<b>/g, "<strong>").replace(/<\/b>/g, "</strong>") }} />
+                  </CorporateMinimalBulletItem>
+                ))}
               </ul>
             </section>
           ))}

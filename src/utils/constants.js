@@ -42,8 +42,8 @@ export const DEFAULT_RESUME_DATA = {
     { id: "edu3", year: "2021", degree: "Class X", institution: "Delhi Public School, R. K. Puram", grade: "98.8%" }
   ],
   internships: [
-    { id: "int1", title: "Research Internship at Indian Institute of Technology Guwahati", date: "Jun 2025 - Present", description: "Working as a research intern on the project Air to Water Generator. I simulated a model in Dymola to extract water from humid air with the purpose of satisfying water requirements in coastal regions." },
-    { id: "int2", title: "Internship at AHODS Technologies Private Limited", date: "Jun 2025 - Aug 2025", description: "Collaborated with IIT Delhi on a project to enhance onboard hydrogen production for vehicles. Conducted a literature review on electrolysis methods to propose cost-effective solutions." }
+    { id: "int1", title: "Research Internship at Indian Institute of Technology Guwahati", from: "Jun 2025", to: "Present", description: "Working as a research intern on the project Air to Water Generator. I simulated a model in Dymola to extract water from humid air with the purpose of satisfying water requirements in coastal regions." },
+    { id: "int2", title: "Internship at AHODS Technologies Private Limited", from: "Jun 2025", to: "Aug 2025", description: "Collaborated with IIT Delhi on a project to enhance onboard hydrogen production for vehicles. Conducted a literature review on electrolysis methods to propose cost-effective solutions." }
   ],
   achievements: [
     { id: "ach1", description: "Secured <b>Rank 2</b> in Cyber Olympiad(IFCO) in the Zonal level conducted by International Olympiad Foundation in 2022." },
@@ -51,9 +51,9 @@ export const DEFAULT_RESUME_DATA = {
     { id: "ach3", description: "<b>IBPC Meritorious Student Award</b> in 2021 and 2023." }
   ],
   projects: [
-    { id: "proj1", name: "Smart Inventory System", date: "January 2025 - March 2025", description: "Designed and deployed a comprehensive inventory management system using the MERN stack to streamline stock tracking for local businesses. Implemented real-time data visualization dashboards using Chart.js to analyze sales trends and predict future stock requirements with 95% accuracy." },
-    { id: "proj2", name: "Weather App", date: "May 2025", description: "Developed a Weather App that displays the weather of 3 cities on the home page. It also displays the weather of any city searched for in the search box. It displays temperature, feels like temperature, humidity, and wind speed. The front end is made using HTML, CSS, and JavaScript. The API used to get weather data is Weather API by WeatherAPI.com." },
-    { id: "proj3", name: "Chatty", date: "June 2025", description: "Built Chatty, a real-time chat application with one-on-one messaging and online status, using the MERN stack with Socket.io, JWT for security, and Zustand for state management. Optimized database queries and implemented a caching layer, improving message delivery speed by 30." }
+    { id: "proj1", name: "Smart Inventory System", from: "January 2025", to: "March 2025", description: "Designed and deployed a comprehensive inventory management system using the MERN stack to streamline stock tracking for local businesses. Implemented real-time data visualization dashboards using Chart.js to analyze sales trends and predict future stock requirements with 95% accuracy." },
+    { id: "proj2", name: "Weather App", from: "May 2025", to: "May 2025", description: "Developed a Weather App that displays the weather of 3 cities on the home page. It also displays the weather of any city searched for in the search box. It displays temperature, feels like temperature, humidity, and wind speed. The front end is made using HTML, CSS, and JavaScript. The API used to get weather data is Weather API by WeatherAPI.com." },
+    { id: "proj3", name: "Chatty", from: "June 2025", to: "June 2025", description: "Built Chatty, a real-time chat application with one-on-one messaging and online status, using the MERN stack with Socket.io, JWT for security, and Zustand for state management. Optimized database queries and implemented a caching layer, improving message delivery speed by 30." }
   ],
   skills: [
     { id: "skill1", category: "Programming Languages", skills: "C++, C, JavaScript, HTML, CSS" },
@@ -62,8 +62,8 @@ export const DEFAULT_RESUME_DATA = {
     { id: "skill4", category: "Other Softwares", skills: "Figma, Photoshop" }
   ],
   positions: [
-    { id: "pos1", title: "Associate, The Product Folks NITT", date: "May 2025-Present", description: "As a member of the Product Management Club of NIT Trichy, I take part in upskilling sessions and work on case studies, projects, and product decks." },
-    { id: "pos2", title: "Manager, Marketing, Festember", date: "Mar 2024 - Present", description: "Worked as a Marketing Manager of Festember'24, the annual cultural festival of NIT Trichy. Executed the task of establishing partnerships with various companies through effective communication and negotiation strategies." }
+    { id: "pos1", title: "Associate, The Product Folks NITT", from: "May 2025", to: "Present", description: "As a member of the Product Management Club of NIT Trichy, I take part in upskilling sessions and work on case studies, projects, and product decks." },
+    { id: "pos2", title: "Manager, Marketing, Festember", from: "Mar 2024", to: "Present", description: "Worked as a Marketing Manager of Festember'24, the annual cultural festival of NIT Trichy. Executed the task of establishing partnerships with various companies through effective communication and negotiation strategies." }
   ],
   activities: [
     { id: "act1", title: "Social Activities", description: "A volunteer under the HumaNITTy programme, NIT Trichy chapter, which aims at visiting local old age homes and orphanages and spending quality time with them.\nOrganized a campus-wide blood donation camp in collaboration with the Red Cross Society, collecting over 200 units of blood." },

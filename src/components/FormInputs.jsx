@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 
 export const OnCampusAccordion = ({ title, children, defaultOpen = false, icon }) => {
   const [isOpen, setIsOpen] = useState(defaultOpen);

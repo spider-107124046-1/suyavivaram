@@ -80,6 +80,7 @@ body {
 .custom-bullet-list li {
   position: relative;
   padding-left: 2rem;
+  text-align: justify;
 }
 
 .custom-bullet-list li::before {
@@ -106,6 +107,7 @@ body {
 .custom-square-list li {
   position: relative;
   padding-left: 3rem;
+  text-align: justify;
 }
 
 .custom-square-list li::before {
@@ -116,4 +118,27 @@ body {
   width: 5px;
   height: 5px;
   background-color: black;
+}
+
+.custom-circle-list {
+  list-style: none;
+  padding-left: 0;
+}
+
+.custom-circle-list li {
+  position: relative;
+  padding-left: 3rem;
+  text-align: justify;
+}
+
+.custom-circle-list li::before {
+  content: "";
+  position: absolute;
+  left: 1.75rem;
+  top: 0.55em;
+  width: 6px;
+  height: 6px;
+  border: 1px solid black;
+  border-radius: 50%;
+  background-color: transparent;
 }

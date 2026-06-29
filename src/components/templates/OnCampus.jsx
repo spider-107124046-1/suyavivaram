@@ -1,4 +1,4 @@
-import React, { useState, useRef, useLayoutEffect, useImperativeHandle, forwardRef, Fragment } from 'react';
+import { useState, useRef, useLayoutEffect, useImperativeHandle, forwardRef, Fragment } from 'react';
 import ReactCrop from 'react-image-crop';
 import 'react-image-crop/dist/ReactCrop.css';
 import {
@@ -8,8 +8,7 @@ import {
   ResumeSection
 } from '../FormInputs';
 import {
-  PAGE_HEIGHT_PX,
-  THEME_COLOR_STYLES
+  PAGE_HEIGHT_PX
 } from '../../utils/constants';
 import {
   centerCrop,
@@ -256,7 +255,14 @@ export const OnCampusEditor = ({ resumeData, setResumeData, photoFileInputRef, l
           <div key={item.id} className="border-b border-gray-100 pb-4 mb-4 last:border-0 last:pb-0 last:mb-0">
             <h3 className="text-sm font-semibold text-gray-800 mb-3">Internship</h3>
             <OnCampusTextInput label="Title" name="title" value={item.title} onChange={e => handleListItemChange("internships", item.id, e)} />
-            <OnCampusTextInput label="Date" name="date" value={item.date} onChange={e => handleListItemChange("internships", item.id, e)} />
+            <div className="flex gap-4">
+              <div className="flex-1">
+                <OnCampusTextInput label="From" name="from" value={item.from || ""} onChange={e => handleListItemChange("internships", item.id, e)} />
+              </div>
+              <div className="flex-1">
+                <OnCampusTextInput label="To" name="to" value={item.to || ""} onChange={e => handleListItemChange("internships", item.id, e)} />
+              </div>
+            </div>
             <OnCampusTextArea label="Description" name="description" rows={5} value={item.description} onChange={e => handleListItemChange("internships", item.id, e)} />
             <p className="text-xs text-gray-400 -mt-2 mb-2 ml-1">Use <b>text</b> to make text bold.</p>
             <div className="flex justify-end mt-3">
@@ -270,7 +276,7 @@ export const OnCampusEditor = ({ resumeData, setResumeData, photoFileInputRef, l
           </div>
         ))}
         <button
-          onClick={() => handleAddListItem("internships", { id: generateUniqueId(), title: "", date: "", description: "" })}
+          onClick={() => handleAddListItem("internships", { id: generateUniqueId(), title: "", from: "", to: "", description: "" })}
           className="mt-4 w-full py-2 border-2 border-dashed border-blue-200 text-blue-600 rounded-lg hover:bg-blue-50 hover:border-blue-300 transition-colors font-semibold text-sm"
         >
           + Add Internship
@@ -290,7 +296,14 @@ export const OnCampusEditor = ({ resumeData, setResumeData, photoFileInputRef, l
           <div key={item.id} className="border-b border-gray-100 pb-4 mb-4 last:border-0 last:pb-0 last:mb-0">
             <h3 className="text-sm font-semibold text-gray-800 mb-3">Project</h3>
             <OnCampusTextInput label="Name" name="name" value={item.name} onChange={e => handleListItemChange("projects", item.id, e)} />
-            <OnCampusTextInput label="Date" name="date" value={item.date} onChange={e => handleListItemChange("projects", item.id, e)} />
+            <div className="flex gap-4">
+              <div className="flex-1">
+                <OnCampusTextInput label="From" name="from" value={item.from || ""} onChange={e => handleListItemChange("projects", item.id, e)} />
+              </div>
+              <div className="flex-1">
+                <OnCampusTextInput label="To" name="to" value={item.to || ""} onChange={e => handleListItemChange("projects", item.id, e)} />
+              </div>
+            </div>
             <OnCampusTextArea label="Description" name="description" rows={5} value={item.description} onChange={e => handleListItemChange("projects", item.id, e)} />
             <p className="text-xs text-gray-400 -mt-2 mb-2 ml-1">Use <b>text</b> to make text bold. Use a newline for bullet points.</p>
             <div className="flex justify-end mt-3">
@@ -304,7 +317,7 @@ export const OnCampusEditor = ({ resumeData, setResumeData, photoFileInputRef, l
           </div>
         ))}
         <button
-          onClick={() => handleAddListItem("projects", { id: generateUniqueId(), name: "", date: "", description: "" })}
+          onClick={() => handleAddListItem("projects", { id: generateUniqueId(), name: "", from: "", to: "", description: "" })}
           className="mt-4 w-full py-2 border-2 border-dashed border-blue-200 text-blue-600 rounded-lg hover:bg-blue-50 hover:border-blue-300 transition-colors font-semibold text-sm"
         >
           + Add Project
@@ -356,7 +369,14 @@ export const OnCampusEditor = ({ resumeData, setResumeData, photoFileInputRef, l
           <div key={item.id} className="border-b border-gray-100 pb-4 mb-4 last:border-0 last:pb-0 last:mb-0">
             <h3 className="text-sm font-semibold text-gray-800 mb-3">Position</h3>
             <OnCampusTextInput label="Title" name="title" value={item.title} onChange={e => handleListItemChange("positions", item.id, e)} />
-            <OnCampusTextInput label="Date" name="date" value={item.date} onChange={e => handleListItemChange("positions", item.id, e)} />
+            <div className="flex gap-4">
+              <div className="flex-1">
+                <OnCampusTextInput label="From" name="from" value={item.from || ""} onChange={e => handleListItemChange("positions", item.id, e)} />
+              </div>
+              <div className="flex-1">
+                <OnCampusTextInput label="To" name="to" value={item.to || ""} onChange={e => handleListItemChange("positions", item.id, e)} />
+              </div>
+            </div>
             <OnCampusTextArea label="Description" name="description" value={item.description} onChange={e => handleListItemChange("positions", item.id, e)} />
             <p className="text-xs text-gray-400 -mt-2 mb-2 ml-1">Use <b>text</b> to make text bold.</p>
             <div className="flex justify-end mt-3">
@@ -370,7 +390,7 @@ export const OnCampusEditor = ({ resumeData, setResumeData, photoFileInputRef, l
           </div>
         ))}
         <button
-          onClick={() => handleAddListItem("positions", { id: generateUniqueId(), title: "", date: "", description: "" })}
+          onClick={() => handleAddListItem("positions", { id: generateUniqueId(), title: "", from: "", to: "", description: "" })}
           className="mt-4 w-full py-2 border-2 border-dashed border-blue-200 text-blue-600 rounded-lg hover:bg-blue-50 hover:border-blue-300 transition-colors font-semibold text-sm"
         >
           + Add Position
@@ -423,6 +443,54 @@ export const OnCampusEditor = ({ resumeData, setResumeData, photoFileInputRef, l
 export const OnCampusResumeLayout = forwardRef(({ resumeData }, ref) => {
   const { personalDetails, education, internships, achievements, projects, skills, positions, activities } = resumeData;
   const formatBold = text => text ? text.replace(/<b>/g, "<strong>").replace(/<\/b>/g, "</strong>").replace(/\n/g, "<br />") : "";
+
+  const renderParsedDescription = (description) => {
+    if (!description) return null;
+    const lines = description.split("\n").map(l => l.trim()).filter(Boolean);
+    if (lines.length === 0) return null;
+
+    const hasMarker = lines.some(line => /^[-*•]\s+/.test(line));
+
+    if (hasMarker) {
+      const elements = [];
+      let currentList = [];
+
+      lines.forEach((line, idx) => {
+        const match = line.match(/^[-*•]\s+(.*)/);
+        if (match) {
+          currentList.push(match[1]);
+        } else {
+          if (currentList.length > 0) {
+            elements.push(
+              <ul key={`list-${idx}`} className="custom-circle-list mt-1 text-justify">
+                {currentList.map((item, itemIdx) => (
+                  <li key={itemIdx} className="text-justify" dangerouslySetInnerHTML={{ __html: formatBold(item) }} />
+                ))}
+              </ul>
+            );
+            currentList = [];
+          }
+          elements.push(
+            <div key={`p-${idx}`} className="text-justify" dangerouslySetInnerHTML={{ __html: formatBold(line) }} />
+          );
+        }
+      });
+
+      if (currentList.length > 0) {
+        elements.push(
+          <ul key="list-final" className="custom-circle-list mt-1 text-justify">
+            {currentList.map((item, itemIdx) => (
+              <li key={itemIdx} className="text-justify" dangerouslySetInnerHTML={{ __html: formatBold(item) }} />
+            ))}
+          </ul>
+        );
+      }
+
+      return <div className="space-y-1">{elements}</div>;
+    } else {
+      return <div className="text-justify" dangerouslySetInnerHTML={{ __html: formatBold(description) }} />;
+    }
+  };
 
   return (
     <div
@@ -488,9 +556,15 @@ export const OnCampusResumeLayout = forwardRef(({ resumeData }, ref) => {
                 <li key={item.id}>
                   <div className="flex justify-between items-baseline">
                     <h3 className="font-bold text-[15px]">{item.title}</h3>
-                    <p className="flex-shrink-0 ml-4 text-right">{item.date}</p>
+                    <p className="flex-shrink-0 ml-4 text-right">
+                      {item.from && item.to ? (
+                        <i className="italic">{item.from} – {item.to}</i>
+                      ) : (item.from || item.to) ? (
+                        <i className="italic">{item.from || item.to}</i>
+                      ) : null}
+                    </p>
                   </div>
-                  <div dangerouslySetInnerHTML={{ __html: formatBold(item.description) }} />
+                  {renderParsedDescription(item.description)}
                 </li>
               ))}
             </ul>
@@ -503,17 +577,15 @@ export const OnCampusResumeLayout = forwardRef(({ resumeData }, ref) => {
                 <li key={item.id}>
                   <div className="flex justify-between items-baseline">
                     <h3 className="font-bold text-[15px]">{item.name}</h3>
-                    <p className="flex-shrink-0 ml-4 text-right">{item.date}</p>
+                    <p className="flex-shrink-0 ml-4 text-right">
+                      {item.from && item.to ? (
+                        <i className="italic">{item.from} – {item.to}</i>
+                      ) : (item.from || item.to) ? (
+                        <i className="italic">{item.from || item.to}</i>
+                      ) : null}
+                    </p>
                   </div>
-                  {item.description.includes("\n") ? (
-                    <ul className="custom-square-list mt-1">
-                      {item.description.split("\n").filter(line => line.trim() !== "").map((line, idx) => (
-                        <li key={idx} dangerouslySetInnerHTML={{ __html: line.replace(/<b>/g, "<strong>").replace(/<\/b>/g, "</strong>") }} />
-                      ))}
-                    </ul>
-                  ) : (
-                    <div dangerouslySetInnerHTML={{ __html: formatBold(item.description) }} />
-                  )}
+                  {renderParsedDescription(item.description)}
                 </li>
               ))}
             </ul>
@@ -526,7 +598,7 @@ export const OnCampusResumeLayout = forwardRef(({ resumeData }, ref) => {
                 <li key={item.id} className="flex items-start">
                   <span className="w-56 flex-shrink-0 break-words">{item.category}</span>
                   <span className="mx-2 flex-shrink-0">:</span>
-                  <span className="flex-1 break-words">{item.skills}</span>
+                  <span className="flex-1 break-words text-justify">{item.skills}</span>
                 </li>
               ))}
             </ul>
@@ -539,9 +611,15 @@ export const OnCampusResumeLayout = forwardRef(({ resumeData }, ref) => {
                 <li key={item.id}>
                   <div className="flex justify-between items-baseline">
                     <h3 className="font-bold text-[15px]">{item.title}</h3>
-                    <p className="flex-shrink-0 ml-4 text-right">{item.date}</p>
+                    <p className="flex-shrink-0 ml-4 text-right">
+                      {item.from && item.to ? (
+                        <i className="italic">{item.from} – {item.to}</i>
+                      ) : (item.from || item.to) ? (
+                        <i className="italic">{item.from || item.to}</i>
+                      ) : null}
+                    </p>
                   </div>
-                  <div dangerouslySetInnerHTML={{ __html: formatBold(item.description) }} />
+                  {renderParsedDescription(item.description)}
                 </li>
               ))}
             </ul>
@@ -571,8 +649,7 @@ export const OnCampusResumeLayout = forwardRef(({ resumeData }, ref) => {
         <div style={{ borderTop: "1px solid #2596be", width: "100px", margin: "0 15px" }} />
         <div className="px-1">
           <p style={{ margin: 0 }}>Department of Training and Placement, NIT Trichy 620015</p>
-          <p style={{ margin: 0 }}>Telephone : +91-431-2501081 | e-mail: tp@nitt.edu,</p>
-          <p style={{ margin: 0 }}>tnp.nitt@gmail.com</p>
+          <p style={{ margin: 0 }}>Telephone : +91-431-2501081 &nbsp; e-mail: tp@nitt.edu, tnp.nitt@gmail.com</p>
         </div>
         <div style={{ borderTop: "1px solid #2596be", width: "100px", margin: "0 15px" }} />
       </footer>
