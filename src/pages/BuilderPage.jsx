@@ -160,6 +160,7 @@ const BuilderPage = () => {
   const logoFileInputRef = useRef(null);
   const errorTimeoutRef = useRef(null);
 
+  const [unlockTableBorders, setUnlockTableBorders] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
   const [saveStatus, setSaveStatus] = useState("Saved");
   const [draftAvailable, setDraftAvailable] = useState(false);
@@ -615,6 +616,8 @@ const BuilderPage = () => {
                   setResumeData={setResumeData}
                   photoFileInputRef={photoFileInputRef}
                   logoFileInputRef={logoFileInputRef}
+                  unlockTableBorders={unlockTableBorders}
+                  setUnlockTableBorders={setUnlockTableBorders}
                 />
               ) : selectedTemplate === "modern-creative" ? (
                 <ModernCreativeEditor
