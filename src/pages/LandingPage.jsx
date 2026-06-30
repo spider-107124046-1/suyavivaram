@@ -40,6 +40,7 @@ const LandingPage = () => {
 
   const navigateToTemplates = () => { navigate('/templates'); };
   const navigateToFAQ = () => { navigate('/faq'); };
+  const navigateToInfo = () => { navigate('/info'); };
 
   const handleLoadConfigClick = () => {
     fileInputRef.current?.click();
@@ -54,11 +55,11 @@ const LandingPage = () => {
       try {
         const json = JSON.parse(event.target.result);
         const { resumeData, layout, themeColor } = reconstructResumeData(json);
-        
+
         // Save in sessionStorage
         sessionStorage.setItem('uploadedResumeData', JSON.stringify(resumeData));
         sessionStorage.setItem('uploadedThemeColor', themeColor);
-        
+
         // Navigate to the editor with correct template
         navigate(`/builder?template=${layout}`);
       } catch (err) {
@@ -97,10 +98,32 @@ const LandingPage = () => {
         >
           <svg role="img" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 fill-current">
             <title>Forgejo</title>
-            <path d="M16.7773 0c1.6018 0 2.9004 1.2986 2.9004 2.9005s-1.2986 2.9004-2.9004 2.9004c-1.0854 0-2.0315-.596-2.5288-1.4787H12.91c-2.3322 0-4.2272 1.8718-4.2649 4.195l-.0007 2.1175a7.0759 7.0759 0 0 1 4.148-1.4205l.1176-.001 1.3385.0002c.4973-.8827 1.4434-1.4788 2.5288-1.4788 1.6018 0 2.9004 1.2986 2.9004 2.9005s-1.2986 2.9004-2.9004 2.9004c-1.0854 0-2.0315-.596-2.5288-1.4787H12.91c-2.3322 0-4.2272 1.8718-4.2649 4.195l-.0007 2.319c.8827.4973 1.4788 1.4434 1.4788 2.5287 0 1.602-1.2986 2.9005-2.9005 2.9005-1.6018 0-2.9004-1.2986-2.9004-2.9005 0-1.0853.596-2.0314 1.4788-2.5287l-.0002-9.9831c0-3.887 3.1195-7.0453 6.9915-7.108l.1176-.001h1.3385C14.7458.5962 15.692 0 16.7773 0ZM7.2227 19.9052c-.6596 0-1.1943.5347-1.1943 1.1943s.5347 1.1943 1.1943 1.1943 1.1944-.5347 1.1944-1.1943-.5348-1.1943-1.1944-1.1943Zm9.5546-10.4644c-.6596 0-1.1944.5347-1.1944 1.1943s.5348 1.1943 1.1944 1.1943c.6596 0 1.1943-.5347 1.1943-1.1943s-.5347-1.1943-1.1943-1.1943Zm0-7.7346c-.6596 0-1.1944.5347-1.1944 1.1943s.5348 1.1943 1.1944 1.1943c.6596 0 1.1943-.5347 1.1943-1.1943s-.5347-1.1943-1.1943-1.1943Z"/>
+            <path d="M16.7773 0c1.6018 0 2.9004 1.2986 2.9004 2.9005s-1.2986 2.9004-2.9004 2.9004c-1.0854 0-2.0315-.596-2.5288-1.4787H12.91c-2.3322 0-4.2272 1.8718-4.2649 4.195l-.0007 2.1175a7.0759 7.0759 0 0 1 4.148-1.4205l.1176-.001 1.3385.0002c.4973-.8827 1.4434-1.4788 2.5288-1.4788 1.6018 0 2.9004 1.2986 2.9004 2.9005s-1.2986 2.9004-2.9004 2.9004c-1.0854 0-2.0315-.596-2.5288-1.4787H12.91c-2.3322 0-4.2272 1.8718-4.2649 4.195l-.0007 2.319c.8827.4973 1.4788 1.4434 1.4788 2.5287 0 1.602-1.2986 2.9005-2.9005 2.9005-1.6018 0-2.9004-1.2986-2.9004-2.9005 0-1.0853.596-2.0314 1.4788-2.5287l-.0002-9.9831c0-3.887 3.1195-7.0453 6.9915-7.108l.1176-.001h1.3385C14.7458.5962 15.692 0 16.7773 0ZM7.2227 19.9052c-.6596 0-1.1943.5347-1.1943 1.1943s.5347 1.1943 1.1943 1.1943 1.1944-.5347 1.1944-1.1943-.5348-1.1943-1.1944-1.1943Zm9.5546-10.4644c-.6596 0-1.1944.5347-1.1944 1.1943s.5348 1.1943 1.1944 1.1943c.6596 0 1.1943-.5347 1.1943-1.1943s-.5347-1.1943-1.1943-1.1943Zm0-7.7346c-.6596 0-1.1944.5347-1.1944 1.1943s.5348 1.1943 1.1944 1.1943c.6596 0 1.1943-.5347 1.1943-1.1943s-.5347-1.1943-1.1943-1.1943Z" />
           </svg>
           <span>Source</span>
         </a>
+        {/* Info button */}
+        <button
+          onClick={navigateToInfo}
+          className="mr-2 text-dimgrey hover:text-cerulean transition-colors"
+          aria-label="Info"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="h-9 w-9"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            strokeWidth={1.5}
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+            />
+          </svg>
+        </button>
+        {/* FAQ button */}
         <button
           onClick={navigateToFAQ}
           className="text-dimgrey hover:text-cerulean transition-colors"
@@ -156,12 +179,12 @@ const LandingPage = () => {
           {/* Headline */}
           <h1 className="text-5xl md:text-7xl font-black text-slate-900 leading-tight mb-6 tracking-tight">
             Build your resume <br />
-            <span className="text-slate-800">in minutes.</span>
+            <span className="text-slate-800">in minutes...</span>
           </h1>
 
           {/* Description */}
           <p className="text-xl text-slate-600 mb-10 max-w-2xl mx-auto leading-relaxed">
-            Create professional, ATS-friendly resumes with our real-time builder. Start from polished templates, format it perfectly, and stand out.
+            ...and save those minutes the subsequent times! Improved version of resumify.live focusing on making the NITT On-campus Resume template a lesser pain to edit. (All my homies hate Microsoft Word!)
           </p>
 
           {/* Get Started and Load Resume Buttons */}
