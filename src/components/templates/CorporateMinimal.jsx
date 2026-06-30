@@ -7,6 +7,7 @@ import {
 import {
   generateUniqueId
 } from '../../utils/helpers';
+import { formatInline } from '../../utils/formatInline';
 
 export const CorporateMinimalEditor = ({ resumeData, setResumeData }) => {
   const handlePersonalDetailsChange = (e) => {
@@ -371,9 +372,9 @@ export const CorporateMinimalResumeLayout = forwardRef(({ resumeData }, ref) => 
   };
 
   const formatBold = text => {
-    if (!text) return "";
-    let processed = formatDates(text);
-    return processed.replace(/<b>/g, "<strong>").replace(/<\/b>/g, "</strong>").replace(/\n/g, "<br />");
+    if (!text) return '';
+    const withDates = formatDates(text);
+    return formatInline(withDates);
   };
 
   return (

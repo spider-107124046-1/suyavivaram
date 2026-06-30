@@ -1,29 +1,48 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 
-/**
- * RichText — renders a subset of HTML inline tags from a string:
- *   <b>…</b>  → bold
- *   <i>…</i>  → italic
- *   <u>…</u>  → underline
- *   <s>…</s>  → strikethrough
- *   <a href="…">…</a> → external link (opens in new tab)
- */
+
+const ENTITIES = {
+  '&amp;': '&',
+  '&lt;': '<',
+  '&gt;': '>',
+  '&quot;': '"',
+  '&#39;': "'",
+  '&apos;': "'",
+  '&nbsp;': '\u00A0',
+  '&ndash;': '–',
+  '&mdash;': '—',
+  '&laquo;': '«',
+  '&raquo;': '»',
+  '&copy;': '©',
+  '&reg;': '®',
+  '&trade;': '™',
+  '&hellip;': '…',
+};
+
+function decodeEntities(str) {
+  // Named entities
+  let out = str.replace(/&[a-z]+;/gi, m => ENTITIES[m] ?? m);
+  // Numeric decimal entities e.g. &#8212;
+  out = out.replace(/&#(\d+);/g, (_, code) => String.fromCharCode(Number(code)));
+  // Numeric hex entities e.g. &#x2014;
+  out = out.replace(/&#x([0-9a-f]+);/gi, (_, hex) => String.fromCharCode(parseInt(hex, 16)));
+  return out;
+}
+
 const RichText = ({ text }) => {
-  // Tokenise the string into plain-text chunks and tag nodes.
   const TAG_RE = /<(\/?)([bius]|a)(?:\s+href="([^"]*)")?>/gi;
   const elements = [];
+  const stack = [];
   let last = 0;
-  let match;
-  const stack = []; // tracks open formatting tags
+  let idx = 0;
 
-  // Walk through every recognised tag in the string
   const allMatches = [...text.matchAll(TAG_RE)];
 
   const renderSegment = (str, keyPrefix) => {
     if (!str) return null;
-    // Apply current stack of formatting as nested spans
-    let node = <span key={keyPrefix}>{str}</span>;
+    const decoded = decodeEntities(str);
+    let node = <span key={keyPrefix}>{decoded}</span>;
     for (let i = stack.length - 1; i >= 0; i--) {
       const tag = stack[i];
       if (tag.name === 'b') node = <strong key={`${keyPrefix}-b${i}`}>{node}</strong>;
@@ -47,19 +66,16 @@ const RichText = ({ text }) => {
     return node;
   };
 
-  let idx = 0;
   for (const m of allMatches) {
     const [fullMatch, closing, tagName, href] = m;
     const matchStart = m.index;
 
-    // Push any plain text before this tag
     if (matchStart > last) {
       elements.push(renderSegment(text.slice(last, matchStart), `t${idx++}`));
     }
     last = matchStart + fullMatch.length;
 
     if (closing) {
-      // Pop the matching open tag from the stack
       for (let i = stack.length - 1; i >= 0; i--) {
         if (stack[i].name === tagName.toLowerCase()) {
           stack.splice(i, 1);
@@ -71,7 +87,6 @@ const RichText = ({ text }) => {
     }
   }
 
-  // Push any remaining plain text after the last tag
   if (last < text.length) {
     elements.push(renderSegment(text.slice(last), `t${idx++}`));
   }
@@ -79,45 +94,46 @@ const RichText = ({ text }) => {
   return <>{elements}</>;
 };
 
-const FAQItem = ({ question, answer }) => {
+const FAQItem = ({ question, answer, index }) => {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
     <div
-      className={`bg-white/60 backdrop-blur-sm rounded-2xl border border-slate-100 shadow-sm transition-all duration-300 ${isOpen ? 'bg-white/90 ring-1 ring-slate-200 shadow-md' : 'hover:bg-white/70'
+      className={`backdrop-blur-sm rounded-2xl border shadow-sm transition-all duration-300 ${isOpen
+        ? 'bg-white/95 border-cerulean/20 ring-1 ring-cerulean/10 shadow-md'
+        : 'bg-white/70 border-slate-100 hover:bg-white/90 hover:border-slate-200'
         }`}
     >
       <button
+        id={`faq-item-${index}`}
         onClick={() => setIsOpen(!isOpen)}
         className="w-full text-left p-6 flex justify-between items-center focus:outline-none group"
+        aria-expanded={isOpen}
       >
-        <h3
-          className={`text-lg font-bold pr-8 transition-colors ${isOpen ? 'text-cerulean' : 'text-slate-900 group-hover:text-slate-800'
+        <h2
+          className={`text-base font-bold pr-8 transition-colors leading-snug ${isOpen ? 'text-cerulean' : 'text-slate-900 group-hover:text-slate-700'
             }`}
         >
           {question}
-        </h3>
+        </h2>
         <div
-          className={`flex-shrink-0 ml-4 p-2 rounded-full transition-all duration-300 ${isOpen ? 'bg-cerulean/10 text-cerulean rotate-180' : 'bg-dimgrey/10 text-dimgrey group-hover:bg-dimgrey/20'
+          className={`flex-shrink-0 ml-4 w-8 h-8 rounded-full flex items-center justify-center transition-all duration-300 ${isOpen
+            ? 'bg-cerulean/10 text-cerulean rotate-180'
+            : 'bg-slate-100 text-slate-500 group-hover:bg-slate-200'
             }`}
         >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            className="h-5 w-5"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" />
           </svg>
         </div>
       </button>
+
       <div
-        className={`overflow-hidden transition-all duration-300 ease-in-out ${isOpen ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'
+        className={`overflow-hidden transition-all duration-300 ease-in-out ${isOpen ? 'max-h-[600px] opacity-100' : 'max-h-0 opacity-0'
           }`}
       >
-        <div className="px-6 pb-6 text-slate-600 leading-relaxed border-t border-slate-100/50 pt-4">
-          <RichText text={answer} />
+        <div className="px-6 pb-6 text-slate-600 text-sm leading-relaxed border-t border-slate-100 pt-4">
+          {typeof answer === 'string' ? <RichText text={answer} /> : answer}
         </div>
       </div>
     </div>
@@ -127,25 +143,51 @@ const FAQItem = ({ question, answer }) => {
 const FAQPage = () => {
   const navigate = useNavigate();
 
-  const navigateBack = () => { navigate('/'); };
-
   const faqs = [
     {
-      q: 'Isn\'t this a ripoff of resumify.live?',
-      a: 'Yes, but not quite. Since they called their tool <b>"open-source"</b> (check their FAQ page) and have failed to make their source code public, this was <b>derived</b> from the static assets their website hosts. <i>Technically, every website (not its backend) is open source if you really think about it.</i>'
+      q: "Isn't this a ripoff of resumify.live?",
+      a: 'Yes, but not quite. Since they called their tool <b>"open-source"</b> (check their FAQ page) and have failed to make their source code public, this was <b>derived</b> from the static assets their website hosts. <i>Technically, every website (not its backend) is open source if you really think about it.</i>',
     },
     {
-      q: 'Why did you do this to yourself if it already exists?',
-      a: 'It is missing key features such as... <b>saving your progress!</b> Whether you download the PDF or not, once you refresh the page you can never get it back unless you decide to sit and fill everything in again. Also, whatever you see in the preview is <i>not</i> what you get as the PDF. This derivative fixes that and adds a bunch more. <a href="/info">Check out the Info page!</a>'
+      q: 'Why did you do this if it already exists?',
+      a: 'It is missing key features such as... <b>saving your progress!</b> Whether you download the PDF or not, once you refresh the page you can never get it back. Also, whatever you see in the preview is <i>not</i> what you get as the PDF. This derivative fixes that and adds a bunch more. <a href="/info">Check out the Info page!</a>',
     },
     {
       q: 'Where is the rest of the FAQ?',
-      a: 'If you have questions, refer to the <a href="/info">Info page</a> — nobody ever asks me questions for this to be a truly <i>frequently</i> asked set of questions.'
+      a: 'If you have questions, refer to the <a href="/info">Info page</a> ma, nobody ever asks me questions for this to be a truly <i>frequently</i> asked set of questions.',
     },
     {
       q: 'What rich text formatting is supported in the editor?',
-      a: 'In text fields you can use inline HTML tags: <b>&lt;b&gt;bold&lt;/b&gt;</b>, <i>&lt;i&gt;italic&lt;/i&gt;</i>, <u>&lt;u&gt;underline&lt;/u&gt;</u>, <s>&lt;s&gt;strikethrough&lt;/s&gt;</s>, and <b>&lt;a href="..."&gt;hyperlinks&lt;/a&gt;</b>. See the <a href="/info">Info page</a> for a full cheatsheet.'
-    }
+      a: 'In text fields you can type inline HTML tags: &lt;b&gt; for <b>bold</b>, &lt;i&gt; for <i>italic</i>, &lt;u&gt; for <u>underline</u>, &lt;s&gt; for <s>strikethrough</s>, and &lt;a href="..."&gt; for hyperlinks. See the <a href="/info">Info page</a> for a full cheatsheet.',
+    },
+    {
+      q: 'How different is this from resumify.live?',
+      a: (
+        <div>
+          <p className="mb-3">Here’s what this version adds on top of the original:</p>
+          <ul className="space-y-2">
+            {[
+              ['💾 Auto-save', 'Your resume is saved to localStorage after every edit. Refresh the page without losing anything.'],
+              ['🗂️ Config export / import', 'Download your entire resume as a portable .json config file and reload it later from the home page.'],
+              ['🎯 WYSIWYG PDF export', 'The live preview uses the exact same styles as the printed PDF — no more layout surprises.'],
+              ['📝 Rich text in fields', 'Type <b>, <i>, <u>, <s>, and <a href> tags directly into text fields. HTML entities like &amp;amp; also work.'],
+              ['📅 Date shorthand', 'Use <date from="Jan 2024" to="May 2024" /> in description fields to auto-format right-aligned italic date ranges.'],
+              ['📏 Resizable table layout', 'The On-Campus template uses a real HTML table whose column widths you can drag to resize, with a toggle to reveal/hide borders for alignment.'],
+              ['✂️ Photo crop tool', 'Upload and interactively crop your profile photo and institute logo directly in the browser.'],
+              ['🎨 Theme colours', 'The Modern Creative template supports a set of curated accent colours, switchable from the toolbar.'],
+              ['🔍 Zoom control', 'Zoom the live preview in and out, or type an exact percentage — useful for fine-tuning layout on small screens.'],
+              ['📱 PWA support', 'Install the site as an app on your phone or desktop for a fully offline, native-like experience.'],
+              ['📄 Three templates', 'On-Campus (NITT), Modern Creative, and Corporate Minimal — all editable with the same tooling.'],
+            ].map(([title, desc]) => (
+              <li key={title} className="flex gap-2 items-start">
+                <span className="font-semibold text-slate-800 whitespace-nowrap">{title}:</span>
+                <span>{desc}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ),
+    },
   ];
 
   return (
@@ -157,42 +199,52 @@ const FAQPage = () => {
 
       {/* Main Container */}
       <div className="relative z-10 flex-grow flex flex-col p-6 md:p-12 max-w-4xl mx-auto w-full">
+
         {/* Back Button */}
         <div className="w-full mb-8">
           <button
-            onClick={navigateBack}
+            onClick={() => navigate('/')}
             className="flex items-center text-dimgrey hover:text-cerulean transition-colors font-medium"
           >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-5 w-5 mr-2"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
             </svg>
             Back
           </button>
         </div>
 
-        {/* Title */}
-        <h1 className="text-4xl font-extrabold text-slate-900 mb-4 tracking-tight text-center">
-          Frequently Asked Questions
-        </h1>
-        <p className="text-center text-slate-500 mb-10">
-          Looking for feature docs? Visit the{' '}
+        {/* Header */}
+        <div className="text-center mb-10">
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-cerulean/10 ring-1 ring-cerulean/20 mb-4">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-cerulean" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
+          <h1 className="text-4xl font-extrabold text-slate-900 tracking-tight mb-2">
+            Frequently Asked Questions
+          </h1>
+          <p className="text-slate-500 max-w-xl mx-auto">
+            Looking for feature docs?{' '}
+            <Link to="/info" className="text-cerulean hover:underline font-semibold">
+              Visit the Info page.
+            </Link>
+          </p>
+        </div>
+
+        {/* FAQ List */}
+        <div className="space-y-3 pb-10">
+          {faqs.map((faq, index) => (
+            <FAQItem key={index} question={faq.q} answer={faq.a} index={index} />
+          ))}
+        </div>
+
+        {/* Footer */}
+        <p className="text-center text-slate-400 text-sm pb-4">
+          Still stuck? Check out the{' '}
           <Link to="/info" className="text-cerulean hover:underline font-semibold">
             Info page
           </Link>.
         </p>
-
-        {/* Accordion List */}
-        <div className="space-y-4 overflow-y-auto pb-10">
-          {faqs.map((faq, index) => (
-            <FAQItem key={index} question={faq.q} answer={faq.a} />
-          ))}
-        </div>
       </div>
     </div>
   );

@@ -10,6 +10,7 @@ import {
 import {
   THEME_COLOR_STYLES
 } from '../../utils/constants';
+import { formatInline } from '../../utils/formatInline';
 import {
   centerCrop,
   makeAspectCrop,
@@ -420,9 +421,9 @@ export const ModernCreativeResumeLayout = forwardRef(({ resumeData, themeColor }
   };
 
   const formatBold = text => {
-    if (!text) return "";
-    let processed = formatDates(text);
-    return processed.replace(/<b>/g, "<strong>").replace(/<\/b>/g, "</strong>").replace(/\n/g, "<br />");
+    if (!text) return '';
+    const withDates = formatDates(text);
+    return formatInline(withDates);
   };
 
   const colors = THEME_COLOR_STYLES[themeColor] || THEME_COLOR_STYLES["#2274a5"];

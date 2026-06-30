@@ -2,6 +2,7 @@ import { useState, useRef, useLayoutEffect, useImperativeHandle, forwardRef, Fra
 import { createPortal } from 'react-dom';
 import ReactCrop from 'react-image-crop';
 import 'react-image-crop/dist/ReactCrop.css';
+import { formatInline } from '../../utils/formatInline';
 import {
   OnCampusAccordion,
   OnCampusTextInput,
@@ -803,9 +804,9 @@ export const OnCampusResumeLayout = forwardRef(({ resumeData, onTableChange }, r
   };
 
   const formatBold = text => {
-    if (!text) return "";
-    let processed = formatDates(text);
-    return processed.replace(/<b>/g, "<strong>").replace(/<\/b>/g, "</strong>").replace(/\n/g, "<br />");
+    if (!text) return '';
+    const withDates = formatDates(text);
+    return formatInline(withDates);
   };
 
   const renderParsedDescription = (description) => {

@@ -1,16 +1,12 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 
-// ─── Tab data ────────────────────────────────────────────────────────────────
-
 const TABS = [
   { id: 'getting-started', label: 'Getting Started', icon: '🚀' },
   { id: 'editor', label: 'Editor Tips', icon: '✏️' },
   { id: 'formatting', label: 'Formatting', icon: '🎨' },
   { id: 'saving', label: 'Saving & Exporting', icon: '💾' },
 ];
-
-// ─── Feature card ─────────────────────────────────────────────────────────────
 
 const FeatureCard = ({ icon, title, description, accent = 'cerulean' }) => {
   const accentMap = {
@@ -36,15 +32,11 @@ const FeatureCard = ({ icon, title, description, accent = 'cerulean' }) => {
   );
 };
 
-// ─── Code badge ───────────────────────────────────────────────────────────────
-
 const Code = ({ children }) => (
   <code className="bg-slate-100 text-slate-700 px-1.5 py-0.5 rounded text-sm font-mono border border-slate-200">
     {children}
   </code>
 );
-
-// ─── Section heading ──────────────────────────────────────────────────────────
 
 const SectionHeading = ({ children }) => (
   <h2 className="text-xl font-extrabold text-slate-900 mb-5 mt-8 first:mt-0 flex items-center gap-2">
@@ -52,8 +44,6 @@ const SectionHeading = ({ children }) => (
     {children}
   </h2>
 );
-
-// ─── Rich text cheatsheet row ─────────────────────────────────────────────────
 
 const CheatRow = ({ tag, example, rendered, desc }) => (
   <tr className="border-b border-slate-100 last:border-0 hover:bg-slate-50/80 transition-colors">
@@ -68,14 +58,12 @@ const CheatRow = ({ tag, example, rendered, desc }) => (
   </tr>
 );
 
-// ─── Tab content components ───────────────────────────────────────────────────
-
 const GettingStartedTab = () => (
   <div>
     <SectionHeading>Welcome to Suyavivaram</SectionHeading>
     <p className="text-slate-600 mb-6 leading-relaxed">
       Suyavivaram (சுயவிவரம்) is an improved, browser-based resume builder focused on the{' '}
-      <strong>NITT On-Campus template</strong>. Everything runs locally — no account, no cloud, no nonsense.
+      <strong>NITT On-Campus template</strong>. Everything runs locally — no account, no cloud, no AI.
     </p>
 
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
@@ -100,7 +88,7 @@ const GettingStartedTab = () => (
       <FeatureCard
         icon="📱"
         title="Install as a PWA"
-        description="Install the app to your home screen for a native-like offline experience — no app store needed."
+        description="Install the app to your home screen for a native-like offline experience — no internet required!"
         accent="paprika"
       />
     </div>
@@ -138,20 +126,20 @@ const EditorTab = () => (
       />
       <FeatureCard
         icon="—"
-        title="Em Dash Helper"
+        title="En Dash Helper"
         description='Click the "Copy: –" button in the status bar to copy an en-dash (–) to your clipboard, then paste it anywhere.'
         accent="dimgrey"
       />
-      <FeatureCard
+      {/* <FeatureCard
         icon="🎨"
         title="Theme Colour (Modern)"
         description="The colour circle in the toolbar lets you pick an accent colour for the Modern Creative template."
         accent="berry"
-      />
+      /> */}
       <FeatureCard
         icon="📐"
         title="Table Border Unlock (On-Campus)"
-        description="Toggle hidden table borders to help align content precisely, then turn them off before exporting."
+        description="Toggle hidden table borders to help align content precisely, then turn them off before exporting. Do not resize it too much!"
         accent="amber"
       />
     </div>
@@ -165,7 +153,7 @@ const EditorTab = () => (
         accent="emerald"
       />
       <FeatureCard
-        icon="✅"
+        icon="🟢"
         title="Save Status Indicator"
         description='The coloured dot in the top-left of the editor shows "Saving…" (amber ping), "Saved" (green), or an error (red).'
         accent="paprika"
@@ -286,19 +274,18 @@ const SavingTab = () => (
       <FeatureCard
         icon="☁️"
         title="No Cloud Required"
-        description="Everything is stored in your browser's localStorage. Your data never leaves your device — unless you choose to share the config file."
+        description="Everything is stored in your browser's localStorage. Your data remains your responsibility."
         accent="cerulean"
       />
     </div>
 
     <SectionHeading>Auto-Save Details</SectionHeading>
     <p className="text-slate-600 leading-relaxed text-sm">
-      Changes are debounced and saved to <Code>localStorage</Code> about <strong>1 second</strong> after you stop typing. Each template has its own independent draft. The status indicator in the editor's top bar always reflects the current save state.
+      Changes are debounced and saved to <Code>localStorage</Code> about <strong>1 second</strong> after you stop typing. <b>Each template has its own independent draft.</b> The status indicator in the editor's top bar always reflects the current save state.
     </p>
   </div>
 );
 
-// ─── Main InfoPage ────────────────────────────────────────────────────────────
 
 const InfoPage = () => {
   const navigate = useNavigate();
@@ -345,7 +332,7 @@ const InfoPage = () => {
             Info &amp; Help
           </h1>
           <p className="text-slate-500 max-w-xl mx-auto">
-            Everything you need to know about using Suyavivaram. Have a specific question?{' '}
+            Documentation of this site.{' '}
             <Link to="/faq" className="text-cerulean hover:underline font-semibold">Visit the FAQ.</Link>
           </p>
         </div>
@@ -356,11 +343,10 @@ const InfoPage = () => {
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`flex-1 min-w-[120px] flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 ${
-                activeTab === tab.id
-                  ? 'bg-white text-cerulean shadow-md ring-1 ring-slate-200'
-                  : 'text-slate-500 hover:text-slate-800 hover:bg-white/60'
-              }`}
+              className={`flex-1 min-w-[120px] flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 ${activeTab === tab.id
+                ? 'bg-white text-cerulean shadow-md ring-1 ring-slate-200'
+                : 'text-slate-500 hover:text-slate-800 hover:bg-white/60'
+                }`}
             >
               <span>{tab.icon}</span>
               <span>{tab.label}</span>
@@ -378,9 +364,9 @@ const InfoPage = () => {
 
         {/* Footer link */}
         <p className="text-center text-slate-400 text-sm mt-8 pb-4">
-          Still lost? Reach out via the{' '}
-          <a href="https://git.ilamparithi.in/ilamparithi/suyavivaram" target="_blank" rel="noopener noreferrer" className="text-cerulean hover:underline font-semibold">
-            source repository
+          Need help? Contact the dev via {' '}
+          <a href="https://matrix.to/#/@pseudoforceyt:matrix.org" target="_blank" rel="noopener noreferrer" className="text-cerulean hover:underline font-semibold">
+            Matrix.org
           </a>.
         </p>
       </div>
