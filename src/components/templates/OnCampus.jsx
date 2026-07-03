@@ -551,14 +551,14 @@ const ResizableEduTable = ({ education, unlocked, colWidths, rowHeights, onTable
     const table = tableRef.current;
     const totalWidth = table.getBoundingClientRect().width;
 
-    // Resolve current column widths as percentages
+    // Resolve current column widths as percentages using layout offsets
     let startPcts;
     if (colWidths) {
       startPcts = [...colWidths];
     } else {
       const headerCells = Array.from(table.querySelectorAll('thead tr:not(.edu-rh-tr) th'));
-      const pxWidths = headerCells.map(th => th.getBoundingClientRect().width);
-      const total = pxWidths.reduce((a, b) => a + b, 0) || totalWidth;
+      const pxWidths = headerCells.map(th => th.offsetWidth);
+      const total = pxWidths.reduce((a, b) => a + b, 0) || table.offsetWidth;
       startPcts = pxWidths.map(w => (w / total) * 100);
     }
 
@@ -571,7 +571,7 @@ const ResizableEduTable = ({ education, unlocked, colWidths, rowHeights, onTable
       const cx = me.touches ? me.touches[0].clientX : me.clientX;
       const dxPx = cx - dragStateRef.current.startX;
       const dxPct = (dxPx / dragStateRef.current.totalWidth) * 100;
-      const minPct = (MIN_COL_PX / dragStateRef.current.totalWidth) * 100;
+      const minPct = (MIN_COL_PX / table.offsetWidth) * 100;
       const { startPcts: sp, colIdx: ci } = dragStateRef.current;
       const newPcts = [...sp];
       const sumLR = sp[ci] + sp[ci + 1];
@@ -590,7 +590,9 @@ const ResizableEduTable = ({ education, unlocked, colWidths, rowHeights, onTable
       document.body.style.cursor = '';
     };
 
+    // eslint-disable-next-line react-hooks/immutability
     document.body.style.userSelect = 'none';
+    // eslint-disable-next-line react-hooks/immutability
     document.body.style.cursor = 'col-resize';
     document.addEventListener('mousemove', onMove);
     document.addEventListener('touchmove', onMove, { passive: false });
@@ -613,20 +615,22 @@ const ResizableEduTable = ({ education, unlocked, colWidths, rowHeights, onTable
     if (rowHeights) {
       startHeights = [...rowHeights];
     } else {
-      startHeights = allRealTrs.map(tr => tr.getBoundingClientRect().height);
+      startHeights = allRealTrs.map(tr => tr.offsetHeight);
     }
 
     const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-    dragStateRef.current = { type: 'row', rowIdx, startY: clientY, startHeights };
+    const zoomLevel = table.getBoundingClientRect().width / table.offsetWidth || 1;
+    dragStateRef.current = { type: 'row', rowIdx, startY: clientY, startHeights, zoomLevel };
 
     const onMove = (me) => {
       if (!dragStateRef.current) return;
       if (me.cancelable) me.preventDefault();
       const cy = me.touches ? me.touches[0].clientY : me.clientY;
       const dy = cy - dragStateRef.current.startY;
+      const dyLayout = dy / dragStateRef.current.zoomLevel;
       const { startHeights: sh, rowIdx: ri } = dragStateRef.current;
       const newHeights = [...sh];
-      newHeights[ri] = Math.max(MIN_ROW_PX, sh[ri] + dy);
+      newHeights[ri] = Math.max(MIN_ROW_PX, sh[ri] + dyLayout);
       onTableChange(colWidths, newHeights);
     };
 
@@ -640,7 +644,9 @@ const ResizableEduTable = ({ education, unlocked, colWidths, rowHeights, onTable
       document.body.style.cursor = '';
     };
 
+    // eslint-disable-next-line react-hooks/immutability
     document.body.style.userSelect = 'none';
+    // eslint-disable-next-line react-hooks/immutability
     document.body.style.cursor = 'row-resize';
     document.addEventListener('mousemove', onMove);
     document.addEventListener('touchmove', onMove, { passive: false });
@@ -655,9 +661,9 @@ const ResizableEduTable = ({ education, unlocked, colWidths, rowHeights, onTable
   const colHandleStyle = {
     position: 'absolute',
     top: 0,
-    right: -3,
+    right: -10,
     bottom: 0,
-    width: 6,
+    width: 20,
     cursor: 'col-resize',
     zIndex: 10,
     background: 'transparent',
@@ -669,8 +675,8 @@ const ResizableEduTable = ({ education, unlocked, colWidths, rowHeights, onTable
     position: 'absolute',
     left: 0,
     right: 0,
-    bottom: -3,
-    height: 6,
+    bottom: -10,
+    height: 20,
     cursor: 'row-resize',
     zIndex: 10,
     background: 'transparent',
@@ -719,7 +725,13 @@ const ResizableEduTable = ({ education, unlocked, colWidths, rowHeights, onTable
                     data-resize-type="col"
                     data-col-idx={colIdx}
                     aria-hidden="true"
-                  />
+                    className="no-print group flex items-center justify-center"
+                  >
+                    {/* Visual guide line */}
+                    <div className="w-[1px] h-full bg-blue-400/40 group-hover:bg-blue-500/80 transition-colors pointer-events-none" />
+                    {/* Center grip pill */}
+                    <div className="w-1.5 h-6 bg-blue-500 rounded-full absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 shadow-md border border-white pointer-events-none" />
+                  </div>
                 )}
                 {/* Row resize handle on the bottom edge of the header row (not after last row) */}
                 {unlocked && numDataRows > 0 && (
@@ -730,7 +742,13 @@ const ResizableEduTable = ({ education, unlocked, colWidths, rowHeights, onTable
                     data-resize-type="row"
                     data-row-idx={0}
                     aria-hidden="true"
-                  />
+                    className="no-print group flex flex-col justify-center"
+                  >
+                    {/* Visual guide line */}
+                    <div className="h-[1px] w-full bg-blue-400/40 group-hover:bg-blue-500/80 transition-colors pointer-events-none absolute top-1/2 left-0 -translate-y-1/2" />
+                    {/* Center grip pill */}
+                    <div className="w-6 h-1.5 bg-blue-500 rounded-full absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 shadow-md border border-white pointer-events-none" />
+                  </div>
                 )}
               </th>
             );
@@ -764,7 +782,13 @@ const ResizableEduTable = ({ education, unlocked, colWidths, rowHeights, onTable
                       data-resize-type="col"
                       data-col-idx={colIdx}
                       aria-hidden="true"
-                    />
+                      className="no-print group flex items-center justify-center"
+                    >
+                      {/* Visual guide line */}
+                      <div className="w-[1px] h-full bg-blue-400/40 group-hover:bg-blue-500/80 transition-colors pointer-events-none" />
+                      {/* Center grip pill */}
+                      <div className="w-1.5 h-6 bg-blue-500 rounded-full absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 shadow-md border border-white pointer-events-none" />
+                    </div>
                   )}
                   {/* Row resize handle on the bottom edge of each non-last row */}
                   {unlocked && !isLastRow && (
@@ -775,7 +799,13 @@ const ResizableEduTable = ({ education, unlocked, colWidths, rowHeights, onTable
                       data-resize-type="row"
                       data-row-idx={rowIdx + 1}
                       aria-hidden="true"
-                    />
+                      className="no-print group flex flex-col justify-center"
+                    >
+                      {/* Visual guide line */}
+                      <div className="h-[1px] w-full bg-blue-400/40 group-hover:bg-blue-500/80 transition-colors pointer-events-none absolute top-1/2 left-0 -translate-y-1/2" />
+                      {/* Center grip pill */}
+                      <div className="w-6 h-1.5 bg-blue-500 rounded-full absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 shadow-md border border-white pointer-events-none" />
+                    </div>
                   )}
                 </td>
               ))}
@@ -1037,8 +1067,10 @@ export const OnCampusPreview = forwardRef(({ resumeData, onPhotoUploadClick, onL
     if (!container) return;
 
     const handleStart = (e) => {
-      const handle = e.target;
-      if (!handle || !(handle instanceof HTMLElement)) return;
+      const target = e.target;
+      if (!target || !(target instanceof HTMLElement)) return;
+      const handle = target.closest('[data-resize-type]');
+      if (!handle) return;
 
       const resizeType = handle.getAttribute('data-resize-type');
       if (!resizeType) return;
@@ -1071,8 +1103,8 @@ export const OnCampusPreview = forwardRef(({ resumeData, onPhotoUploadClick, onL
         startPcts = [...currentColWidths];
       } else {
         const headerCells = Array.from(table.querySelectorAll('thead tr:not(.edu-rh-tr) th'));
-        const pxWidths = headerCells.map(th => th.getBoundingClientRect().width);
-        const total = pxWidths.reduce((a, b) => a + b, 0) || totalWidth;
+        const pxWidths = headerCells.map(th => th.offsetWidth);
+        const total = pxWidths.reduce((a, b) => a + b, 0) || table.offsetWidth;
         startPcts = pxWidths.map(w => (w / total) * 100);
       }
 
@@ -1084,7 +1116,7 @@ export const OnCampusPreview = forwardRef(({ resumeData, onPhotoUploadClick, onL
         const cx = me.touches ? me.touches[0].clientX : me.clientX;
         const dxPx = cx - dragColState.startX;
         const dxPct = (dxPx / dragColState.totalWidth) * 100;
-        const minPct = (MIN_COL_PX / dragColState.totalWidth) * 100;
+        const minPct = (MIN_COL_PX / table.offsetWidth) * 100;
         const { startPcts: sp, colIdx: ci } = dragColState;
         const newPcts = [...sp];
         const sumLR = sp[ci] + sp[ci + 1];
@@ -1128,19 +1160,21 @@ export const OnCampusPreview = forwardRef(({ resumeData, onPhotoUploadClick, onL
       if (currentRowHeights) {
         startHeights = [...currentRowHeights];
       } else {
-        startHeights = allRealTrs.map(tr => tr.getBoundingClientRect().height);
+        startHeights = allRealTrs.map(tr => tr.offsetHeight);
       }
 
       const clientY = startEvent.touches ? startEvent.touches[0].clientY : startEvent.clientY;
-      const dragRowState = { rowIdx, startY: clientY, startHeights };
+      const zoomLevel = table.getBoundingClientRect().width / table.offsetWidth || 1;
+      const dragRowState = { rowIdx, startY: clientY, startHeights, zoomLevel };
 
       const onMove = (me) => {
         if (me.cancelable) me.preventDefault();
         const cy = me.touches ? me.touches[0].clientY : me.clientY;
         const dy = cy - dragRowState.startY;
+        const dyLayout = dy / dragRowState.zoomLevel;
         const { startHeights: sh, rowIdx: ri } = dragRowState;
         const newHeights = [...sh];
-        newHeights[ri] = Math.max(MIN_ROW_PX, sh[ri] + dy);
+        newHeights[ri] = Math.max(MIN_ROW_PX, sh[ri] + dyLayout);
         
         setResumeData(prev => ({
           ...prev,

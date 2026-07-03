@@ -14,18 +14,19 @@ const LandingPage = () => {
 
   React.useEffect(() => {
     const templates = ["on-campus", "modern-creative", "corporate-minimal"];
-    let latestTime = 0;
+    let latestTime = -1;
     let selectedTemp = "on-campus";
     let found = false;
 
     templates.forEach(t => {
-      const ts = localStorage.getItem(`suyavivaram_timestamp_${t}`);
-      if (ts) {
-        const time = parseInt(ts, 10);
+      const draft = localStorage.getItem(`suyavivaram_resume_${t}`);
+      if (draft) {
+        found = true;
+        const ts = localStorage.getItem(`suyavivaram_timestamp_${t}`);
+        const time = ts ? parseInt(ts, 10) : 0;
         if (time > latestTime) {
           latestTime = time;
           selectedTemp = t;
-          found = true;
         }
       }
     });
