@@ -53,12 +53,17 @@ const LandingPage = () => {
     const reader = new FileReader();
     reader.onload = (event) => {
       try {
-        const json = JSON.parse(event.target.result);
-        const { resumeData, layout, themeColor } = reconstructResumeData(json);
+        const { resumeData, layout, themeColor, unlockTableBorders, dateItalics } = reconstructResumeData(json);
 
         // Save in sessionStorage
         sessionStorage.setItem('uploadedResumeData', JSON.stringify(resumeData));
         sessionStorage.setItem('uploadedThemeColor', themeColor);
+        if (unlockTableBorders !== undefined) {
+          sessionStorage.setItem('uploadedUnlockTableBorders', String(unlockTableBorders));
+        }
+        if (dateItalics !== undefined) {
+          sessionStorage.setItem('uploadedDateItalics', String(dateItalics));
+        }
 
         // Navigate to the editor with correct template
         navigate(`/builder?template=${layout}`);

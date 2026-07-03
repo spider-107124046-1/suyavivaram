@@ -1,4 +1,4 @@
-import { useState, useRef, useLayoutEffect, useImperativeHandle, forwardRef, Fragment } from 'react';
+import { useState, useEffect, useRef, useLayoutEffect, useImperativeHandle, forwardRef, Fragment } from 'react';
 import { createPortal } from 'react-dom';
 import ReactCrop from 'react-image-crop';
 import 'react-image-crop/dist/ReactCrop.css';
@@ -536,7 +536,6 @@ export const OnCampusEditor = ({ resumeData, setResumeData, photoFileInputRef, l
   );
 };
 
-// ─── Resizable Education Table ───────────────────────────────────────────────
 const MIN_COL_PX = 16; // ≈ 2ch
 const MIN_ROW_PX = 2;  // 2 px
 
@@ -544,7 +543,6 @@ const ResizableEduTable = ({ education, unlocked, colWidths, rowHeights, onTable
   const tableRef = useRef(null);
   const dragStateRef = useRef(null);
 
-  // ── Column drag ──────────────────────────────────────────────────────────
   const handleColDragStart = (e, colIdx) => {
     if (!unlocked) return;
     e.preventDefault();
@@ -718,6 +716,8 @@ const ResizableEduTable = ({ education, unlocked, colWidths, rowHeights, onTable
                     style={colHandleStyle}
                     onMouseDown={(e) => handleColDragStart(e, colIdx)}
                     onTouchStart={(e) => handleColDragStart(e, colIdx)}
+                    data-resize-type="col"
+                    data-col-idx={colIdx}
                     aria-hidden="true"
                   />
                 )}
@@ -727,6 +727,8 @@ const ResizableEduTable = ({ education, unlocked, colWidths, rowHeights, onTable
                     style={rowHandleStyle}
                     onMouseDown={(e) => handleRowDragStart(e, 0)}
                     onTouchStart={(e) => handleRowDragStart(e, 0)}
+                    data-resize-type="row"
+                    data-row-idx={0}
                     aria-hidden="true"
                   />
                 )}
@@ -759,6 +761,8 @@ const ResizableEduTable = ({ education, unlocked, colWidths, rowHeights, onTable
                       style={colHandleStyle}
                       onMouseDown={(e) => handleColDragStart(e, colIdx)}
                       onTouchStart={(e) => handleColDragStart(e, colIdx)}
+                      data-resize-type="col"
+                      data-col-idx={colIdx}
                       aria-hidden="true"
                     />
                   )}
@@ -768,6 +772,8 @@ const ResizableEduTable = ({ education, unlocked, colWidths, rowHeights, onTable
                       style={rowHandleStyle}
                       onMouseDown={(e) => handleRowDragStart(e, rowIdx + 1)}
                       onTouchStart={(e) => handleRowDragStart(e, rowIdx + 1)}
+                      data-resize-type="row"
+                      data-row-idx={rowIdx + 1}
                       aria-hidden="true"
                     />
                   )}
@@ -780,9 +786,8 @@ const ResizableEduTable = ({ education, unlocked, colWidths, rowHeights, onTable
     </table>
   );
 };
-// ─────────────────────────────────────────────────────────────────────────────
 
-export const OnCampusResumeLayout = forwardRef(({ resumeData, onTableChange }, ref) => {
+export const OnCampusResumeLayout = forwardRef(({ resumeData, onTableChange, dateItalics = true }, ref) => {
   const { personalDetails, education, internships, achievements, projects, skills, positions, activities } = resumeData;
 
   const formatDates = text => {
@@ -799,7 +804,8 @@ export const OnCampusResumeLayout = forwardRef(({ resumeData, onTableChange }, r
         dateText = from || to || "";
       }
       if (!dateText) return "";
-      return `<span class="subpoint-date" style="float: right; font-style: italic; font-weight: normal; font-size: inherit;">${dateText}</span>`;
+      const fontStyle = dateItalics ? "italic" : "normal";
+      return `<span class="subpoint-date" style="float: right; font-style: ${fontStyle}; font-weight: normal; font-size: inherit;">${dateText}</span>`;
     });
   };
 
@@ -889,7 +895,7 @@ export const OnCampusResumeLayout = forwardRef(({ resumeData, onTableChange }, r
                 unlocked={!!onTableChange}
                 colWidths={resumeData.educationColWidths}
                 rowHeights={resumeData.educationRowHeights}
-                onTableChange={onTableChange || (() => {})}
+                onTableChange={onTableChange || (() => { })}
               />
             </div>
           </ResumeSection>
@@ -910,9 +916,9 @@ export const OnCampusResumeLayout = forwardRef(({ resumeData, onTableChange }, r
                     <h3 className="font-bold text-[15px]">{item.title}</h3>
                     <p className="flex-shrink-0 ml-4 text-right">
                       {item.from && item.to ? (
-                        <i className="italic">{item.from} – {item.to}</i>
+                        <span style={{ fontStyle: dateItalics ? "italic" : "normal" }}>{item.from} – {item.to}</span>
                       ) : (item.from || item.to) ? (
-                        <i className="italic">{item.from || item.to}</i>
+                        <span style={{ fontStyle: dateItalics ? "italic" : "normal" }}>{item.from || item.to}</span>
                       ) : null}
                     </p>
                   </div>
@@ -931,9 +937,9 @@ export const OnCampusResumeLayout = forwardRef(({ resumeData, onTableChange }, r
                     <h3 className="font-bold text-[15px]">{item.name}</h3>
                     <p className="flex-shrink-0 ml-4 text-right">
                       {item.from && item.to ? (
-                        <i className="italic">{item.from} – {item.to}</i>
+                        <span style={{ fontStyle: dateItalics ? "italic" : "normal" }}>{item.from} – {item.to}</span>
                       ) : (item.from || item.to) ? (
-                        <i className="italic">{item.from || item.to}</i>
+                        <span style={{ fontStyle: dateItalics ? "italic" : "normal" }}>{item.from || item.to}</span>
                       ) : null}
                     </p>
                   </div>
@@ -965,9 +971,9 @@ export const OnCampusResumeLayout = forwardRef(({ resumeData, onTableChange }, r
                     <h3 className="font-bold text-[15px]">{item.title}</h3>
                     <p className="flex-shrink-0 ml-4 text-right">
                       {item.from && item.to ? (
-                        <i className="italic">{item.from} – {item.to}</i>
+                        <span style={{ fontStyle: dateItalics ? "italic" : "normal" }}>{item.from} – {item.to}</span>
                       ) : (item.from || item.to) ? (
-                        <i className="italic">{item.from || item.to}</i>
+                        <span style={{ fontStyle: dateItalics ? "italic" : "normal" }}>{item.from || item.to}</span>
                       ) : null}
                     </p>
                   </div>
@@ -1011,7 +1017,7 @@ export const OnCampusResumeLayout = forwardRef(({ resumeData, onTableChange }, r
 
 OnCampusResumeLayout.displayName = "OnCampusResumeLayout";
 
-export const OnCampusPreview = forwardRef(({ resumeData, onPhotoUploadClick, onLogoUploadClick, setResumeData, unlockTableBorders }, ref) => {
+export const OnCampusPreview = forwardRef(({ resumeData, onPhotoUploadClick, onLogoUploadClick, setResumeData, unlockTableBorders, dateItalics }, ref) => {
   const rawLayoutRef = useRef(null);
   const pagesContainerRef = useRef(null);
   const [pagesHtml, setPagesHtml] = useState([]);
@@ -1024,6 +1030,149 @@ export const OnCampusPreview = forwardRef(({ resumeData, onPhotoUploadClick, onL
   useImperativeHandle(ref, () => ({
     getHtmlForPdf: () => pagesContainerRef.current
   }));
+
+  useEffect(() => {
+    if (!unlockTableBorders) return;
+    const container = pagesContainerRef.current;
+    if (!container) return;
+
+    const handleStart = (e) => {
+      const handle = e.target;
+      if (!handle || !(handle instanceof HTMLElement)) return;
+
+      const resizeType = handle.getAttribute('data-resize-type');
+      if (!resizeType) return;
+
+      if (resizeType === 'col') {
+        const colIdx = parseInt(handle.getAttribute('data-col-idx'), 10);
+        if (!isNaN(colIdx)) {
+          handleColDrag(e, colIdx, handle);
+        }
+      } else if (resizeType === 'row') {
+        const rowIdx = parseInt(handle.getAttribute('data-row-idx'), 10);
+        if (!isNaN(rowIdx)) {
+          handleRowDrag(e, rowIdx, handle);
+        }
+      }
+    };
+
+    const handleColDrag = (startEvent, colIdx, handleEl) => {
+      startEvent.preventDefault();
+      startEvent.stopPropagation();
+
+      const table = handleEl.closest('table');
+      if (!table) return;
+      const totalWidth = table.getBoundingClientRect().width;
+
+      const currentColWidths = resumeData.educationColWidths;
+
+      let startPcts;
+      if (currentColWidths) {
+        startPcts = [...currentColWidths];
+      } else {
+        const headerCells = Array.from(table.querySelectorAll('thead tr:not(.edu-rh-tr) th'));
+        const pxWidths = headerCells.map(th => th.getBoundingClientRect().width);
+        const total = pxWidths.reduce((a, b) => a + b, 0) || totalWidth;
+        startPcts = pxWidths.map(w => (w / total) * 100);
+      }
+
+      const clientX = startEvent.touches ? startEvent.touches[0].clientX : startEvent.clientX;
+      const dragColState = { colIdx, startX: clientX, startPcts, totalWidth };
+
+      const onMove = (me) => {
+        if (me.cancelable) me.preventDefault();
+        const cx = me.touches ? me.touches[0].clientX : me.clientX;
+        const dxPx = cx - dragColState.startX;
+        const dxPct = (dxPx / dragColState.totalWidth) * 100;
+        const minPct = (MIN_COL_PX / dragColState.totalWidth) * 100;
+        const { startPcts: sp, colIdx: ci } = dragColState;
+        const newPcts = [...sp];
+        const sumLR = sp[ci] + sp[ci + 1];
+        newPcts[ci] = Math.max(minPct, Math.min(sumLR - minPct, sp[ci] + dxPct));
+        newPcts[ci + 1] = sumLR - newPcts[ci];
+        
+        setResumeData(prev => ({
+          ...prev,
+          educationColWidths: newPcts
+        }));
+      };
+
+      const onUp = () => {
+        document.removeEventListener('mousemove', onMove);
+        document.removeEventListener('touchmove', onMove);
+        document.removeEventListener('mouseup', onUp);
+        document.removeEventListener('touchend', onUp);
+        document.body.style.userSelect = '';
+        document.body.style.cursor = '';
+      };
+
+      document.body.style.userSelect = 'none';
+      document.body.style.cursor = 'col-resize';
+      document.addEventListener('mousemove', onMove);
+      document.addEventListener('touchmove', onMove, { passive: false });
+      document.addEventListener('mouseup', onUp);
+      document.addEventListener('touchend', onUp);
+    };
+
+    const handleRowDrag = (startEvent, rowIdx, handleEl) => {
+      startEvent.preventDefault();
+      startEvent.stopPropagation();
+
+      const table = handleEl.closest('table');
+      if (!table) return;
+
+      const allRealTrs = Array.from(table.querySelectorAll('tr:not(.edu-rh-tr)'));
+      const currentRowHeights = resumeData.educationRowHeights;
+
+      let startHeights;
+      if (currentRowHeights) {
+        startHeights = [...currentRowHeights];
+      } else {
+        startHeights = allRealTrs.map(tr => tr.getBoundingClientRect().height);
+      }
+
+      const clientY = startEvent.touches ? startEvent.touches[0].clientY : startEvent.clientY;
+      const dragRowState = { rowIdx, startY: clientY, startHeights };
+
+      const onMove = (me) => {
+        if (me.cancelable) me.preventDefault();
+        const cy = me.touches ? me.touches[0].clientY : me.clientY;
+        const dy = cy - dragRowState.startY;
+        const { startHeights: sh, rowIdx: ri } = dragRowState;
+        const newHeights = [...sh];
+        newHeights[ri] = Math.max(MIN_ROW_PX, sh[ri] + dy);
+        
+        setResumeData(prev => ({
+          ...prev,
+          educationRowHeights: newHeights
+        }));
+      };
+
+      const onUp = () => {
+        document.removeEventListener('mousemove', onMove);
+        document.removeEventListener('touchmove', onMove);
+        document.removeEventListener('mouseup', onUp);
+        document.removeEventListener('touchend', onUp);
+        document.body.style.userSelect = '';
+        document.body.style.cursor = '';
+      };
+
+      document.body.style.userSelect = 'none';
+      document.body.style.cursor = 'row-resize';
+      document.addEventListener('mousemove', onMove);
+      document.addEventListener('touchmove', onMove, { passive: false });
+      document.addEventListener('mouseup', onUp);
+      document.addEventListener('touchend', onUp);
+    };
+
+    container.addEventListener('mousedown', handleStart);
+    container.addEventListener('touchstart', handleStart, { passive: false });
+
+    return () => {
+      container.removeEventListener('mousedown', handleStart);
+      container.removeEventListener('touchstart', handleStart);
+    };
+  }, [resumeData.educationColWidths, resumeData.educationRowHeights, unlockTableBorders, setResumeData]);
 
   useLayoutEffect(() => {
     const calculateLayout = () => {
@@ -1167,7 +1316,7 @@ export const OnCampusPreview = forwardRef(({ resumeData, onPhotoUploadClick, onL
     calculateLayout();
     window.addEventListener("resize", calculateLayout);
     return () => window.removeEventListener("resize", calculateLayout);
-  }, [resumeData, isMobileOrSmallScreen]);
+  }, [resumeData, dateItalics, isMobileOrSmallScreen]);
 
   const UploadPromptIcon = () => (
     <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 text-white opacity-75 group-hover:opacity-100 transition-opacity" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -1180,26 +1329,26 @@ export const OnCampusPreview = forwardRef(({ resumeData, onPhotoUploadClick, onL
       {/* Hidden off-screen raw layout — used for pagination measurement only.
           When unlocked, also wires onTableChange to update resumeData. */}
       <div
-        aria-hidden={!unlockTableBorders}
+        aria-hidden={true}
         style={{
           position: 'absolute',
           top: 0,
           left: -9999,
           opacity: 0,
-          pointerEvents: 'none',
-          ...(unlockTableBorders ? { opacity: 1, left: 'auto', position: 'relative', pointerEvents: 'auto' } : {})
+          pointerEvents: 'none'
         }}
       >
         <OnCampusResumeLayout
           resumeData={resumeData}
           ref={rawLayoutRef}
+          dateItalics={dateItalics}
           onTableChange={setResumeData && unlockTableBorders ? (colWidths, rowHeights) => {
             setResumeData(prev => ({ ...prev, educationColWidths: colWidths, educationRowHeights: rowHeights }));
           } : undefined}
         />
       </div>
-      {/* Paginated pages — hidden when unlocked so the interactive layout is visible */}
-      {!unlockTableBorders && pagesHtml.length > 0 ? (
+      {/* Paginated pages — always rendered so page separation and upload prompts remain visible */}
+      {pagesHtml.length > 0 ? (
         pagesHtml.map((pageContent, idx) => (
           <div key={idx} className="relative">
             <div className={`resume-page-container overflow-hidden bg-white shadow-lg px-10 pb-2 w-[210mm] h-[297mm] flex flex-col text-black leading-relaxed relative ${idx === 0 ? "pt-14" : "pt-10"}`}>
@@ -1244,11 +1393,11 @@ export const OnCampusPreview = forwardRef(({ resumeData, onPhotoUploadClick, onL
             )}
           </div>
         ))
-      ) : !unlockTableBorders ? (
+      ) : (
         <div className="bg-white shadow-lg w-[210mm] h-[297mm] flex items-center justify-center">
           <p className="text-center p-8 text-gray-500">Generating preview...</p>
         </div>
-      ) : null}
+      )}
     </div>
   );
 });

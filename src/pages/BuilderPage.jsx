@@ -162,7 +162,24 @@ const BuilderPage = () => {
   const logoFileInputRef = useRef(null);
   const errorTimeoutRef = useRef(null);
 
-  const [unlockTableBorders, setUnlockTableBorders] = useState(false);
+  const [unlockTableBorders, setUnlockTableBorders] = useState(() => {
+    const uploadedBorders = sessionStorage.getItem('uploadedUnlockTableBorders');
+    if (uploadedBorders !== null) {
+      sessionStorage.removeItem('uploadedUnlockTableBorders');
+      return uploadedBorders === 'true';
+    }
+    const saved = localStorage.getItem(`suyavivaram_unlockTableBorders_${selectedTemplate}`);
+    return saved === 'true';
+  });
+  const [dateItalics, setDateItalics] = useState(() => {
+    const uploadedItalics = sessionStorage.getItem('uploadedDateItalics');
+    if (uploadedItalics !== null) {
+      sessionStorage.removeItem('uploadedDateItalics');
+      return uploadedItalics === 'true';
+    }
+    const saved = localStorage.getItem(`suyavivaram_dateItalics_${selectedTemplate}`);
+    return saved === null ? true : saved === 'true';
+  });
   const [hasChanges, setHasChanges] = useState(false);
   const [saveStatus, setSaveStatus] = useState("Saved");
   const [draftAvailable, setDraftAvailable] = useState(false);
@@ -201,6 +218,14 @@ const BuilderPage = () => {
         if (savedTheme) {
           setThemeColor(savedTheme);
         }
+        const savedBorders = localStorage.getItem(`suyavivaram_unlockTableBorders_${selectedTemplate}`);
+        if (savedBorders !== null) {
+          setUnlockTableBorders(savedBorders === 'true');
+        }
+        const savedDateItalics = localStorage.getItem(`suyavivaram_dateItalics_${selectedTemplate}`);
+        if (savedDateItalics !== null) {
+          setDateItalics(savedDateItalics === 'true');
+        }
         setDraftAvailable(false);
         setSaveStatus("Saved");
         setHasChanges(false);
@@ -228,7 +253,7 @@ const BuilderPage = () => {
     if (!showRestoreModal) {
       setHasChanges(true);
     }
-  }, [resumeData, themeColor, showRestoreModal]);
+  }, [resumeData, themeColor, unlockTableBorders, dateItalics, showRestoreModal]);
 
   // Autosave
   useEffect(() => {
@@ -243,6 +268,8 @@ const BuilderPage = () => {
         localStorage.setItem(`suyavivaram_resume_${selectedTemplate}`, JSON.stringify(resumeData));
         localStorage.setItem(`suyavivaram_theme_${selectedTemplate}`, themeColor);
         localStorage.setItem(`suyavivaram_timestamp_${selectedTemplate}`, Date.now().toString());
+        localStorage.setItem(`suyavivaram_dateItalics_${selectedTemplate}`, String(dateItalics));
+        localStorage.setItem(`suyavivaram_unlockTableBorders_${selectedTemplate}`, String(unlockTableBorders));
         setSaveStatus("Saved");
         setDraftAvailable(false);
       } catch (e) {
@@ -252,7 +279,7 @@ const BuilderPage = () => {
     }, 1000);
 
     return () => clearTimeout(timer);
-  }, [resumeData, themeColor, selectedTemplate, hasChanges, showRestoreModal]);
+  }, [resumeData, themeColor, dateItalics, unlockTableBorders, selectedTemplate, hasChanges, showRestoreModal]);
 
   const loadDraftData = () => {
     const draft = localStorage.getItem(`suyavivaram_resume_${selectedTemplate}`);
@@ -264,6 +291,14 @@ const BuilderPage = () => {
         const savedTheme = localStorage.getItem(`suyavivaram_theme_${selectedTemplate}`);
         if (savedTheme) {
           setThemeColor(savedTheme);
+        }
+        const savedBorders = localStorage.getItem(`suyavivaram_unlockTableBorders_${selectedTemplate}`);
+        if (savedBorders !== null) {
+          setUnlockTableBorders(savedBorders === 'true');
+        }
+        const savedDateItalics = localStorage.getItem(`suyavivaram_dateItalics_${selectedTemplate}`);
+        if (savedDateItalics !== null) {
+          setDateItalics(savedDateItalics === 'true');
         }
         setDraftAvailable(false);
         setSaveStatus("Saved");
@@ -284,6 +319,8 @@ const BuilderPage = () => {
 
   const handleStartFresh = () => {
     setShowRestoreModal(false);
+    setUnlockTableBorders(false);
+    setDateItalics(true);
     setHasChanges(false);
     setSaveStatus("Saved");
   };
@@ -550,6 +587,8 @@ const BuilderPage = () => {
         version: "1.0",
         layout: selectedTemplate,
         themeColor: themeColor,
+        unlockTableBorders: unlockTableBorders,
+        dateItalics: dateItalics,
         resumeData: clonedResumeData,
         images: images
       };
@@ -640,6 +679,17 @@ const BuilderPage = () => {
                   </button>
                 )}
               </div>
+              {/* Date italics toggle */}
+              <label className="flex items-center gap-1.5 cursor-pointer select-none" title="Toggle italic style on dates rendered from the &lt;date&gt; shorthand">
+                <input
+                  type="checkbox"
+                  id="date-italics-toggle"
+                  checked={dateItalics}
+                  onChange={e => setDateItalics(e.target.checked)}
+                  className="w-3.5 h-3.5 accent-cerulean cursor-pointer"
+                />
+                <span className="text-xs font-semibold text-dimgrey italic">Date italics</span>
+              </label>
             </div>
             <div className="flex-1">
               {selectedTemplate === "on-campus" ? (
@@ -794,6 +844,7 @@ const BuilderPage = () => {
                 onLogoUploadClick={openLogoSelection}
                 unlockTableBorders={unlockTableBorders}
                 setResumeData={setResumeData}
+                dateItalics={dateItalics}
               />
             ) : selectedTemplate === "modern-creative" ? (
               <ModernCreativePreview
@@ -802,11 +853,13 @@ const BuilderPage = () => {
                 themeColor={themeColor}
                 onPhotoUploadClick={triggerPhotoUpload}
                 isDownloading={isDownloading}
+                dateItalics={dateItalics}
               />
             ) : (
               <CorporateMinimalPreview
                 ref={resumePreviewRef}
                 resumeData={resumeData}
+                dateItalics={dateItalics}
               />
             )}
           </div>

@@ -350,7 +350,7 @@ const CorporateMinimalBulletItem = ({ children }) => (
 
 const SectionHeader = ({ title }) => <h3 className="text-lg font-bold tracking-widest text-gray-800 uppercase mb-1">{title}</h3>;
 
-export const CorporateMinimalResumeLayout = forwardRef(({ resumeData }, ref) => {
+export const CorporateMinimalResumeLayout = forwardRef(({ resumeData, dateItalics = true }, ref) => {
   const { personalDetails, education, projects, internships, achievements, skills, positions, activities, webLinks, coursework } = resumeData;
 
   const formatDates = text => {
@@ -367,7 +367,8 @@ export const CorporateMinimalResumeLayout = forwardRef(({ resumeData }, ref) => 
         dateText = from || to || "";
       }
       if (!dateText) return "";
-      return `<span class="subpoint-date" style="float: right; font-style: italic; font-weight: normal; font-size: inherit;">${dateText}</span>`;
+      const fontStyle = dateItalics ? "italic" : "normal";
+      return `<span class="subpoint-date" style="float: right; font-style: ${fontStyle}; font-weight: normal; font-size: inherit;">${dateText}</span>`;
     });
   };
 
@@ -403,7 +404,7 @@ export const CorporateMinimalResumeLayout = forwardRef(({ resumeData }, ref) => 
                   <div key={item.id}>
                     <div className="font-bold text-base uppercase text-gray-900">{item.institution}</div>
                     <div className="font-bold text-sm text-gray-700">{item.degree}</div>
-                    <div className="text-sm text-gray-600 italic">{item.year}</div>
+                    <div className={`text-sm text-gray-600 ${dateItalics ? 'italic' : ''}`}>{item.year}</div>
                     <div className="text-sm text-gray-600">{item.grade}</div>
                   </div>
                 ))}
@@ -464,7 +465,7 @@ export const CorporateMinimalResumeLayout = forwardRef(({ resumeData }, ref) => 
                   <div key={item.id}>
                     <div className="flex justify-between items-baseline mb-1">
                       <div className="font-bold text-base uppercase text-gray-900">{item.title}</div>
-                      <div className="text-sm text-gray-500 italic font-medium">{item.date}</div>
+                      <div className={`text-sm text-gray-500 font-medium ${dateItalics ? 'italic' : ''}`}>{item.date}</div>
                     </div>
                     <div className="text-sm text-gray-700 leading-relaxed" dangerouslySetInnerHTML={{ __html: formatBold(item.description) }} />
                   </div>
@@ -480,7 +481,7 @@ export const CorporateMinimalResumeLayout = forwardRef(({ resumeData }, ref) => 
                   <div key={item.id}>
                     <div className="flex justify-between items-baseline mb-1">
                       <div className="font-bold text-base uppercase text-gray-900">{item.name}</div>
-                      <div className="text-sm text-gray-500 italic font-medium">{item.date}</div>
+                      <div className={`text-sm text-gray-500 font-medium ${dateItalics ? 'italic' : ''}`}>{item.date}</div>
                     </div>
                     <div className="text-sm text-gray-700 leading-relaxed" dangerouslySetInnerHTML={{ __html: formatBold(item.description) }} />
                   </div>
@@ -532,7 +533,7 @@ export const CorporateMinimalResumeLayout = forwardRef(({ resumeData }, ref) => 
 
 CorporateMinimalResumeLayout.displayName = "CorporateMinimalResumeLayout";
 
-export const CorporateMinimalPreview = forwardRef(({ resumeData }, ref) => {
+export const CorporateMinimalPreview = forwardRef(({ resumeData, dateItalics }, ref) => {
   const pagesContainerRef = useRef(null);
 
   useImperativeHandle(ref, () => ({
@@ -543,7 +544,7 @@ export const CorporateMinimalPreview = forwardRef(({ resumeData }, ref) => {
     <div ref={pagesContainerRef} className="flex flex-col items-center gap-8">
       <div className="relative">
         <div className="resume-page-container bg-white shadow-lg w-[210mm] min-h-[297mm] flex overflow-hidden">
-          <CorporateMinimalResumeLayout resumeData={resumeData} />
+          <CorporateMinimalResumeLayout resumeData={resumeData} dateItalics={dateItalics} />
         </div>
       </div>
     </div>

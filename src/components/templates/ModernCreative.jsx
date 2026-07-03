@@ -399,7 +399,7 @@ export const ModernCreativeEditor = ({ resumeData, setResumeData, photoFileInput
   );
 };
 
-export const ModernCreativeResumeLayout = forwardRef(({ resumeData, themeColor }, ref) => {
+export const ModernCreativeResumeLayout = forwardRef(({ resumeData, themeColor, dateItalics = true }, ref) => {
   const { personalDetails, education, internships, achievements, projects, skills, activities, summary, languages } = resumeData;
 
   const formatDates = text => {
@@ -416,7 +416,8 @@ export const ModernCreativeResumeLayout = forwardRef(({ resumeData, themeColor }
         dateText = from || to || "";
       }
       if (!dateText) return "";
-      return `<span class="subpoint-date" style="float: right; font-style: italic; font-weight: normal; font-size: inherit;">${dateText}</span>`;
+      const fontStyle = dateItalics ? "italic" : "normal";
+      return `<span class="subpoint-date" style="float: right; font-style: ${fontStyle}; font-weight: normal; font-size: inherit;">${dateText}</span>`;
     });
   };
 
@@ -674,7 +675,7 @@ export const ModernCreativeResumeLayout = forwardRef(({ resumeData, themeColor }
 
 ModernCreativeResumeLayout.displayName = "ModernCreativeResumeLayout";
 
-export const ModernCreativePreview = forwardRef(({ resumeData, themeColor, onPhotoUploadClick, isDownloading }, ref) => {
+export const ModernCreativePreview = forwardRef(({ resumeData, themeColor, onPhotoUploadClick, isDownloading, dateItalics }, ref) => {
   const pagesContainerRef = useRef(null);
 
   useImperativeHandle(ref, () => ({
@@ -685,7 +686,7 @@ export const ModernCreativePreview = forwardRef(({ resumeData, themeColor, onPho
     <div ref={pagesContainerRef} className="flex flex-col items-center gap-8">
       <div className="relative">
         <div className="resume-page-container bg-white shadow-lg w-[210mm] min-h-[297mm] flex overflow-hidden">
-          <ModernCreativeResumeLayout resumeData={resumeData} themeColor={themeColor} />
+          <ModernCreativeResumeLayout resumeData={resumeData} themeColor={themeColor} dateItalics={dateItalics} />
         </div>
         <button
           onClick={onPhotoUploadClick}

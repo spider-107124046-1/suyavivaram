@@ -173,11 +173,7 @@ const FAQPage = () => {
               ['📝 Rich text in fields', 'Type <b>, <i>, <u>, <s>, and <a href> tags directly into text fields. HTML entities like &amp;amp; also work.'],
               ['📅 Date shorthand', 'Use <date from="Jan 2024" to="May 2024" /> in description fields to auto-format right-aligned italic date ranges.'],
               ['📏 Resizable table layout', 'The On-Campus template uses a real HTML table whose column widths you can drag to resize, with a toggle to reveal/hide borders for alignment.'],
-              ['✂️ Photo crop tool', 'Upload and interactively crop your profile photo and institute logo directly in the browser.'],
-              ['🎨 Theme colours', 'The Modern Creative template supports a set of curated accent colours, switchable from the toolbar.'],
-              ['🔍 Zoom control', 'Zoom the live preview in and out, or type an exact percentage — useful for fine-tuning layout on small screens.'],
               ['📱 PWA support', 'Install the site as an app on your phone or desktop for a fully offline, native-like experience.'],
-              ['📄 Three templates', 'On-Campus (NITT), Modern Creative, and Corporate Minimal — all editable with the same tooling.'],
             ].map(([title, desc]) => (
               <li key={title} className="flex gap-2 items-start">
                 <span className="font-semibold text-slate-800 whitespace-nowrap">{title}:</span>
