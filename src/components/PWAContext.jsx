@@ -196,28 +196,28 @@ export const PWAProvider = ({ children }) => {
 
       {/* Premium site-wide Update App Banner */}
       {updateAvailable && !dismissed && (
-        <div className="fixed bottom-6 right-6 z-[9999] max-w-sm w-full p-4 bg-slate-900/95 backdrop-blur-md border border-slate-800 text-white rounded-2xl shadow-2xl flex flex-col gap-3 animate-fade-in">
+        <div className="fixed bottom-6 right-6 z-[9999] max-w-sm w-full p-4 bg-white/95 backdrop-blur-md border border-slate-200 text-slate-800 rounded-2xl shadow-2xl flex flex-col gap-3 animate-fade-in">
           <div className="flex gap-3 items-start">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-teal-500/10 text-teal-400 border border-teal-500/20">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-cerulean/10 text-cerulean border border-cerulean/20">
               <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 1121.21 7.89M9 11l3-3 3 3m-3-3v12" />
               </svg>
             </div>
             <div className="flex-1">
-              <h4 className="text-sm font-bold text-slate-100 flex items-center gap-2">
+              <h4 className="text-sm font-bold text-slate-950 flex items-center gap-2">
                 Update Available
                 <span className="flex h-2 w-2 relative">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-teal-400 opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-teal-500"></span>
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cerulean/40 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-cerulean"></span>
                 </span>
               </h4>
-              <p className="text-xs text-slate-400 mt-1 leading-relaxed font-normal">
+              <p className="text-xs text-slate-500 mt-1 leading-relaxed font-normal">
                 A new version of the app is ready. Reload now to apply the updates and access new features.
               </p>
             </div>
             <button 
               onClick={() => setDismissed(true)}
-              className="rounded-lg p-1 text-slate-400 hover:bg-slate-800 hover:text-slate-200 transition-colors"
+              className="rounded-lg p-1 text-slate-400 hover:bg-slate-50 hover:text-slate-600 transition-colors"
               aria-label="Dismiss update notification"
             >
               <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
@@ -228,13 +228,13 @@ export const PWAProvider = ({ children }) => {
           <div className="flex gap-2 justify-end mt-1">
             <button
               onClick={() => setDismissed(true)}
-              className="px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-400 hover:text-slate-200 hover:bg-slate-800 transition-all"
+              className="px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-500 hover:text-slate-800 hover:bg-slate-50 transition-all"
             >
               Later
             </button>
             <button
               onClick={updateApp}
-              className="px-4 py-1.5 bg-gradient-to-r from-teal-500 to-emerald-500 hover:from-teal-400 hover:to-emerald-400 text-slate-950 font-bold rounded-lg text-xs shadow-md shadow-teal-500/20 hover:shadow-lg hover:shadow-teal-500/30 transition-all hover:-translate-y-0.5 active:translate-y-0"
+              className="px-4 py-1.5 bg-cerulean hover:bg-cerulean/90 text-white font-bold rounded-lg text-xs shadow-md shadow-cerulean/20 hover:shadow-lg hover:shadow-cerulean/30 transition-all hover:-translate-y-0.5 active:translate-y-0"
             >
               Reload to Update
             </button>

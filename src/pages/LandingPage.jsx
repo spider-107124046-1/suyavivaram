@@ -54,6 +54,7 @@ const LandingPage = () => {
     const reader = new FileReader();
     reader.onload = (event) => {
       try {
+        const json = JSON.parse(event.target.result);
         const { resumeData, layout, themeColor, unlockTableBorders, dateItalics } = reconstructResumeData(json);
 
         // Save in sessionStorage
