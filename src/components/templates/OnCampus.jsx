@@ -271,14 +271,6 @@ export const OnCampusEditor = ({ resumeData, setResumeData, photoFileInputRef, l
               checked={!!unlockTableBorders}
               onChange={(e) => {
                 setUnlockTableBorders(e.target.checked);
-                if (!e.target.checked) {
-                  // Re-lock: clear sizes so table goes back to auto layout
-                  setResumeData(prev => ({
-                    ...prev,
-                    educationColWidths: null,
-                    educationRowHeights: null,
-                  }));
-                }
               }}
               className="w-3.5 h-3.5 accent-amber-600 cursor-pointer"
             />
@@ -286,7 +278,7 @@ export const OnCampusEditor = ({ resumeData, setResumeData, photoFileInputRef, l
               Unlock table layout
               <span className="block font-normal text-amber-600 mt-0.5">Drag column/row dividers on the preview to resize</span>
             </label>
-            {unlockTableBorders && (
+            {(unlockTableBorders || resumeData.educationColWidths || resumeData.educationRowHeights) && (
               <button
                 onClick={() => {
                   setResumeData(prev => ({
@@ -683,10 +675,10 @@ const ResizableEduTable = ({ education, unlocked, colWidths, rowHeights, onTable
     <table
       ref={tableRef}
       className="w-full border-collapse border border-black text-black text-center text-[15px]"
-      style={{ tableLayout: unlocked && colWidths ? 'fixed' : 'auto', width: '100%' }}
+      style={{ tableLayout: colWidths ? 'fixed' : 'auto', width: '100%' }}
     >
       {/* Column width hints when fixed layout is active */}
-      {unlocked && colWidths && (
+      {colWidths && (
         <colgroup>
           {columns.map((_, i) => (
             <col key={i} style={{ width: `${colWidths[i]}%` }} />
@@ -706,7 +698,7 @@ const ResizableEduTable = ({ education, unlocked, colWidths, rowHeights, onTable
                 style={{
                   position: 'relative',
                   textAlign: 'center',
-                  ...(unlocked && cellHeight ? { height: cellHeight, minHeight: cellHeight } : { height: '0.5in' }),
+                  ...(cellHeight ? { height: cellHeight, minHeight: cellHeight } : { height: '0.5in' }),
                 }}
               >
                 {col}
@@ -751,7 +743,7 @@ const ResizableEduTable = ({ education, unlocked, colWidths, rowHeights, onTable
                   style={{
                     position: 'relative',
                     textAlign: 'center',
-                    ...(unlocked && cellHeight ? { height: cellHeight, minHeight: cellHeight } : { height: '0.5in' }),
+                    ...(cellHeight ? { height: cellHeight, minHeight: cellHeight } : { height: '0.5in' }),
                   }}
                 >
                   {item[key]}
