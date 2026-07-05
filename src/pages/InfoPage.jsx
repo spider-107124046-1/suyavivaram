@@ -130,12 +130,18 @@ const EditorTab = () => (
         description='Click the "Copy: –" button in the status bar to copy an en-dash (–) to your clipboard, then paste it anywhere.'
         accent="dimgrey"
       />
-      {/* <FeatureCard
-        icon="🎨"
-        title="Theme Colour (Modern)"
-        description="The colour circle in the toolbar lets you pick an accent colour for the Modern Creative template."
+      <FeatureCard
+        icon="🎯"
+        title="Click-to-Edit Section"
+        description="Click on any section header in the live resume preview to automatically expand, scroll to, and focus the corresponding edit form."
         accent="berry"
-      /> */}
+      />
+      <FeatureCard
+        icon="🔢"
+        title="Reorder Section Items"
+        description="Rearrange lists of items (like projects, work, or education) by entering a comma-separated list of indices (e.g. 3, 1, 2) in the Reorder items input."
+        accent="emerald"
+      />
       <FeatureCard
         icon="📐"
         title="Table Border Unlock (On-Campus)"
@@ -231,7 +237,7 @@ const SavingTab = () => (
   <div>
     <SectionHeading>Saving as PDF</SectionHeading>
     <p className="text-slate-600 mb-6 leading-relaxed text-sm">
-      The <strong>PDF button</strong> (green, top toolbar) opens a new browser window with your resume laid out for printing. Your browser's "Save as PDF" option will produce a pixel-perfect, A4 document.
+      The <strong>PDF button</strong> (green, top toolbar) opens a new browser window with your resume laid out for printing. Your browser&apos;s &quot;Save as PDF&quot; option will produce a pixel-perfect, A4 document.
     </p>
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
       <FeatureCard
@@ -281,7 +287,7 @@ const SavingTab = () => (
 
     <SectionHeading>Auto-Save Details</SectionHeading>
     <p className="text-slate-600 leading-relaxed text-sm">
-      Changes are debounced and saved to <Code>localStorage</Code> about <strong>1 second</strong> after you stop typing. <b>Each template has its own independent draft.</b> The status indicator in the editor's top bar always reflects the current save state.
+      Changes are debounced and saved to <Code>localStorage</Code> about <strong>1 second</strong> after you stop typing. <b>Each template has its own independent draft.</b> The status indicator in the editor&apos;s top bar always reflects the current save state.
     </p>
   </div>
 );
