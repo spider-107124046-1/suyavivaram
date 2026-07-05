@@ -1235,9 +1235,18 @@ export const OnCampusPreview = forwardRef(({ resumeData, onPhotoUploadClick, onL
   }, [resumeData.educationColWidths, resumeData.educationRowHeights, unlockTableBorders, setResumeData]);
 
   useLayoutEffect(() => {
+    let active = true;
+
     const calculateLayout = () => {
+      if (!active) return;
       if (!rawLayoutRef.current) return;
+      
       const scratchDiv = document.createElement("div");
+      // Copy exact classes and style properties from the layout wrapper
+      scratchDiv.className = rawLayoutRef.current.className;
+      scratchDiv.setAttribute("style", rawLayoutRef.current.getAttribute("style") || "");
+      
+      // Measure off-screen
       scratchDiv.style.position = "absolute";
       scratchDiv.style.left = "-9999px";
       scratchDiv.style.top = "0";
@@ -1270,7 +1279,7 @@ export const OnCampusPreview = forwardRef(({ resumeData, onPhotoUploadClick, onL
 
       const sections = Array.from(mainEl.children);
       const mainStyle = window.getComputedStyle(mainEl);
-      const paddingTop = parseInt(mainStyle.paddingTop, 10);
+      const paddingTop = parseInt(mainStyle.paddingTop, 10) || 0;
       const bottomGap = isMobileOrSmallScreen ? 12 : 5;
 
       const headerAndHrHeight = getOuterHeight(headerEl) + getOuterHeight(hrEl);
@@ -1280,10 +1289,15 @@ export const OnCampusPreview = forwardRef(({ resumeData, onPhotoUploadClick, onL
         setFooterHeight(rawFooterVal);
       }
 
-      const topPadding = 64;
-      const bottomPadding = 48;
-      const firstPageMaxHeight = PAGE_HEIGHT_PX - topPadding - headerAndHrHeight - rawFooterVal - paddingTop - bottomGap;
-      const subsequentPageMaxHeight = PAGE_HEIGHT_PX - bottomPadding - rawFooterVal - bottomGap;
+      // Read parent padding values dynamically from rawLayoutRef
+      const layoutStyle = window.getComputedStyle(rawLayoutRef.current);
+      const containerPaddingTop = parseInt(layoutStyle.paddingTop, 10) || 56;
+      const containerPaddingBottom = parseInt(layoutStyle.paddingBottom, 10) || 8;
+      // subsequent pages have pt-10 (40px)
+      const subsequentPagePaddingTop = Math.max(0, containerPaddingTop - 16); 
+
+      const firstPageMaxHeight = PAGE_HEIGHT_PX - (containerPaddingTop + paddingTop) - headerAndHrHeight - rawFooterVal - bottomGap;
+      const subsequentPageMaxHeight = PAGE_HEIGHT_PX - subsequentPagePaddingTop - rawFooterVal - bottomGap;
 
       const pages = [];
       let currentPageHtml = "";
@@ -1310,6 +1324,7 @@ export const OnCampusPreview = forwardRef(({ resumeData, onPhotoUploadClick, onL
               const headerDiv = section.querySelector(".section-header-flex");
               const sectionHeaderHeight = headerDiv ? getOuterHeight(headerDiv) : 35;
               let accumulatedHeight = currentPageHeight + sectionHeaderHeight;
+              let secondPartHeight = 0;
 
               for (const item of listItems) {
                 const itemHeight = getOuterHeight(item);
@@ -1319,6 +1334,7 @@ export const OnCampusPreview = forwardRef(({ resumeData, onPhotoUploadClick, onL
                 } else {
                   fitsInCurrentPage = false;
                   secondPartHtml += item.outerHTML;
+                  secondPartHeight += itemHeight;
                 }
               }
 
@@ -1338,8 +1354,11 @@ export const OnCampusPreview = forwardRef(({ resumeData, onPhotoUploadClick, onL
                 const cloneSecondList = cloneSecond.querySelector("ul, div.space-y-3");
                 if (cloneSecondList) cloneSecondList.innerHTML = secondPartHtml;
 
+                const sectionStyle = window.getComputedStyle(section);
+                const sectionMarginBottom = parseInt(sectionStyle.marginBottom, 10) || 0;
+
                 currentPageHtml = cloneSecond.outerHTML;
-                currentPageHeight = sectionHeaderHeight + (accumulatedHeight - currentPageHeight - sectionHeaderHeight);
+                currentPageHeight = sectionHeaderHeight + secondPartHeight + sectionMarginBottom;
               } else {
                 pages.push(currentPageHtml);
                 isFirstPage = false;
@@ -1374,8 +1393,18 @@ export const OnCampusPreview = forwardRef(({ resumeData, onPhotoUploadClick, onL
     };
 
     calculateLayout();
+
+    if (typeof document !== "undefined" && document.fonts) {
+      document.fonts.ready.then(() => {
+        if (active) calculateLayout();
+      });
+    }
+
     window.addEventListener("resize", calculateLayout);
-    return () => window.removeEventListener("resize", calculateLayout);
+    return () => {
+      active = false;
+      window.removeEventListener("resize", calculateLayout);
+    };
   }, [resumeData, dateItalics, isMobileOrSmallScreen]);
 
   const UploadPromptIcon = () => (
