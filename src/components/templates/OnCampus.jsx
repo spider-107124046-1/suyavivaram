@@ -1006,7 +1006,7 @@ export const OnCampusResumeLayout = forwardRef(({ resumeData, onTableChange, dat
           <ResumeSection title="Technical Skills and Certifications" splittable={false}>
             {skillsDescription && skillsDescription.trim() !== "" && (
               <div 
-                className="text-[15px] mb-3 text-justify leading-relaxed" 
+                className="text-[15px] mb-3 text-justify" 
                 dangerouslySetInnerHTML={{ __html: formatBold(skillsDescription) }} 
               />
             )}
