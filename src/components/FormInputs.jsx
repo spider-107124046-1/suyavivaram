@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { useFormattingShortcuts } from '../utils/useFormattingShortcuts';
 
 const useAccordionAutoOpen = (title, setIsOpen) => {
   const containerRef = useRef(null);
@@ -69,27 +70,37 @@ export const OnCampusAccordion = ({ title, children, defaultOpen = false, icon }
   );
 };
 
-export const OnCampusTextInput = ({ label, value, name, onChange }) => (
-  <div className="mb-4">
-    <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5 ml-1">{label}</label>
-    <input
-      type="text" name={name} value={value} onChange={onChange}
-      className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all duration-200 bg-gray-50 focus:bg-white text-gray-800 text-base placeholder-gray-400 shadow-sm"
-      placeholder={`Enter ${label.toLowerCase()}`}
-    />
-  </div>
-);
+export const OnCampusTextInput = ({ label, value, name, onChange }) => {
+  const { inputRef, handleKeyDown } = useFormattingShortcuts(value, onChange);
+  return (
+    <div className="mb-4">
+      <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5 ml-1">{label}</label>
+      <input
+        ref={inputRef}
+        onKeyDown={handleKeyDown}
+        type="text" name={name} value={value} onChange={onChange}
+        className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all duration-200 bg-gray-50 focus:bg-white text-gray-800 text-base placeholder-gray-400 shadow-sm"
+        placeholder={`Enter ${label.toLowerCase()}`}
+      />
+    </div>
+  );
+};
 
-export const OnCampusTextArea = ({ label, value, name, rows = 3, onChange }) => (
-  <div className="mb-4">
-    <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5 ml-1">{label}</label>
-    <textarea
-      name={name} value={value} rows={rows} onChange={onChange}
-      className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all duration-200 bg-gray-50 focus:bg-white text-gray-800 text-base placeholder-gray-400 shadow-sm resize-y"
-      placeholder={`Enter ${label.toLowerCase()}`}
-    />
-  </div>
-);
+export const OnCampusTextArea = ({ label, value, name, rows = 3, onChange }) => {
+  const { inputRef, handleKeyDown } = useFormattingShortcuts(value, onChange);
+  return (
+    <div className="mb-4">
+      <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5 ml-1">{label}</label>
+      <textarea
+        ref={inputRef}
+        onKeyDown={handleKeyDown}
+        name={name} value={value} rows={rows} onChange={onChange}
+        className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all duration-200 bg-gray-50 focus:bg-white text-gray-800 text-base placeholder-gray-400 shadow-sm resize-y"
+        placeholder={`Enter ${label.toLowerCase()}`}
+      />
+    </div>
+  );
+};
 
 export const ModernAccordion = ({ title, children, defaultOpen = false, icon }) => {
   const [isOpen, setIsOpen] = useState(defaultOpen);
@@ -128,27 +139,37 @@ export const ModernAccordion = ({ title, children, defaultOpen = false, icon }) 
   );
 };
 
-export const ModernTextInput = ({ label, value, name, onChange }) => (
-  <div className="mb-4">
-    <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5 ml-1">{label}</label>
-    <input
-      type="text" name={name} value={value} onChange={onChange}
-      className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-4 focus:ring-purple-500/10 focus:border-purple-500 transition-all duration-200 bg-gray-50 focus:bg-white text-gray-800 text-base placeholder-gray-400 shadow-sm"
-      placeholder={`Enter ${label.toLowerCase()}`}
-    />
-  </div>
-);
+export const ModernTextInput = ({ label, value, name, onChange }) => {
+  const { inputRef, handleKeyDown } = useFormattingShortcuts(value, onChange);
+  return (
+    <div className="mb-4">
+      <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5 ml-1">{label}</label>
+      <input
+        ref={inputRef}
+        onKeyDown={handleKeyDown}
+        type="text" name={name} value={value} onChange={onChange}
+        className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-4 focus:ring-purple-500/10 focus:border-purple-500 transition-all duration-200 bg-gray-50 focus:bg-white text-gray-800 text-base placeholder-gray-400 shadow-sm"
+        placeholder={`Enter ${label.toLowerCase()}`}
+      />
+    </div>
+  );
+};
 
-export const ModernTextArea = ({ label, value, name, rows = 3, onChange }) => (
-  <div className="mb-4">
-    <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5 ml-1">{label}</label>
-    <textarea
-      name={name} value={value} rows={rows} onChange={onChange}
-      className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-4 focus:ring-purple-500/10 focus:border-purple-500 transition-all duration-200 bg-gray-50 focus:bg-white text-gray-800 text-base placeholder-gray-400 shadow-sm resize-y"
-      placeholder={`Enter ${label.toLowerCase()}`}
-    />
-  </div>
-);
+export const ModernTextArea = ({ label, value, name, rows = 3, onChange }) => {
+  const { inputRef, handleKeyDown } = useFormattingShortcuts(value, onChange);
+  return (
+    <div className="mb-4">
+      <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5 ml-1">{label}</label>
+      <textarea
+        ref={inputRef}
+        onKeyDown={handleKeyDown}
+        name={name} value={value} rows={rows} onChange={onChange}
+        className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-4 focus:ring-purple-500/10 focus:border-purple-500 transition-all duration-200 bg-gray-50 focus:bg-white text-gray-800 text-base placeholder-gray-400 shadow-sm resize-y"
+        placeholder={`Enter ${label.toLowerCase()}`}
+      />
+    </div>
+  );
+};
 
 export const CorporateAccordion = ({ title, children, defaultOpen = false, icon }) => {
   const [isOpen, setIsOpen] = useState(defaultOpen);
@@ -187,27 +208,37 @@ export const CorporateAccordion = ({ title, children, defaultOpen = false, icon 
   );
 };
 
-export const CorporateTextInput = ({ label, value, name, onChange }) => (
-  <div className="mb-4">
-    <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5 ml-1">{label}</label>
-    <input
-      type="text" name={name} value={value} onChange={onChange}
-      className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all duration-200 bg-gray-50 focus:bg-white text-gray-800 text-base placeholder-gray-400 shadow-sm"
-      placeholder={`Enter ${label.toLowerCase()}`}
-    />
-  </div>
-);
+export const CorporateTextInput = ({ label, value, name, onChange }) => {
+  const { inputRef, handleKeyDown } = useFormattingShortcuts(value, onChange);
+  return (
+    <div className="mb-4">
+      <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5 ml-1">{label}</label>
+      <input
+        ref={inputRef}
+        onKeyDown={handleKeyDown}
+        type="text" name={name} value={value} onChange={onChange}
+        className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all duration-200 bg-gray-50 focus:bg-white text-gray-800 text-base placeholder-gray-400 shadow-sm"
+        placeholder={`Enter ${label.toLowerCase()}`}
+      />
+    </div>
+  );
+};
 
-export const CorporateTextArea = ({ label, value, name, rows = 3, onChange }) => (
-  <div className="mb-4">
-    <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5 ml-1">{label}</label>
-    <textarea
-      name={name} value={value} rows={rows} onChange={onChange}
-      className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all duration-200 bg-gray-50 focus:bg-white text-gray-800 text-base placeholder-gray-400 shadow-sm resize-y"
-      placeholder={`Enter ${label.toLowerCase()}`}
-    />
-  </div>
-);
+export const CorporateTextArea = ({ label, value, name, rows = 3, onChange }) => {
+  const { inputRef, handleKeyDown } = useFormattingShortcuts(value, onChange);
+  return (
+    <div className="mb-4">
+      <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5 ml-1">{label}</label>
+      <textarea
+        ref={inputRef}
+        onKeyDown={handleKeyDown}
+        name={name} value={value} rows={rows} onChange={onChange}
+        className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all duration-200 bg-gray-50 focus:bg-white text-gray-800 text-base placeholder-gray-400 shadow-sm resize-y"
+        placeholder={`Enter ${label.toLowerCase()}`}
+      />
+    </div>
+  );
+};
 
 export const ResumeSection = ({ title, children, splittable = false }) => {
   const handleClick = () => {

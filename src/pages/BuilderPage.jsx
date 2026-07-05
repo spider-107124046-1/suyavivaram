@@ -156,11 +156,13 @@ const BuilderPage = () => {
   const [showColorPicker, setShowColorPicker] = useState(false);
   const [showLogoSelectionModal, setShowLogoSelectionModal] = useState(false);
   const [errorMessage, setErrorMessage] = useState(null);
+  const [toastMessage, setToastMessage] = useState(null);
 
   const resumePreviewRef = useRef(null);
   const photoFileInputRef = useRef(null);
   const logoFileInputRef = useRef(null);
   const errorTimeoutRef = useRef(null);
+  const toastTimeoutRef = useRef(null);
 
   const [unlockTableBorders, setUnlockTableBorders] = useState(() => {
     const uploadedBorders = sessionStorage.getItem('uploadedUnlockTableBorders');
@@ -401,6 +403,15 @@ const BuilderPage = () => {
     }, 6000);
   };
 
+  const showToast = (msg, duration = 6000) => {
+    if (toastTimeoutRef.current) clearTimeout(toastTimeoutRef.current);
+    setToastMessage(msg);
+    toastTimeoutRef.current = window.setTimeout(() => {
+      setToastMessage(null);
+      toastTimeoutRef.current = null;
+    }, duration);
+  };
+
   const handleDownloadPdf = async () => {
     const validationError = validateUploads();
     if (validationError) {
@@ -620,11 +631,38 @@ const BuilderPage = () => {
       link.click();
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
+
+      // Trigger toast only after the save window closes (on window focus regain, or fallback timeout)
+      let toastShown = false;
+      const triggerToast = () => {
+        if (toastShown) return;
+        toastShown = true;
+        showToast("You have saved the config! To load it later, use 'Load Resume' on homepage. To save PDF, use the PDF button.", 10000);
+        window.removeEventListener('focus', triggerToast);
+      };
+      window.addEventListener('focus', triggerToast);
+      setTimeout(triggerToast, 10000); // 10-second fallback if window focus didn't change
     } catch (error) {
       console.error("Failed to save configuration:", error);
       showBannerError("Failed to save configuration.");
     }
   };
+
+  // Hijack Ctrl + S (or Cmd + S) to save the config JSON instead of the browser saving the HTML page
+  useEffect(() => {
+    const handleGlobalKeyDown = (e) => {
+      const isCtrlOrCmd = e.ctrlKey || e.metaKey;
+      if (isCtrlOrCmd && e.key.toLowerCase() === 's' && !e.shiftKey) {
+        e.preventDefault();
+        handleSaveConfig();
+      }
+    };
+
+    window.addEventListener('keydown', handleGlobalKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleGlobalKeyDown);
+    };
+  }, [resumeData, selectedTemplate, themeColor, unlockTableBorders, dateItalics]);
 
   const handleZoomInputChange = (e) => setZoomInputVal(e.target.value);
 
@@ -910,6 +948,16 @@ const BuilderPage = () => {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
             <span>{errorMessage}</span>
+          </div>
+        )}
+
+        {/* --- Success toast message --- */}
+        {toastMessage && (
+          <div className="fixed bottom-10 left-1/2 -translate-x-1/2 bg-slate-900 text-white px-6 py-3.5 rounded-xl shadow-2xl z-50 animate-fade-in flex items-center gap-3 max-w-md border border-slate-800">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-emerald-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <span className="text-sm font-medium leading-relaxed">{toastMessage}</span>
           </div>
         )}
 

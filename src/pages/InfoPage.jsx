@@ -45,7 +45,7 @@ const SectionHeading = ({ children }) => (
   </h2>
 );
 
-const CheatRow = ({ tag, example, rendered, desc }) => (
+const CheatRow = ({ tag, example, rendered, shortcut, desc }) => (
   <tr className="border-b border-slate-100 last:border-0 hover:bg-slate-50/80 transition-colors">
     <td className="py-3 pr-4 font-mono text-sm text-slate-700 whitespace-nowrap">
       <Code>{tag}</Code>
@@ -54,6 +54,9 @@ const CheatRow = ({ tag, example, rendered, desc }) => (
       {example}
     </td>
     <td className="py-3 pr-4 text-sm text-slate-800">{rendered}</td>
+    <td className="py-3 pr-4 font-mono text-xs text-slate-600 whitespace-nowrap">
+      <kbd className="px-1.5 py-0.5 bg-slate-100 border border-slate-200 rounded text-slate-700 shadow-sm">{shortcut}</kbd>
+    </td>
     <td className="py-3 text-sm text-slate-500">{desc}</td>
   </tr>
 );
@@ -187,6 +190,7 @@ const FormattingTab = () => (
             <th className="py-3 px-4 text-xs font-bold text-slate-500 uppercase tracking-wide">Tag</th>
             <th className="py-3 px-4 text-xs font-bold text-slate-500 uppercase tracking-wide hidden sm:table-cell">Example</th>
             <th className="py-3 px-4 text-xs font-bold text-slate-500 uppercase tracking-wide">Renders as</th>
+            <th className="py-3 px-4 text-xs font-bold text-slate-500 uppercase tracking-wide">Shortcut</th>
             <th className="py-3 px-4 text-xs font-bold text-slate-500 uppercase tracking-wide">Effect</th>
           </tr>
         </thead>
@@ -195,30 +199,42 @@ const FormattingTab = () => (
             tag="<b>…</b>"
             example='<b>strong</b>'
             rendered={<strong>strong</strong>}
+            shortcut="Ctrl+B / ⌘B"
             desc="Bold text"
           />
           <CheatRow
             tag="<i>…</i>"
             example='<i>emphasis</i>'
             rendered={<em>emphasis</em>}
+            shortcut="Ctrl+I / ⌘I"
             desc="Italic text"
           />
           <CheatRow
             tag="<u>…</u>"
             example='<u>underline</u>'
             rendered={<u>underline</u>}
+            shortcut="Ctrl+U / ⌘U"
             desc="Underlined text"
           />
           <CheatRow
             tag="<s>…</s>"
             example='<s>crossed</s>'
             rendered={<s>crossed</s>}
+            shortcut="Ctrl+Shift+S / X"
             desc="Strikethrough"
+          />
+          <CheatRow
+            tag='<date from="…" to="…"/>'
+            example='<date from="May 24" to="Jul 24"/>'
+            rendered={<span className="text-slate-500 italic">May 24 – Jul 24</span>}
+            shortcut="Ctrl+D / ⌘D"
+            desc="Right-aligned date range (styled using date italics settings)"
           />
           <CheatRow
             tag='<a href="…">…</a>'
             example='<a href="https://example.com">link</a>'
             rendered={<a href="#" className="text-cerulean underline">link</a>}
+            shortcut="Ctrl+K / ⌘K"
             desc="Clickable hyperlink (opens in new tab)"
           />
         </tbody>
