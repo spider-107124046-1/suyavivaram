@@ -908,6 +908,54 @@ export const OnCampusResumeLayout = forwardRef(({ resumeData, onTableChange, dat
     }
   };
 
+  const renderParsedActivities = (description) => {
+    if (!description) return null;
+    const lines = description.split("\n").map(l => l.trim()).filter(Boolean);
+    if (lines.length === 0) return null;
+
+    const hasMarker = lines.some(line => /^[-*•]\s+/.test(line));
+
+    if (hasMarker) {
+      const elements = [];
+      let currentList = [];
+
+      lines.forEach((line, idx) => {
+        const match = line.match(/^[-*•]\s+(.*)/);
+        if (match) {
+          currentList.push(match[1]);
+        } else {
+          if (currentList.length > 0) {
+            elements.push(
+              <ul key={`list-${idx}`} className="custom-bullet-list technical-skills-list mt-1">
+                {currentList.map((item, itemIdx) => (
+                  <li key={itemIdx} dangerouslySetInnerHTML={{ __html: formatBold(item) }} />
+                ))}
+              </ul>
+            );
+            currentList = [];
+          }
+          elements.push(
+            <div key={`p-${idx}`} className="text-justify" dangerouslySetInnerHTML={{ __html: formatBold(line) }} />
+          );
+        }
+      });
+
+      if (currentList.length > 0) {
+        elements.push(
+          <ul key="list-final" className="custom-bullet-list technical-skills-list mt-1">
+            {currentList.map((item, itemIdx) => (
+              <li key={itemIdx} dangerouslySetInnerHTML={{ __html: formatBold(item) }} />
+            ))}
+          </ul>
+        );
+      }
+
+      return <div className="space-y-1">{elements}</div>;
+    } else {
+      return <div className="text-justify" dangerouslySetInnerHTML={{ __html: formatBold(description) }} />;
+    }
+  };
+
   return (
     <div
       ref={ref}
@@ -1050,11 +1098,7 @@ export const OnCampusResumeLayout = forwardRef(({ resumeData, onTableChange, dat
               {activities.map(item => item.description.trim() !== "" && (
                 <div key={item.id}>
                   <h3 className="font-bold text-[15px]">{item.title}</h3>
-                  <ul className="custom-bullet-list technical-skills-list mt-1">
-                    {item.description.split("\n").map((line, idx) => line.trim() !== "" && (
-                      <li key={idx} dangerouslySetInnerHTML={{ __html: formatBold(line) }} />
-                    ))}
-                  </ul>
+                  {renderParsedActivities(item.description)}
                 </div>
               ))}
             </div>

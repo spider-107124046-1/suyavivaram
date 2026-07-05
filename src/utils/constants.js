@@ -68,9 +68,9 @@ export const DEFAULT_RESUME_DATA = {
     { id: "pos2", title: "Manager, Marketing, Festember", from: "Mar 2024", to: "Present", description: "Worked as a Marketing Manager of Festember'24, the annual cultural festival of NIT Trichy. Executed the task of establishing partnerships with various companies through effective communication and negotiation strategies." }
   ],
   activities: [
-    { id: "act1", title: "Social Activities", description: "A volunteer under the HumaNITTy programme, NIT Trichy chapter, which aims at visiting local old age homes and orphanages and spending quality time with them.\nOrganized a campus-wide blood donation camp in collaboration with the Red Cross Society, collecting over 200 units of blood." },
-    { id: "act2", title: "Cultural Activities", description: "Secured 1st position in Pixel Pirates event of Pragyan in 2023.\nDAN 1 - Black Belt Holder in Karate" },
-    { id: "act3", title: "Sports Activities", description: "Participated in 10K sportsfete marathon" }
+    { id: "act1", title: "Social Activities", description: "- A volunteer under the HumaNITTy programme, NIT Trichy chapter, which aims at visiting local old age homes and orphanages and spending quality time with them.\n- Organized a campus-wide blood donation camp in collaboration with the Red Cross Society, collecting over 200 units of blood." },
+    { id: "act2", title: "Cultural Activities", description: "- Secured 1st position in Pixel Pirates event of Pragyan in 2023.\n- DAN 1 - Black Belt Holder in Karate" },
+    { id: "act3", title: "Sports Activities", description: "- Participated in 10K sportsfete marathon" }
   ],
   educationColWidths: null,
   educationRowHeights: null,
