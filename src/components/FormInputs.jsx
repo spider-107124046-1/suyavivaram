@@ -183,3 +183,111 @@ export const ResumeSection = ({ title, children, splittable = false }) => (
     {children}
   </div>
 );
+
+export const ReorderControl = ({ itemsCount, onReorder, theme = "blue" }) => {
+  const [value, setValue] = useState('');
+  const [error, setError] = useState('');
+
+  if (itemsCount <= 1) return null;
+
+  const handleApply = () => {
+    setError('');
+    // Parse the input: e.g. "3, 1, 2" or "3,1, 2"
+    const parts = value.split(',')
+      .map(s => s.trim())
+      .filter(Boolean)
+      .map(Number);
+
+    if (parts.length === 0) {
+      setError('Please enter a list of indices, e.g. 2, 1');
+      return;
+    }
+
+    // Validate that all numbers are within 1 to itemsCount
+    const invalidNumbers = parts.filter(n => isNaN(n) || n < 1 || n > itemsCount);
+    if (invalidNumbers.length > 0) {
+      setError(`Indices must be between 1 and ${itemsCount}`);
+      return;
+    }
+
+    // Check for duplicates
+    const uniqueParts = new Set(parts);
+    if (uniqueParts.size !== parts.length) {
+      setError('Indices must be unique');
+      return;
+    }
+
+    // Validate that all indices are included
+    const expectedSet = new Set(Array.from({ length: itemsCount }, (_, i) => i + 1));
+    const providedSet = new Set(parts);
+    const missing = [...expectedSet].filter(x => !providedSet.has(x));
+    if (missing.length > 0) {
+      setError(`Missing indices: ${missing.join(', ')}`);
+      return;
+    }
+
+    // Convert 1-indexed to 0-indexed indices
+    const zeroIndexedOrder = parts.map(n => n - 1);
+    onReorder(zeroIndexedOrder);
+    setValue('');
+  };
+
+  // theme styling configuration
+  const themeClasses = {
+    blue: {
+      bg: "bg-blue-50/50 border-blue-100",
+      label: "text-blue-700",
+      inputFocus: "focus:border-blue-500 focus:ring-blue-500",
+      button: "bg-blue-600 hover:bg-blue-700 focus:ring-blue-500"
+    },
+    purple: {
+      bg: "bg-purple-50/50 border-purple-100",
+      label: "text-purple-700",
+      inputFocus: "focus:border-purple-500 focus:ring-purple-500",
+      button: "bg-purple-600 hover:bg-purple-700 focus:ring-purple-500"
+    },
+    emerald: {
+      bg: "bg-emerald-50/50 border-emerald-100",
+      label: "text-emerald-700",
+      inputFocus: "focus:border-emerald-500 focus:ring-emerald-500",
+      button: "bg-emerald-600 hover:bg-emerald-700 focus:ring-emerald-500"
+    }
+  };
+
+  const style = themeClasses[theme] || themeClasses.blue;
+
+  return (
+    <div className={`mb-4 p-3.5 border rounded-xl ${style.bg} transition-all duration-200 shadow-sm`}>
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-end gap-2.5">
+        <div className="flex-1">
+          <label className={`block text-xs font-bold uppercase tracking-wider mb-1.5 ml-1 ${style.label}`}>
+            Reorder items
+          </label>
+          <input
+            type="text"
+            value={value}
+            onChange={(e) => {
+              setValue(e.target.value);
+              if (error) setError('');
+            }}
+            placeholder="e.g. 3, 1, 2"
+            className={`w-full px-3 py-2 text-sm bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-opacity-20 transition-all duration-200 font-mono ${style.inputFocus}`}
+          />
+        </div>
+        <button
+          type="button"
+          onClick={handleApply}
+          className={`px-5 py-2 text-white rounded-lg text-sm font-semibold shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-opacity-20 h-[38px] flex items-center justify-center shrink-0 ${style.button}`}
+        >
+          Apply Order
+        </button>
+      </div>
+      {error && (
+        <span className="text-xs text-red-500 font-semibold mt-1.5 ml-1 block">
+          ⚠️ {error}
+        </span>
+      )}
+    </div>
+  );
+};
+

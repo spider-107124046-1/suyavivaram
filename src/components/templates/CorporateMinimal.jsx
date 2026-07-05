@@ -2,7 +2,8 @@ import { useRef, useImperativeHandle, forwardRef } from 'react';
 import {
   CorporateAccordion,
   CorporateTextInput,
-  CorporateTextArea
+  CorporateTextArea,
+  ReorderControl
 } from '../FormInputs';
 import {
   generateUniqueId
@@ -40,6 +41,17 @@ export const CorporateMinimalEditor = ({ resumeData, setResumeData }) => {
     }));
   };
 
+  const handleReorderListItems = (section, zeroIndexedOrder) => {
+    setResumeData(prev => {
+      const list = prev[section] || [];
+      const reorderedList = zeroIndexedOrder.map(idx => list[idx]);
+      return {
+        ...prev,
+        [section]: reorderedList
+      };
+    });
+  };
+
   return (
     <div className="p-4 bg-white relative">
       <h1 className="text-3xl font-bold text-center mb-8 text-gray-800">Resume Editor</h1>
@@ -69,8 +81,14 @@ export const CorporateMinimalEditor = ({ resumeData, setResumeData }) => {
           </svg>
         }
       >
-        {resumeData.education.map((item) => (
+        <ReorderControl
+          itemsCount={resumeData.education.length}
+          onReorder={(order) => handleReorderListItems("education", order)}
+          theme="emerald"
+        />
+        {resumeData.education.map((item, idx) => (
           <div key={item.id} className="border-b border-gray-100 pb-4 mb-4 last:border-0 last:pb-0 last:mb-0">
+            <h3 className="text-sm font-semibold text-gray-800 mb-3">Education #{idx + 1}</h3>
             <CorporateTextInput label="Institution" name="institution" value={item.institution} onChange={e => handleListItemChange("education", item.id, e)} />
             <CorporateTextInput label="Degree" name="degree" value={item.degree} onChange={e => handleListItemChange("education", item.id, e)} />
             <CorporateTextInput label="Date / Year" name="year" value={item.year} onChange={e => handleListItemChange("education", item.id, e)} />
@@ -102,8 +120,14 @@ export const CorporateMinimalEditor = ({ resumeData, setResumeData }) => {
           </svg>
         }
       >
-        {resumeData.webLinks.map((item) => (
+        <ReorderControl
+          itemsCount={resumeData.webLinks.length}
+          onReorder={(order) => handleReorderListItems("webLinks", order)}
+          theme="emerald"
+        />
+        {resumeData.webLinks.map((item, idx) => (
           <div key={item.id} className="border-b border-gray-100 pb-4 mb-4 last:border-0 last:pb-0 last:mb-0">
+            <h3 className="text-sm font-semibold text-gray-800 mb-3">Link #{idx + 1}</h3>
             <CorporateTextInput label="Name (e.g. Github)" name="name" value={item.name} onChange={e => handleListItemChange("webLinks", item.id, e)} />
             <CorporateTextInput label="URL / Handle" name="url" value={item.url} onChange={e => handleListItemChange("webLinks", item.id, e)} />
             <div className="flex justify-end">
@@ -133,8 +157,14 @@ export const CorporateMinimalEditor = ({ resumeData, setResumeData }) => {
           </svg>
         }
       >
-        {resumeData.coursework.map((item) => (
+        <ReorderControl
+          itemsCount={resumeData.coursework.length}
+          onReorder={(order) => handleReorderListItems("coursework", order)}
+          theme="emerald"
+        />
+        {resumeData.coursework.map((item, idx) => (
           <div key={item.id} className="border-b border-gray-100 pb-4 mb-4 last:border-0 last:pb-0 last:mb-0">
+            <h3 className="text-sm font-semibold text-gray-800 mb-3">Coursework #{idx + 1}</h3>
             <CorporateTextInput label="Category (e.g. Undergraduate)" name="category" value={item.category} onChange={e => handleListItemChange("coursework", item.id, e)} />
             <CorporateTextArea label="Subjects (One per line)" name="subjects" rows={4} value={item.subjects} onChange={e => handleListItemChange("coursework", item.id, e)} />
             <div className="flex justify-end">
@@ -164,12 +194,18 @@ export const CorporateMinimalEditor = ({ resumeData, setResumeData }) => {
           </svg>
         }
       >
-        {resumeData.internships.map((item) => (
+        <ReorderControl
+          itemsCount={resumeData.internships.length}
+          onReorder={(order) => handleReorderListItems("internships", order)}
+          theme="emerald"
+        />
+        {resumeData.internships.map((item, idx) => (
           <div key={item.id} className="border-b border-gray-100 pb-4 mb-4 last:border-0 last:pb-0 last:mb-0">
+            <h3 className="text-sm font-semibold text-gray-800 mb-3">Internship #{idx + 1}</h3>
             <CorporateTextInput label="Role Title" name="title" value={item.title} onChange={e => handleListItemChange("internships", item.id, e)} />
             <CorporateTextInput label="Date" name="date" value={item.date} onChange={e => handleListItemChange("internships", item.id, e)} />
             <CorporateTextArea label="Description" name="description" rows={4} value={item.description} onChange={e => handleListItemChange("internships", item.id, e)} />
-            <p className="text-xs text-gray-400 -mt-2 mb-2 ml-1">Use <b>text</b> to make text bold.</p>
+
             <div className="flex justify-end mt-3">
               <button
                 onClick={() => handleRemoveListItem("internships", item.id)}
@@ -197,12 +233,18 @@ export const CorporateMinimalEditor = ({ resumeData, setResumeData }) => {
           </svg>
         }
       >
-        {resumeData.projects.map((item) => (
+        <ReorderControl
+          itemsCount={resumeData.projects.length}
+          onReorder={(order) => handleReorderListItems("projects", order)}
+          theme="emerald"
+        />
+        {resumeData.projects.map((item, idx) => (
           <div key={item.id} className="border-b border-gray-100 pb-4 mb-4 last:border-0 last:pb-0 last:mb-0">
+            <h3 className="text-sm font-semibold text-gray-800 mb-3">Project #{idx + 1}</h3>
             <CorporateTextInput label="Project Name | Tech Stack" name="name" value={item.name} onChange={e => handleListItemChange("projects", item.id, e)} />
             <CorporateTextInput label="Date" name="date" value={item.date} onChange={e => handleListItemChange("projects", item.id, e)} />
             <CorporateTextArea label="Description" name="description" rows={4} value={item.description} onChange={e => handleListItemChange("projects", item.id, e)} />
-            <p className="text-xs text-gray-400 -mt-2 mb-2 ml-1">Use <b>text</b> to make text bold.</p>
+
             <div className="flex justify-end mt-3">
               <button
                 onClick={() => handleRemoveListItem("projects", item.id)}
@@ -230,10 +272,16 @@ export const CorporateMinimalEditor = ({ resumeData, setResumeData }) => {
           </svg>
         }
       >
-        {resumeData.achievements.map((item) => (
+        <ReorderControl
+          itemsCount={resumeData.achievements.length}
+          onReorder={(order) => handleReorderListItems("achievements", order)}
+          theme="emerald"
+        />
+        {resumeData.achievements.map((item, idx) => (
           <div key={item.id} className="border-b border-gray-100 pb-4 mb-4 last:border-0 last:pb-0 last:mb-0">
+            <h3 className="text-sm font-semibold text-gray-800 mb-3">Achievement #{idx + 1}</h3>
             <CorporateTextArea label="Description" name="description" value={item.description} onChange={e => handleListItemChange("achievements", item.id, e)} />
-            <p className="text-xs text-gray-400 -mt-2 mb-2 ml-1">Use <b>text</b> to make text bold.</p>
+
             <div className="flex justify-end">
               <button
                 onClick={() => handleRemoveListItem("achievements", item.id)}
@@ -261,8 +309,14 @@ export const CorporateMinimalEditor = ({ resumeData, setResumeData }) => {
           </svg>
         }
       >
-        {resumeData.skills.map((item) => (
+        <ReorderControl
+          itemsCount={resumeData.skills.length}
+          onReorder={(order) => handleReorderListItems("skills", order)}
+          theme="emerald"
+        />
+        {resumeData.skills.map((item, idx) => (
           <div key={item.id} className="border-b border-gray-100 pb-4 mb-4 last:border-0 last:pb-0 last:mb-0">
+            <h3 className="text-sm font-semibold text-gray-800 mb-3">Skill #{idx + 1}</h3>
             <CorporateTextInput label="Category (e.g. LANGUAGES)" name="category" value={item.category} onChange={e => handleListItemChange("skills", item.id, e)} />
             <CorporateTextArea label="Details" name="skills" value={item.skills} onChange={e => handleListItemChange("skills", item.id, e)} />
             <div className="flex justify-end">
@@ -292,10 +346,16 @@ export const CorporateMinimalEditor = ({ resumeData, setResumeData }) => {
           </svg>
         }
       >
-        {resumeData.positions.map((item) => (
+        <ReorderControl
+          itemsCount={resumeData.positions.length}
+          onReorder={(order) => handleReorderListItems("positions", order)}
+          theme="emerald"
+        />
+        {resumeData.positions.map((item, idx) => (
           <div key={item.id} className="border-b border-gray-100 pb-4 mb-4 last:border-0 last:pb-0 last:mb-0">
+            <h3 className="text-sm font-semibold text-gray-800 mb-3">Position #{idx + 1}</h3>
             <CorporateTextArea label="Description" name="description" value={item.description} onChange={e => handleListItemChange("positions", item.id, e)} />
-            <p className="text-xs text-gray-400 -mt-2 mb-2 ml-1">Use <b>text</b> to make text bold.</p>
+
             <div className="flex justify-end">
               <button
                 onClick={() => handleRemoveListItem("positions", item.id)}
@@ -326,7 +386,7 @@ export const CorporateMinimalEditor = ({ resumeData, setResumeData }) => {
         {resumeData.activities.map((item) => item.title === "EXTRACURRICULAR ACTIVITIES" && (
           <div key={item.id}>
             <CorporateTextArea label="Description (One per line)" name="description" rows={5} value={item.description} onChange={e => handleListItemChange("activities", item.id, e)} />
-            <p className="text-xs text-gray-400 -mt-2 mb-2 ml-1">Use <b>text</b> to make text bold.</p>
+
           </div>
         ))}
         {!resumeData.activities.some(item => item.title === "EXTRACURRICULAR ACTIVITIES") && (

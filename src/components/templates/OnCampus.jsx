@@ -7,7 +7,8 @@ import {
   OnCampusAccordion,
   OnCampusTextInput,
   OnCampusTextArea,
-  ResumeSection
+  ResumeSection,
+  ReorderControl
 } from '../FormInputs';
 import {
   PAGE_HEIGHT_PX
@@ -55,6 +56,17 @@ export const OnCampusEditor = ({ resumeData, setResumeData, photoFileInputRef, l
       ...prev,
       [section]: prev[section].filter(item => item.id !== itemId)
     }));
+  };
+
+  const handleReorderListItems = (section, zeroIndexedOrder) => {
+    setResumeData(prev => {
+      const list = prev[section] || [];
+      const reorderedList = zeroIndexedOrder.map(idx => list[idx]);
+      return {
+        ...prev,
+        [section]: reorderedList
+      };
+    });
   };
 
   const handleUseDefaultLogo = () => {
@@ -238,9 +250,14 @@ export const OnCampusEditor = ({ resumeData, setResumeData, photoFileInputRef, l
           </svg>
         }
       >
-        {resumeData.education.map((item) => (
+        <ReorderControl
+          itemsCount={resumeData.education.length}
+          onReorder={(order) => handleReorderListItems("education", order)}
+          theme="blue"
+        />
+        {resumeData.education.map((item, idx) => (
           <div key={item.id} className="border-b border-gray-100 pb-4 mb-4 last:border-0 last:pb-0 last:mb-0">
-            <h3 className="text-sm font-semibold text-gray-800 mb-3">Education</h3>
+            <h3 className="text-sm font-semibold text-gray-800 mb-3">Education #{idx + 1}</h3>
             <OnCampusTextInput label="Year" name="year" value={item.year} onChange={e => handleListItemChange("education", item.id, e)} />
             <OnCampusTextInput label="Degree/Examination" name="degree" value={item.degree} onChange={e => handleListItemChange("education", item.id, e)} />
             <OnCampusTextInput label="Institution/Board" name="institution" value={item.institution} onChange={e => handleListItemChange("education", item.id, e)} />
@@ -306,11 +323,16 @@ export const OnCampusEditor = ({ resumeData, setResumeData, photoFileInputRef, l
           </svg>
         }
       >
-        {resumeData.achievements.map((item) => (
+        <ReorderControl
+          itemsCount={resumeData.achievements.length}
+          onReorder={(order) => handleReorderListItems("achievements", order)}
+          theme="blue"
+        />
+        {resumeData.achievements.map((item, idx) => (
           <div key={item.id} className="border-b border-gray-100 pb-4 mb-4 last:border-0 last:pb-0 last:mb-0">
-            <h3 className="text-sm font-semibold text-gray-800 mb-3">Achievement</h3>
+            <h3 className="text-sm font-semibold text-gray-800 mb-3">Achievement #{idx + 1}</h3>
             <OnCampusTextArea label="Description" name="description" value={item.description} onChange={e => handleListItemChange("achievements", item.id, e)} />
-            <p className="text-xs text-gray-400 -mt-2 mb-2 ml-1">Use <b>text</b> to make text bold.</p>
+
             <div className="flex justify-end">
               <button
                 onClick={() => handleRemoveListItem("achievements", item.id)}
@@ -338,9 +360,14 @@ export const OnCampusEditor = ({ resumeData, setResumeData, photoFileInputRef, l
           </svg>
         }
       >
-        {resumeData.internships.map((item) => (
+        <ReorderControl
+          itemsCount={resumeData.internships.length}
+          onReorder={(order) => handleReorderListItems("internships", order)}
+          theme="blue"
+        />
+        {resumeData.internships.map((item, idx) => (
           <div key={item.id} className="border-b border-gray-100 pb-4 mb-4 last:border-0 last:pb-0 last:mb-0">
-            <h3 className="text-sm font-semibold text-gray-800 mb-3">Internship</h3>
+            <h3 className="text-sm font-semibold text-gray-800 mb-3">Internship #{idx + 1}</h3>
             <OnCampusTextInput label="Title" name="title" value={item.title} onChange={e => handleListItemChange("internships", item.id, e)} />
             <div className="flex gap-4">
               <div className="flex-1">
@@ -351,7 +378,7 @@ export const OnCampusEditor = ({ resumeData, setResumeData, photoFileInputRef, l
               </div>
             </div>
             <OnCampusTextArea label="Description" name="description" rows={5} value={item.description} onChange={e => handleListItemChange("internships", item.id, e)} />
-            <p className="text-xs text-gray-400 -mt-2 mb-2 ml-1">Use <b>text</b> to make text bold.</p>
+
             <div className="flex justify-end mt-3">
               <button
                 onClick={() => handleRemoveListItem("internships", item.id)}
@@ -379,9 +406,14 @@ export const OnCampusEditor = ({ resumeData, setResumeData, photoFileInputRef, l
           </svg>
         }
       >
-        {resumeData.projects.map((item) => (
+        <ReorderControl
+          itemsCount={resumeData.projects.length}
+          onReorder={(order) => handleReorderListItems("projects", order)}
+          theme="blue"
+        />
+        {resumeData.projects.map((item, idx) => (
           <div key={item.id} className="border-b border-gray-100 pb-4 mb-4 last:border-0 last:pb-0 last:mb-0">
-            <h3 className="text-sm font-semibold text-gray-800 mb-3">Project</h3>
+            <h3 className="text-sm font-semibold text-gray-800 mb-3">Project #{idx + 1}</h3>
             <OnCampusTextInput label="Name" name="name" value={item.name} onChange={e => handleListItemChange("projects", item.id, e)} />
             <div className="flex gap-4">
               <div className="flex-1">
@@ -392,7 +424,6 @@ export const OnCampusEditor = ({ resumeData, setResumeData, photoFileInputRef, l
               </div>
             </div>
             <OnCampusTextArea label="Description" name="description" rows={5} value={item.description} onChange={e => handleListItemChange("projects", item.id, e)} />
-            <p className="text-xs text-gray-400 -mt-2 mb-2 ml-1">Use <b>text</b> to make text bold. Use a newline for bullet points.</p>
             <div className="flex justify-end mt-3">
               <button
                 onClick={() => handleRemoveListItem("projects", item.id)}
@@ -420,9 +451,14 @@ export const OnCampusEditor = ({ resumeData, setResumeData, photoFileInputRef, l
           </svg>
         }
       >
-        {resumeData.skills.map((item) => (
+        <ReorderControl
+          itemsCount={resumeData.skills.length}
+          onReorder={(order) => handleReorderListItems("skills", order)}
+          theme="blue"
+        />
+        {resumeData.skills.map((item, idx) => (
           <div key={item.id} className="border-b border-gray-100 pb-4 mb-4 last:border-0 last:pb-0 last:mb-0">
-            <h3 className="text-sm font-semibold text-gray-800 mb-3">Skill</h3>
+            <h3 className="text-sm font-semibold text-gray-800 mb-3">Skill #{idx + 1}</h3>
             <OnCampusTextInput label="Category" name="category" value={item.category} onChange={e => handleListItemChange("skills", item.id, e)} />
             <OnCampusTextInput label="Skills" name="skills" value={item.skills} onChange={e => handleListItemChange("skills", item.id, e)} />
             <div className="flex justify-end">
@@ -452,9 +488,14 @@ export const OnCampusEditor = ({ resumeData, setResumeData, photoFileInputRef, l
           </svg>
         }
       >
-        {resumeData.positions.map((item) => (
+        <ReorderControl
+          itemsCount={resumeData.positions.length}
+          onReorder={(order) => handleReorderListItems("positions", order)}
+          theme="blue"
+        />
+        {resumeData.positions.map((item, idx) => (
           <div key={item.id} className="border-b border-gray-100 pb-4 mb-4 last:border-0 last:pb-0 last:mb-0">
-            <h3 className="text-sm font-semibold text-gray-800 mb-3">Position</h3>
+            <h3 className="text-sm font-semibold text-gray-800 mb-3">Position #{idx + 1}</h3>
             <OnCampusTextInput label="Title" name="title" value={item.title} onChange={e => handleListItemChange("positions", item.id, e)} />
             <div className="flex gap-4">
               <div className="flex-1">
@@ -465,7 +506,7 @@ export const OnCampusEditor = ({ resumeData, setResumeData, photoFileInputRef, l
               </div>
             </div>
             <OnCampusTextArea label="Description" name="description" value={item.description} onChange={e => handleListItemChange("positions", item.id, e)} />
-            <p className="text-xs text-gray-400 -mt-2 mb-2 ml-1">Use <b>text</b> to make text bold.</p>
+
             <div className="flex justify-end mt-3">
               <button
                 onClick={() => handleRemoveListItem("positions", item.id)}
@@ -496,7 +537,6 @@ export const OnCampusEditor = ({ resumeData, setResumeData, photoFileInputRef, l
         {resumeData.activities.map(item => (
           <div key={item.id} className="mb-4">
             <OnCampusTextArea label={item.title} name="description" value={item.description} onChange={e => handleListItemChange("activities", item.id, e)} />
-            <p className="text-xs text-gray-400 -mt-2 mb-2 ml-1">Use a newline for bullet points. Use <b>text</b> to make text bold.</p>
           </div>
         ))}
       </OnCampusAccordion>
@@ -1082,7 +1122,7 @@ export const OnCampusPreview = forwardRef(({ resumeData, onPhotoUploadClick, onL
         const sumLR = sp[ci] + sp[ci + 1];
         newPcts[ci] = Math.max(minPct, Math.min(sumLR - minPct, sp[ci] + dxPct));
         newPcts[ci + 1] = sumLR - newPcts[ci];
-        
+
         setResumeData(prev => ({
           ...prev,
           educationColWidths: newPcts
@@ -1133,7 +1173,7 @@ export const OnCampusPreview = forwardRef(({ resumeData, onPhotoUploadClick, onL
         const { startHeights: sh, rowIdx: ri } = dragRowState;
         const newHeights = [...sh];
         newHeights[ri] = Math.max(MIN_ROW_PX, sh[ri] + dy);
-        
+
         setResumeData(prev => ({
           ...prev,
           educationRowHeights: newHeights

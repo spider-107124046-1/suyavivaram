@@ -5,7 +5,8 @@ import 'react-image-crop/dist/ReactCrop.css';
 import {
   ModernAccordion,
   ModernTextInput,
-  ModernTextArea
+  ModernTextArea,
+  ReorderControl
 } from '../FormInputs';
 import {
   THEME_COLOR_STYLES
@@ -69,6 +70,17 @@ export const ModernCreativeEditor = ({ resumeData, setResumeData, photoFileInput
       ...prev,
       [section]: prev[section].filter(item => item.id !== itemId)
     }));
+  };
+
+  const handleReorderListItems = (section, zeroIndexedOrder) => {
+    setResumeData(prev => {
+      const list = prev[section] || [];
+      const reorderedList = zeroIndexedOrder.map(idx => list[idx]);
+      return {
+        ...prev,
+        [section]: reorderedList
+      };
+    });
   };
 
   const handleFileChange = (e, target) => {
@@ -178,7 +190,7 @@ export const ModernCreativeEditor = ({ resumeData, setResumeData, photoFileInput
         }
       >
         <ModernTextArea label="Summary" name="summary" rows={5} value={resumeData.summary} onChange={handleSummaryChange} />
-        <p className="text-xs text-gray-400 -mt-2 mb-2 ml-1">Use <b>text</b> to make text bold.</p>
+
       </ModernAccordion>
 
       {/* --- Education --- */}
@@ -191,8 +203,14 @@ export const ModernCreativeEditor = ({ resumeData, setResumeData, photoFileInput
           </svg>
         }
       >
-        {resumeData.education.map((item) => (
+        <ReorderControl
+          itemsCount={resumeData.education.length}
+          onReorder={(order) => handleReorderListItems("education", order)}
+          theme="purple"
+        />
+        {resumeData.education.map((item, idx) => (
           <div key={item.id} className="border-b border-gray-100 pb-4 mb-4 last:border-0 last:pb-0 last:mb-0">
+            <h3 className="text-sm font-semibold text-gray-800 mb-3">Education #{idx + 1}</h3>
             <ModernTextInput label="Degree" name="degree" value={item.degree} onChange={e => handleListItemChange("education", item.id, e)} />
             <ModernTextInput label="Institution" name="institution" value={item.institution} onChange={e => handleListItemChange("education", item.id, e)} />
             <ModernTextInput label="Year" name="year" value={item.year} onChange={e => handleListItemChange("education", item.id, e)} />
@@ -224,12 +242,18 @@ export const ModernCreativeEditor = ({ resumeData, setResumeData, photoFileInput
           </svg>
         }
       >
-        {resumeData.internships.map((item) => (
+        <ReorderControl
+          itemsCount={resumeData.internships.length}
+          onReorder={(order) => handleReorderListItems("internships", order)}
+          theme="purple"
+        />
+        {resumeData.internships.map((item, idx) => (
           <div key={item.id} className="border-b border-gray-100 pb-4 mb-4 last:border-0 last:pb-0 last:mb-0">
+            <h3 className="text-sm font-semibold text-gray-800 mb-3">Experience #{idx + 1}</h3>
             <ModernTextInput label="Role Title" name="title" value={item.title} onChange={e => handleListItemChange("internships", item.id, e)} />
             <ModernTextInput label="Date" name="date" value={item.date} onChange={e => handleListItemChange("internships", item.id, e)} />
             <ModernTextArea label="Description" name="description" rows={4} value={item.description} onChange={e => handleListItemChange("internships", item.id, e)} />
-            <p className="text-xs text-gray-400 -mt-2 mb-2 ml-1">Use <b>text</b> to make text bold.</p>
+
             <div className="flex justify-end mt-3">
               <button
                 onClick={() => handleRemoveListItem("internships", item.id)}
@@ -257,12 +281,17 @@ export const ModernCreativeEditor = ({ resumeData, setResumeData, photoFileInput
           </svg>
         }
       >
-        {resumeData.projects.map((item) => (
+        <ReorderControl
+          itemsCount={resumeData.projects.length}
+          onReorder={(order) => handleReorderListItems("projects", order)}
+          theme="purple"
+        />
+        {resumeData.projects.map((item, idx) => (
           <div key={item.id} className="border-b border-gray-100 pb-4 mb-4 last:border-0 last:pb-0 last:mb-0">
+            <h3 className="text-sm font-semibold text-gray-800 mb-3">Project #{idx + 1}</h3>
             <ModernTextInput label="Project Name" name="name" value={item.name} onChange={e => handleListItemChange("projects", item.id, e)} />
-            <ModernTextInput label="Date" name="date" value={item.date} onChange={e => handleListItemChange("projects", item.id, e) } />
+            <ModernTextInput label="Date" name="date" value={item.date} onChange={e => handleListItemChange("projects", item.id, e)} />
             <ModernTextArea label="Description" name="description" rows={4} value={item.description} onChange={e => handleListItemChange("projects", item.id, e)} />
-            <p className="text-xs text-gray-400 -mt-2 mb-2 ml-1">Use <b>text</b> to make text bold. Use a newline for bullet points.</p>
             <div className="flex justify-end mt-3">
               <button
                 onClick={() => handleRemoveListItem("projects", item.id)}
@@ -302,8 +331,14 @@ export const ModernCreativeEditor = ({ resumeData, setResumeData, photoFileInput
           </svg>
         }
       >
-        {resumeData.languages.map((item) => (
+        <ReorderControl
+          itemsCount={resumeData.languages.length}
+          onReorder={(order) => handleReorderListItems("languages", order)}
+          theme="purple"
+        />
+        {resumeData.languages.map((item, idx) => (
           <div key={item.id} className="border-b border-gray-100 pb-4 mb-4 last:border-0 last:pb-0 last:mb-0">
+            <h3 className="text-sm font-semibold text-gray-800 mb-3">Language #{idx + 1}</h3>
             <ModernTextInput label="Language" name="language" value={item.language} onChange={e => handleListItemChange("languages", item.id, e)} />
             <ModernTextInput label="Proficiency" name="proficiency" value={item.proficiency} onChange={e => handleListItemChange("languages", item.id, e)} />
             <div className="flex justify-end">
@@ -333,10 +368,16 @@ export const ModernCreativeEditor = ({ resumeData, setResumeData, photoFileInput
           </svg>
         }
       >
-        {resumeData.achievements.map((item) => (
+        <ReorderControl
+          itemsCount={resumeData.achievements.length}
+          onReorder={(order) => handleReorderListItems("achievements", order)}
+          theme="purple"
+        />
+        {resumeData.achievements.map((item, idx) => (
           <div key={item.id} className="border-b border-gray-100 pb-4 mb-4 last:border-0 last:pb-0 last:mb-0">
+            <h3 className="text-sm font-semibold text-gray-800 mb-3">Achievement #{idx + 1}</h3>
             <ModernTextArea label="Description" name="description" value={item.description} onChange={e => handleListItemChange("achievements", item.id, e)} />
-            <p className="text-xs text-gray-400 -mt-2 mb-2 ml-1">Use <b>text</b> to make text bold.</p>
+
             <div className="flex justify-end">
               <button
                 onClick={() => handleRemoveListItem("achievements", item.id)}
@@ -367,7 +408,7 @@ export const ModernCreativeEditor = ({ resumeData, setResumeData, photoFileInput
         {resumeData.activities.map((item) => (
           <div key={item.id} className="mb-4">
             <ModernTextArea label={item.title} name="description" value={item.description} onChange={e => handleListItemChange("activities", item.id, e)} />
-            <p className="text-xs text-gray-400 -mt-2 mb-2 ml-1">Use <b>text</b> to make text bold.</p>
+
           </div>
         ))}
       </ModernAccordion>
@@ -690,9 +731,8 @@ export const ModernCreativePreview = forwardRef(({ resumeData, themeColor, onPho
         </div>
         <button
           onClick={onPhotoUploadClick}
-          className={`absolute left-[calc(17.5%-5rem)] h-40 w-40 rounded-full bg-black flex items-center justify-center text-white cursor-pointer group transition-opacity duration-300 ${
-            isPlaceholderImage(resumeData.personalDetails.photo) ? "bg-opacity-50 opacity-100" : "bg-opacity-40 opacity-0 group-hover:opacity-100"
-          }`}
+          className={`absolute left-[calc(17.5%-5rem)] h-40 w-40 rounded-full bg-black flex items-center justify-center text-white cursor-pointer group transition-opacity duration-300 ${isPlaceholderImage(resumeData.personalDetails.photo) ? "bg-opacity-50 opacity-100" : "bg-opacity-40 opacity-0 group-hover:opacity-100"
+            }`}
           style={{ marginLeft: "0", top: isDownloading ? "26px" : "32px" }}
           aria-label="Select new photo"
         >
