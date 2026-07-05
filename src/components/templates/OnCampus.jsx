@@ -905,7 +905,15 @@ export const OnCampusResumeLayout = forwardRef(({ resumeData, onTableChange, dat
         <div className="flex items-center flex-grow min-w-0">
           {personalDetails.logo && <img src={personalDetails.logo} alt="Institute Logo" className="h-36 w-36 mr-6 flex-shrink-0" />}
           <div className="flex-grow min-w-0">
-            <h1 className="font-bold tracking-wide break-words text-[25px] leading-none mb-1">{personalDetails.name}</h1>
+            <h1 className="font-bold tracking-wide break-words text-[25px] leading-none mb-1">
+              <span 
+                className="preview-clickable-header" 
+                data-section-title="Personal Details"
+                onClick={() => window.dispatchEvent(new CustomEvent('open-resume-section', { detail: { title: 'Personal Details' } }))}
+              >
+                {personalDetails.name}
+              </span>
+            </h1>
             <p>{personalDetails.degree}</p>
             <div className="leading-normal">
               <p>Gender: {personalDetails.gender}</p>
@@ -1062,6 +1070,26 @@ export const OnCampusPreview = forwardRef(({ resumeData, onPhotoUploadClick, onL
   useImperativeHandle(ref, () => ({
     getHtmlForPdf: () => pagesContainerRef.current
   }));
+
+  useEffect(() => {
+    const container = pagesContainerRef.current;
+    if (!container) return;
+
+    const handleContainerClick = (e) => {
+      const target = e.target;
+      if (target && target.classList.contains('preview-clickable-header')) {
+        const title = target.getAttribute('data-section-title');
+        if (title) {
+          window.dispatchEvent(new CustomEvent('open-resume-section', { detail: { title } }));
+        }
+      }
+    };
+
+    container.addEventListener('click', handleContainerClick);
+    return () => {
+      container.removeEventListener('click', handleContainerClick);
+    };
+  }, []);
 
   useEffect(() => {
     if (!unlockTableBorders) return;

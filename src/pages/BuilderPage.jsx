@@ -199,6 +199,17 @@ const BuilderPage = () => {
     }, 1500);
   };
 
+  // Auto-expand editor when a section is clicked in the preview
+  useEffect(() => {
+    const handleOpenSection = () => {
+      setIsEditorExpanded(true);
+    };
+    window.addEventListener('open-resume-section', handleOpenSection);
+    return () => {
+      window.removeEventListener('open-resume-section', handleOpenSection);
+    };
+  }, []);
+
   // Check draft existence and query param
   useEffect(() => {
     const draft = localStorage.getItem(`suyavivaram_resume_${selectedTemplate}`);
@@ -483,6 +494,9 @@ const BuilderPage = () => {
           [class*="upload-btn"],
           .no-print {
             display: none !important;
+          }
+          .preview-clickable-header {
+            text-decoration: none !important;
           }
         }
         @media screen {
@@ -834,7 +848,7 @@ const BuilderPage = () => {
           {/* --- Scalable Preview Container --- */}
           <div
             style={{ transform: `scale(${zoomLevel})`, transformOrigin: "top" }}
-            className="transition-transform duration-200"
+            className="transition-transform duration-200 resume-preview-container"
           >
             {selectedTemplate === "on-campus" ? (
               <OnCampusPreview

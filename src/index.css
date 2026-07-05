@@ -174,3 +174,15 @@ body {
   border-radius: 50%;
   background-color: transparent;
 }
+
+/* Clickable headers in preview */
+.resume-preview-container .preview-clickable-header {
+  text-decoration: underline dotted;
+  text-underline-offset: 4px;
+  cursor: pointer;
+}
+@media print {
+  .preview-clickable-header {
+    text-decoration: none !important;
+  }
+}

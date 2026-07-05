@@ -408,7 +408,16 @@ const CorporateMinimalBulletItem = ({ children }) => (
   </li>
 );
 
-const SectionHeader = ({ title }) => <h3 className="text-lg font-bold tracking-widest text-gray-800 uppercase mb-1">{title}</h3>;
+const SectionHeader = ({ title }) => {
+  const handleClick = () => {
+    window.dispatchEvent(new CustomEvent('open-resume-section', { detail: { title } }));
+  };
+  return (
+    <h3 className="text-lg font-bold tracking-widest text-gray-800 uppercase mb-1">
+      <span className="preview-clickable-header" onClick={handleClick}>{title}</span>
+    </h3>
+  );
+};
 
 export const CorporateMinimalResumeLayout = forwardRef(({ resumeData, dateItalics = true }, ref) => {
   const { personalDetails, education, projects, internships, achievements, skills, positions, activities, webLinks, coursework } = resumeData;
@@ -445,7 +454,14 @@ export const CorporateMinimalResumeLayout = forwardRef(({ resumeData, dateItalic
       style={{ fontFamily: "Lato, sans-serif" }}
     >
       <header className="text-center mb-2">
-        <h1 className="text-4xl font-light text-gray-900 mb-3 tracking-wide">{personalDetails.name}</h1>
+        <h1 className="text-4xl font-light text-gray-900 mb-3 tracking-wide">
+          <span 
+            className="preview-clickable-header" 
+            onClick={() => window.dispatchEvent(new CustomEvent('open-resume-section', { detail: { title: 'Personal Details' } }))}
+          >
+            {personalDetails.name}
+          </span>
+        </h1>
         <div className="text-sm text-gray-600 flex justify-center items-center gap-2 mt-1 font-medium">
           {personalDetails.email && <span>{personalDetails.email}</span>}
           {personalDetails.email && personalDetails.contact && <span className="text-gray-400">|</span>}

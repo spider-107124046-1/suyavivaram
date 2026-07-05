@@ -1,9 +1,42 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
+
+const useAccordionAutoOpen = (title, setIsOpen) => {
+  const containerRef = useRef(null);
+
+  useEffect(() => {
+    const handleOpen = (e) => {
+      if (e.detail && e.detail.title.toLowerCase() === title.toLowerCase()) {
+        setIsOpen(true);
+        setTimeout(() => {
+          if (containerRef.current) {
+            const scrollContainer = containerRef.current.closest('.overflow-y-auto');
+            if (scrollContainer) {
+              const elementTop = containerRef.current.offsetTop;
+              scrollContainer.scrollTo({
+                top: elementTop - 60,
+                behavior: 'smooth'
+              });
+            } else {
+              containerRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+          }
+        }, 150);
+      }
+    };
+    window.addEventListener('open-resume-section', handleOpen);
+    return () => {
+      window.removeEventListener('open-resume-section', handleOpen);
+    };
+  }, [title, setIsOpen]);
+
+  return containerRef;
+};
 
 export const OnCampusAccordion = ({ title, children, defaultOpen = false, icon }) => {
   const [isOpen, setIsOpen] = useState(defaultOpen);
+  const containerRef = useAccordionAutoOpen(title, setIsOpen);
   return (
-    <div className={`mb-5 rounded-xl transition-all duration-300 border ${isOpen ? "border-blue-400 shadow-md bg-white ring-1 ring-blue-100" : "border-gray-200 shadow-sm hover:border-blue-300 bg-white"}`}>
+    <div ref={containerRef} className={`mb-5 rounded-xl transition-all duration-300 border ${isOpen ? "border-blue-400 shadow-md bg-white ring-1 ring-blue-100" : "border-gray-200 shadow-sm hover:border-blue-300 bg-white"}`}>
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
@@ -60,8 +93,9 @@ export const OnCampusTextArea = ({ label, value, name, rows = 3, onChange }) => 
 
 export const ModernAccordion = ({ title, children, defaultOpen = false, icon }) => {
   const [isOpen, setIsOpen] = useState(defaultOpen);
+  const containerRef = useAccordionAutoOpen(title, setIsOpen);
   return (
-    <div className={`mb-5 rounded-xl transition-all duration-300 border ${isOpen ? "border-purple-400 shadow-md bg-white ring-1 ring-purple-100" : "border-gray-200 shadow-sm hover:border-purple-300 bg-white"}`}>
+    <div ref={containerRef} className={`mb-5 rounded-xl transition-all duration-300 border ${isOpen ? "border-purple-400 shadow-md bg-white ring-1 ring-purple-100" : "border-gray-200 shadow-sm hover:border-purple-300 bg-white"}`}>
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
@@ -118,8 +152,9 @@ export const ModernTextArea = ({ label, value, name, rows = 3, onChange }) => (
 
 export const CorporateAccordion = ({ title, children, defaultOpen = false, icon }) => {
   const [isOpen, setIsOpen] = useState(defaultOpen);
+  const containerRef = useAccordionAutoOpen(title, setIsOpen);
   return (
-    <div className={`mb-5 rounded-xl transition-all duration-300 border ${isOpen ? "border-emerald-400 shadow-md bg-white ring-1 ring-emerald-100" : "border-gray-200 shadow-sm hover:border-emerald-300 bg-white"}`}>
+    <div ref={containerRef} className={`mb-5 rounded-xl transition-all duration-300 border ${isOpen ? "border-emerald-400 shadow-md bg-white ring-1 ring-emerald-100" : "border-gray-200 shadow-sm hover:border-emerald-300 bg-white"}`}>
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
@@ -174,15 +209,23 @@ export const CorporateTextArea = ({ label, value, name, rows = 3, onChange }) =>
   </div>
 );
 
-export const ResumeSection = ({ title, children, splittable = false }) => (
-  <div className="mb-6 break-inside-avoid resume-section-container" data-splittable={splittable}>
-    <div className="flex items-center mb-1 section-header-flex">
-      <h2 className="text-xl font-bold pr-4 flex-shrink-0" style={{ paddingBottom: "4px" }}>{title}</h2>
-      <div className="flex-grow border-t-[2px] section-header-line" style={{ borderColor: "#C00000" }} />
+export const ResumeSection = ({ title, children, splittable = false }) => {
+  const handleClick = () => {
+    window.dispatchEvent(new CustomEvent('open-resume-section', { detail: { title } }));
+  };
+
+  return (
+    <div className="mb-6 break-inside-avoid resume-section-container" data-splittable={splittable}>
+      <div className="flex items-center mb-1 section-header-flex">
+        <h2 className="text-xl font-bold pr-4 flex-shrink-0" style={{ paddingBottom: "4px" }}>
+          <span className="preview-clickable-header" data-section-title={title} onClick={handleClick}>{title}</span>
+        </h2>
+        <div className="flex-grow border-t-[2px] section-header-line" style={{ borderColor: "#C00000" }} />
+      </div>
+      {children}
     </div>
-    {children}
-  </div>
-);
+  );
+};
 
 export const ReorderControl = ({ itemsCount, onReorder, theme = "blue" }) => {
   const [value, setValue] = useState('');

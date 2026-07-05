@@ -443,6 +443,10 @@ export const ModernCreativeEditor = ({ resumeData, setResumeData, photoFileInput
 export const ModernCreativeResumeLayout = forwardRef(({ resumeData, themeColor, dateItalics = true }, ref) => {
   const { personalDetails, education, internships, achievements, projects, skills, activities, summary, languages } = resumeData;
 
+  const handleSectionClick = (title) => {
+    window.dispatchEvent(new CustomEvent('open-resume-section', { detail: { title } }));
+  };
+
   const formatDates = text => {
     if (!text) return "";
     return text.replace(/<date\b([^>]*)\/?>/gi, (match, attrs) => {
@@ -562,7 +566,7 @@ export const ModernCreativeResumeLayout = forwardRef(({ resumeData, themeColor, 
               className="text-sm font-bold uppercase tracking-widest border-b pb-2 mb-3"
               style={{ borderColor: colors.border, color: colors.textSecondary }}
             >
-              Education
+              <span className="preview-clickable-header" onClick={() => handleSectionClick("Education")}>Education</span>
             </h3>
             <div className="space-y-4">
               {education.map((item, idx) => (
@@ -584,7 +588,7 @@ export const ModernCreativeResumeLayout = forwardRef(({ resumeData, themeColor, 
               className="text-sm font-bold uppercase tracking-widest border-b pb-2 mb-3"
               style={{ borderColor: colors.border, color: colors.textSecondary }}
             >
-              Skills
+              <span className="preview-clickable-header" onClick={() => handleSectionClick("Skills")}>Skills</span>
             </h3>
             <div className="flex flex-wrap gap-2">
               {skills.map((item, keyIdx) => item.skills.split(",").map((sk, skIdx) => sk.trim() && (
@@ -605,7 +609,7 @@ export const ModernCreativeResumeLayout = forwardRef(({ resumeData, themeColor, 
               className="text-sm font-bold uppercase tracking-widest border-b pb-2 mb-3"
               style={{ borderColor: colors.border, color: colors.textSecondary }}
             >
-              Languages
+              <span className="preview-clickable-header" onClick={() => handleSectionClick("Languages")}>Languages</span>
             </h3>
             <div className="space-y-2">
               {languages.map((item, idx) => (
@@ -622,14 +626,18 @@ export const ModernCreativeResumeLayout = forwardRef(({ resumeData, themeColor, 
       {/* Right main column (65%) */}
       <div className="w-[65%] px-6 pb-6 flex flex-col bg-white modern-creative-right-column pt-10">
         <div className="mb-6">
-          <h1 className="text-4xl font-black tracking-tight uppercase mb-2" style={{ color: themeColor }}>{personalDetails.name}</h1>
+          <h1 className="text-4xl font-black tracking-tight uppercase mb-2" style={{ color: themeColor }}>
+            <span className="preview-clickable-header" onClick={() => handleSectionClick("Personal Details")}>{personalDetails.name}</span>
+          </h1>
           <p className="text-xl text-slate-800 font-medium">{personalDetails.degree}</p>
         </div>
         {summary && (
           <div className="mb-5">
             <div className="flex items-center mb-3">
               <div className="w-1 h-8 mr-3 flex-shrink-0 modern-creative-section-border" style={{ backgroundColor: themeColor, position: "relative", top: "3px" }} />
-              <h2 className="text-lg font-bold uppercase text-slate-800">Professional Summary</h2>
+              <h2 className="text-lg font-bold uppercase text-slate-800">
+                <span className="preview-clickable-header" onClick={() => handleSectionClick("Professional Summary")}>Professional Summary</span>
+              </h2>
             </div>
             <p className="text-sm text-slate-600 leading-relaxed">{summary}</p>
           </div>
@@ -638,7 +646,9 @@ export const ModernCreativeResumeLayout = forwardRef(({ resumeData, themeColor, 
           <div className="mb-5">
             <div className="flex items-center mb-3">
               <div className="w-1 h-8 mr-3 flex-shrink-0 modern-creative-section-border" style={{ backgroundColor: themeColor, position: "relative", top: "3px" }} />
-              <h2 className="text-lg font-bold uppercase text-slate-800">Experience</h2>
+              <h2 className="text-lg font-bold uppercase text-slate-800">
+                <span className="preview-clickable-header" onClick={() => handleSectionClick("Experience")}>Experience</span>
+              </h2>
             </div>
             <div className="space-y-5">
               {internships.map((item, idx) => (
@@ -657,7 +667,9 @@ export const ModernCreativeResumeLayout = forwardRef(({ resumeData, themeColor, 
           <div className="mb-5">
             <div className="flex items-center mb-3">
               <div className="w-1 h-8 mr-3 flex-shrink-0 modern-creative-section-border" style={{ backgroundColor: themeColor, position: "relative", top: "3px" }} />
-              <h2 className="text-lg font-bold uppercase text-slate-800">Projects</h2>
+              <h2 className="text-lg font-bold uppercase text-slate-800">
+                <span className="preview-clickable-header" onClick={() => handleSectionClick("Projects")}>Projects</span>
+              </h2>
             </div>
             <div className="space-y-5">
               {projects.map((item, idx) => (
@@ -686,7 +698,9 @@ export const ModernCreativeResumeLayout = forwardRef(({ resumeData, themeColor, 
           <div className="mb-5">
             <div className="flex items-center mb-3">
               <div className="w-1 h-8 mr-3 flex-shrink-0 modern-creative-section-border" style={{ backgroundColor: themeColor, position: "relative", top: "3px" }} />
-              <h2 className="text-lg font-bold uppercase text-slate-800">Achievements</h2>
+              <h2 className="text-lg font-bold uppercase text-slate-800">
+                <span className="preview-clickable-header" onClick={() => handleSectionClick("Achievements")}>Achievements</span>
+              </h2>
             </div>
             <div className="space-y-2 text-sm text-slate-600">
               {achievements.map((item, idx) => <div key={idx} dangerouslySetInnerHTML={{ __html: formatBold(item.description) }} />)}
@@ -697,7 +711,9 @@ export const ModernCreativeResumeLayout = forwardRef(({ resumeData, themeColor, 
           <div className="mb-5">
             <div className="flex items-center mb-3">
               <div className="w-1 h-8 mr-3 flex-shrink-0 modern-creative-section-border" style={{ backgroundColor: themeColor, position: "relative", top: "3px" }} />
-              <h2 className="text-lg font-bold uppercase text-slate-800">Activities</h2>
+              <h2 className="text-lg font-bold uppercase text-slate-800">
+                <span className="preview-clickable-header" onClick={() => handleSectionClick("Activities")}>Activities</span>
+              </h2>
             </div>
             <div className="space-y-3">
               {activities.map((item, idx) => item.description.trim() !== "" && (
