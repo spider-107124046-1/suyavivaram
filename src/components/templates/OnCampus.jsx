@@ -451,6 +451,19 @@ export const OnCampusEditor = ({ resumeData, setResumeData, photoFileInputRef, l
           </svg>
         }
       >
+        <OnCampusTextArea
+          label="Description"
+          name="skillsDescription"
+          value={resumeData.skillsDescription || ""}
+          onChange={(e) => {
+            const { value } = e.target;
+            setResumeData(prev => ({
+              ...prev,
+              skillsDescription: value
+            }));
+          }}
+          rows={3}
+        />
         <ReorderControl
           itemsCount={resumeData.skills.length}
           onReorder={(order) => handleReorderListItems("skills", order)}
@@ -820,7 +833,7 @@ const ResizableEduTable = ({ education, unlocked, colWidths, rowHeights, onTable
 };
 
 export const OnCampusResumeLayout = forwardRef(({ resumeData, onTableChange, dateItalics = true }, ref) => {
-  const { personalDetails, education, internships, achievements, projects, skills, positions, activities } = resumeData;
+  const { personalDetails, education, internships, achievements, projects, skills, skillsDescription, positions, activities } = resumeData;
 
   const formatDates = text => {
     if (!text) return "";
@@ -989,17 +1002,25 @@ export const OnCampusResumeLayout = forwardRef(({ resumeData, onTableChange, dat
             </ul>
           </ResumeSection>
         )}
-        {skills && skills.length > 0 && (
+        {((skills && skills.length > 0) || (skillsDescription && skillsDescription.trim() !== "")) && (
           <ResumeSection title="Technical Skills and Certifications" splittable={false}>
-            <ul className="custom-bullet-list technical-skills-list">
-              {skills.map(item => (
-                <li key={item.id} className="flex items-start">
-                  <span className="w-56 flex-shrink-0 break-words">{item.category}</span>
-                  <span className="mx-2 flex-shrink-0">:</span>
-                  <span className="flex-1 break-words text-justify" dangerouslySetInnerHTML={{ __html: formatBold(item.skills) }} />
-                </li>
-              ))}
-            </ul>
+            {skillsDescription && skillsDescription.trim() !== "" && (
+              <div 
+                className="text-[15px] mb-3 text-justify leading-relaxed" 
+                dangerouslySetInnerHTML={{ __html: formatBold(skillsDescription) }} 
+              />
+            )}
+            {skills && skills.length > 0 && (
+              <ul className="custom-bullet-list technical-skills-list">
+                {skills.map(item => (
+                  <li key={item.id} className="flex items-start">
+                    <span className="w-56 flex-shrink-0 break-words">{item.category}</span>
+                    <span className="mx-2 flex-shrink-0">:</span>
+                    <span className="flex-1 break-words text-justify" dangerouslySetInnerHTML={{ __html: formatBold(item.skills) }} />
+                  </li>
+                ))}
+              </ul>
+            )}
           </ResumeSection>
         )}
         {positions && positions.length > 0 && (

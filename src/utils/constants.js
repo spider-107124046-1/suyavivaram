@@ -56,6 +56,7 @@ export const DEFAULT_RESUME_DATA = {
     { id: "proj2", name: "Weather App", from: "May 2025", to: "May 2025", description: "Developed a Weather App that displays the weather of 3 cities on the home page. It also displays the weather of any city searched for in the search box. It displays temperature, feels like temperature, humidity, and wind speed. The front end is made using HTML, CSS, and JavaScript. The API used to get weather data is Weather API by WeatherAPI.com." },
     { id: "proj3", name: "Chatty", from: "June 2025", to: "June 2025", description: "Built Chatty, a real-time chat application with one-on-one messaging and online status, using the MERN stack with Socket.io, JWT for security, and Zustand for state management. Optimized database queries and implemented a caching layer, improving message delivery speed by 30." }
   ],
+  skillsDescription: "",
   skills: [
     { id: "skill1", category: "Programming Languages", skills: "C++, C, JavaScript, HTML, CSS" },
     { id: "skill2", category: "Frameworks/Libraries", skills: "React.js, Socket.io" },
