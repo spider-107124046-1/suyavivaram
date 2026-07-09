@@ -205,6 +205,7 @@ export const OnCampusEditor = ({ resumeData, setResumeData, photoFileInputRef, l
         }
       >
         <OnCampusTextInput label="Full Name" name="name" value={resumeData.personalDetails.name} onChange={handlePersonalDetailsChange} />
+        <OnCampusTextInput label="Roll No." name="rollNo" value={resumeData.personalDetails.rollNo || ""} onChange={handlePersonalDetailsChange} />
         <div className="mb-4">
           <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5 ml-1">Profile Photo</label>
           <input type="file" accept="image/jpeg,image/png,image/gif,image/webp,image/svg+xml,image/bmp" onChange={(e) => handleFileChange(e, "photo")} ref={photoFileInputRef} className="hidden" />

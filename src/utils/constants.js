@@ -25,6 +25,7 @@ export const THEME_COLOR_STYLES = {
 export const DEFAULT_RESUME_DATA = {
   personalDetails: {
     name: "JOHN DOE",
+    rollNo: "106120084",
     photo: "assets/images/placeholder.png",
     degree: "B.Tech - Computer Science and Engineering",
     gender: "Male",

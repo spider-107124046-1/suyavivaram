@@ -260,6 +260,38 @@ const BuilderPage = () => {
     return () => clearTimeout(timer);
   }, []);
 
+  // Update document title dynamically so printing in the same tab gets the correct default filename
+  useEffect(() => {
+    const name = resumeData.personalDetails?.name || "";
+    if (selectedTemplate === "on-campus") {
+      const rollNo = (resumeData.personalDetails?.rollNo || "").trim();
+      const toPascalCase = (str) => {
+        if (!str) return "";
+        return str
+          .trim()
+          .split(/[\s_-]+/)
+          .map(word => {
+            const cleanWord = word.replace(/[^a-zA-Z0-9]/g, "");
+            if (!cleanWord) return "";
+            return cleanWord.charAt(0).toUpperCase() + cleanWord.slice(1).toLowerCase();
+          })
+          .join("");
+      };
+      const pascalName = toPascalCase(name);
+      if (rollNo) {
+        document.title = `${rollNo}_${pascalName}`;
+      } else {
+        document.title = pascalName || "Suyavivaram - Resume Builder";
+      }
+    } else {
+      document.title = name ? `${name}'s Resume - Suyavivaram` : "Suyavivaram - Resume Builder";
+    }
+
+    return () => {
+      document.title = "Suyavivaram (சுயவிவரம்) - Build your resume in minutes";
+    };
+  }, [resumeData.personalDetails?.name, resumeData.personalDetails?.rollNo, selectedTemplate]);
+
   // Track user edits/changes
   useEffect(() => {
     if (isInitialMount.current) {
