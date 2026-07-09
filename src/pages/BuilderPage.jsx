@@ -960,16 +960,16 @@ const BuilderPage = () => {
 
             <div className="flex gap-3">
               <button
-                onClick={handleRestoreDraft}
-                className="flex-1 px-4 py-3 bg-cerulean hover:bg-cerulean/90 text-white rounded-lg font-bold text-sm shadow-md transition-all hover:shadow-lg flex items-center justify-center gap-2"
-              >
-                Restore Draft
-              </button>
-              <button
                 onClick={handleStartFresh}
                 className="flex-1 px-4 py-3 bg-dimgrey hover:bg-dimgrey/90 text-white rounded-lg font-bold text-sm shadow-md transition-all hover:shadow-lg flex items-center justify-center gap-2"
               >
                 Start Fresh
+              </button>
+              <button
+                onClick={handleRestoreDraft}
+                className="flex-1 px-4 py-3 bg-cerulean hover:bg-cerulean/90 text-white rounded-lg font-bold text-sm shadow-md transition-all hover:shadow-lg flex items-center justify-center gap-2"
+              >
+                Restore Draft
               </button>
             </div>
           </div>

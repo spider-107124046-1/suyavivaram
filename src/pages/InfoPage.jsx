@@ -280,6 +280,12 @@ const SavingTab = () => (
         description="The PDF button is blocked until you set all required images (photo + logo for On-Campus; photo for Modern Creative)."
         accent="amber"
       />
+      <FeatureCard
+        icon="📳"
+        title="Android Print Settings"
+        description="On Android devices, ensure you change the paper size from 'Letter' to 'ISO A4' in the print service layout settings (as per T&P guidelines) to prevent formatting issues."
+        accent="berry"
+      />
     </div>
 
     <SectionHeading>Exporting & Importing Config</SectionHeading>
