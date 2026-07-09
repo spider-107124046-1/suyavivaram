@@ -157,6 +157,8 @@ const BuilderPage = () => {
   const [showLogoSelectionModal, setShowLogoSelectionModal] = useState(false);
   const [errorMessage, setErrorMessage] = useState(null);
   const [toastMessage, setToastMessage] = useState(null);
+  const [showAndroidPrompt, setShowAndroidPrompt] = useState(false);
+  const [showPageCountPrompt, setShowPageCountPrompt] = useState(false);
 
   const resumePreviewRef = useRef(null);
   const photoFileInputRef = useRef(null);
@@ -412,13 +414,7 @@ const BuilderPage = () => {
     }, duration);
   };
 
-  const handleDownloadPdf = async () => {
-    const validationError = validateUploads();
-    if (validationError) {
-      showBannerError(validationError);
-      return;
-    }
-
+  const triggerPrint = () => {
     const previewEl = resumePreviewRef.current?.getHtmlForPdf();
     if (!previewEl) {
       console.error("Resume container not found for PDF generation.");
@@ -492,6 +488,42 @@ const BuilderPage = () => {
         el.remove();
       }
       setIsDownloading(false);
+    }
+  };
+
+  const handleDownloadPdf = async () => {
+    const validationError = validateUploads();
+    if (validationError) {
+      showBannerError(validationError);
+      return;
+    }
+
+    const previewEl = resumePreviewRef.current?.getHtmlForPdf();
+    if (!previewEl) {
+      console.error("Resume container not found for PDF generation.");
+      showBannerError("Could not generate PDF. Please try again.");
+      return;
+    }
+
+    const pages = previewEl.querySelectorAll(".resume-page-container");
+    if (pages.length === 0) {
+      console.error("No pages found to download.");
+      showBannerError("There is no content to save as a PDF.");
+      return;
+    }
+
+    // Detect Android, including when "Desktop Site" mode is enabled.
+    // Android in Desktop Mode spoofs its platform as Linux, but retains touch-screen capability.
+    // Genuine Linux desktops typically have navigator.maxTouchPoints as 0 or undefined.
+    const isAndroid = /Android/i.test(navigator.userAgent) ||
+      (/Linux/i.test(navigator.platform) && navigator.maxTouchPoints > 1);
+
+    if (isAndroid) {
+      setShowAndroidPrompt(true);
+    } else if (pages.length > 2) {
+      setShowPageCountPrompt(true);
+    } else {
+      triggerPrint();
     }
   };
 
@@ -938,6 +970,74 @@ const BuilderPage = () => {
                 className="flex-1 px-4 py-3 bg-dimgrey hover:bg-dimgrey/90 text-white rounded-lg font-bold text-sm shadow-md transition-all hover:shadow-lg flex items-center justify-center gap-2"
               >
                 Start Fresh
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
+
+      {/* --- Android paper size acknowledgment prompt --- */}
+      {showAndroidPrompt && createPortal(
+        <div className="fixed top-0 left-0 w-screen h-screen z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in">
+          <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-sm border border-slate-100">
+            <h3 className="text-xl font-bold text-slate-900 mb-4 text-center">A4 Paper Size Settings</h3>
+            <p className="text-slate-600 text-sm mb-6 leading-relaxed text-center">
+              Please ensure you change the paper size from <strong>"Letter"</strong> to <strong>"ISO A4"</strong> in the Android print service layout settings as per T&P instructions.
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowAndroidPrompt(false)}
+                className="flex-1 px-4 py-3 bg-dimgrey hover:bg-dimgrey/90 text-white rounded-lg font-bold text-sm shadow-md transition-all flex items-center justify-center"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  setShowAndroidPrompt(false);
+                  const previewEl = resumePreviewRef.current?.getHtmlForPdf();
+                  const pages = previewEl ? previewEl.querySelectorAll(".resume-page-container") : [];
+                  if (pages.length > 2) {
+                    setShowPageCountPrompt(true);
+                  } else {
+                    triggerPrint();
+                  }
+                }}
+                className="flex-1 px-4 py-3 bg-cerulean hover:bg-cerulean/90 text-white rounded-lg font-bold text-sm shadow-md transition-all flex items-center justify-center"
+              >
+                I Understand
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
+
+      {/* --- Page count warning modal --- */}
+      {showPageCountPrompt && createPortal(
+        <div className="fixed top-0 left-0 w-screen h-screen z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in">
+          <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-sm border border-slate-100">
+            <h3 className="text-xl font-bold text-slate-900 mb-4 text-center">Resume Page Limit</h3>
+            <p className="text-slate-600 text-sm mb-6 leading-relaxed text-center">
+              Your resume exceeds 2 pages (currently rendering <strong>{
+                (resumePreviewRef.current?.getHtmlForPdf()?.querySelectorAll(".resume-page-container")?.length || 3)
+              } pages</strong>). It is highly recommended to keep your resume under 2 pages as per T&P instructions.
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowPageCountPrompt(false)}
+                className="flex-1 px-4 py-3 bg-dimgrey hover:bg-dimgrey/90 text-white rounded-lg font-bold text-sm shadow-md transition-all flex items-center justify-center"
+              >
+                Go Back
+              </button>
+              <button
+                onClick={() => {
+                  setShowPageCountPrompt(false);
+                  triggerPrint();
+                }}
+                className="flex-1 px-4 py-3 bg-cerulean hover:bg-cerulean/90 text-white rounded-lg font-bold text-sm shadow-md transition-all flex items-center justify-center"
+              >
+                Proceed Anyway
               </button>
             </div>
           </div>
