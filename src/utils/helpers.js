@@ -98,3 +98,36 @@ export function reconstructResumeData(config) {
   };
 }
 
+export function rotateImage(src, rotationAngle) {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement("canvas");
+      const ctx = canvas.getContext("2d");
+      if (!ctx) {
+        resolve(src);
+        return;
+      }
+      
+      const angleRad = (rotationAngle * Math.PI) / 180;
+      const absAngle = Math.abs(rotationAngle);
+      const isSwapped = absAngle === 90 || absAngle === 270;
+      
+      canvas.width = isSwapped ? img.height : img.width;
+      canvas.height = isSwapped ? img.width : img.height;
+      
+      ctx.translate(canvas.width / 2, canvas.height / 2);
+      ctx.rotate(angleRad);
+      
+      ctx.fillStyle = "#ffffff";
+      ctx.fillRect(-img.width / 2, -img.height / 2, img.width, img.height);
+      
+      ctx.drawImage(img, -img.width / 2, -img.height / 2);
+      
+      resolve(canvas.toDataURL("image/jpeg"));
+    };
+    img.onerror = () => resolve(src);
+    img.src = src;
+  });
+}
+

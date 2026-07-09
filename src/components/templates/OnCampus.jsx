@@ -17,7 +17,8 @@ import {
   centerCrop,
   makeAspectCrop,
   generateUniqueId,
-  isPlaceholderImage
+  isPlaceholderImage,
+  rotateImage
 } from '../../utils/helpers';
 
 export const OnCampusEditor = ({ resumeData, setResumeData, photoFileInputRef, logoFileInputRef, unlockTableBorders, setUnlockTableBorders }) => {
@@ -98,6 +99,13 @@ export const OnCampusEditor = ({ resumeData, setResumeData, photoFileInputRef, l
     setCrop(initialCrop);
     setCompletedCrop(initialCrop);
   }
+
+  const handleRotate = async (direction) => {
+    if (!cropSrc) return;
+    const angle = direction === "left" ? -90 : 90;
+    const rotated = await rotateImage(cropSrc, angle);
+    setCropSrc(rotated);
+  };
 
   const handleCropSave = () => {
     if (!completedCrop || !imageRef.current) return;
@@ -558,21 +566,55 @@ export const OnCampusEditor = ({ resumeData, setResumeData, photoFileInputRef, l
       {/* --- Crop Modal overlay (portal) --- */}
       {showCropModal && createPortal(
         <div className="fixed top-0 left-0 w-screen h-screen z-[60] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-fade-in">
-          <div className="bg-white rounded-xl shadow-2xl p-6 w-full max-w-2xl border border-gray-200">
-            <h2 className="text-xl font-bold mb-4 text-gray-900">Crop Your Image</h2>
-            {cropSrc && (
-              <ReactCrop
-                crop={crop}
-                onChange={(c, percentCrop) => setCrop(percentCrop)}
-                onComplete={c => setCompletedCrop(c)}
-                aspect={cropTarget === "logo" ? 1 : 130 / 140}
-              >
-                <img ref={imageRef} alt="Crop me" src={cropSrc} onLoad={onImageLoad} style={{ maxHeight: "70vh" }} />
-              </ReactCrop>
-            )}
-            <div className="mt-6 flex justify-end gap-3">
-              <button onClick={() => { setShowCropModal(false); setCropSrc(""); }} className="px-4 py-2 bg-gray-100 text-gray-800 rounded-lg font-semibold hover:bg-gray-200 transition-colors">Cancel</button>
-              <button onClick={handleCropSave} className="px-4 py-2 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors">Crop & Save</button>
+          <div className="bg-white rounded-xl shadow-2xl p-6 w-full max-w-2xl border border-gray-200 max-h-[90vh] flex flex-col">
+            <h2 className="text-xl font-bold mb-4 text-gray-900 flex-shrink-0">Crop Your Image</h2>
+            <div className="flex-1 min-h-0 flex items-center justify-center overflow-hidden bg-slate-50 rounded-lg p-2">
+              {cropSrc && (
+                <ReactCrop
+                  crop={crop}
+                  onChange={(c, percentCrop) => setCrop(percentCrop)}
+                  onComplete={c => setCompletedCrop(c)}
+                  aspect={cropTarget === "logo" ? 1 : 130 / 140}
+                >
+                  <img
+                    ref={imageRef}
+                    alt="Crop me"
+                    src={cropSrc}
+                    onLoad={onImageLoad}
+                    style={{ maxHeight: "calc(90vh - 12rem)", maxWidth: "100%", objectFit: "contain" }}
+                  />
+                </ReactCrop>
+              )}
+            </div>
+            <div className="mt-6 flex justify-between items-center gap-3 flex-shrink-0 w-full">
+              <div className="flex gap-2">
+                <button
+                  onClick={() => handleRotate("left")}
+                  className="inline-flex items-center px-3 py-1.5 bg-gray-100 text-gray-800 rounded-lg font-semibold hover:bg-gray-200 transition-colors text-xs"
+                  title="Rotate Left"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="mr-1">
+                    <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
+                    <path d="M3 3v5h5" />
+                  </svg>
+                  Rotate Left
+                </button>
+                <button
+                  onClick={() => handleRotate("right")}
+                  className="inline-flex items-center px-3 py-1.5 bg-gray-100 text-gray-800 rounded-lg font-semibold hover:bg-gray-200 transition-colors text-xs"
+                  title="Rotate Right"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="mr-1">
+                    <path d="M21 12a9 9 0 1 1-9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" />
+                    <path d="M21 3v5h-5" />
+                  </svg>
+                  Rotate Right
+                </button>
+              </div>
+              <div className="flex gap-3">
+                <button onClick={() => { setShowCropModal(false); setCropSrc(""); }} className="px-4 py-2 bg-gray-100 text-gray-800 rounded-lg font-semibold hover:bg-gray-200 transition-colors text-sm">Cancel</button>
+                <button onClick={handleCropSave} className="px-4 py-2 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors text-sm">Crop & Save</button>
+              </div>
             </div>
           </div>
         </div>,
