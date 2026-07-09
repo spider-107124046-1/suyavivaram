@@ -436,117 +436,26 @@ const BuilderPage = () => {
     setIsDownloading(true);
 
     try {
-      const printWindow = window.open("", "_blank");
-      if (!printWindow) {
-        showBannerError("Popup blocked. Please allow popups for this website to save your resume as PDF.");
-        setIsDownloading(false);
-        return;
+      // Remove any existing print root just in case
+      const existing = document.getElementById("print-only-root");
+      if (existing) {
+        existing.remove();
       }
 
-      const doc = printWindow.document;
-      doc.open();
-      doc.write(`
-        <!DOCTYPE html>
-        <html lang="en">
-        <head>
-          <meta charset="UTF-8">
-          <meta name="viewport" content="width=device-width, initial-scale=1.0">
-          <title>${resumeData.personalDetails.name || 'Resume'}</title>
-        </head>
-        <body>
-          <div id="print-container"></div>
-        </body>
-        </html>
-      `);
-      doc.close();
+      const printRoot = document.createElement("div");
+      printRoot.id = "print-only-root";
 
-      // Clone and copy all stylesheets, font links, and custom style elements
-      document.querySelectorAll('link, style').forEach(el => {
-        if (el.id === 'pdf-generation-fonts') return;
-        doc.head.appendChild(el.cloneNode(true));
-      });
-
-      // Insert custom print layout and spacing CSS
-      const printStyle = doc.createElement('style');
-      printStyle.innerHTML = `
-        @media print {
-          @page {
-            size: A4 portrait;
-            margin: 0;
-          }
-          body {
-            margin: 0 !important;
-            padding: 0 !important;
-            background: white !important;
-            -webkit-print-color-adjust: exact !important;
-            print-color-adjust: exact !important;
-          }
-          #print-container {
-            width: 210mm !important;
-            margin: 0 !important;
-            padding: 0 !important;
-          }
-          .resume-page-container {
-            width: 210mm !important;
-            height: 297mm !important;
-            max-height: 297mm !important;
-            margin: 0 !important;
-            border: none !important;
-            box-shadow: none !important;
-            page-break-after: always !important;
-            page-break-inside: avoid !important;
-            overflow: hidden !important;
-            box-sizing: border-box !important;
-            position: relative !important;
-          }
-          /* Hide helper button overlays, select triggers, and interactive components */
-          button,
-          [aria-label^="Select"],
-          [class*="upload-btn"],
-          .no-print {
-            display: none !important;
-          }
-          .preview-clickable-header {
-            text-decoration: none !important;
-          }
-        }
-        @media screen {
-          body {
-            background: #f1f5f9;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding: 2rem 0;
-            margin: 0;
-            font-family: "Lato", sans-serif;
-          }
-          .resume-page-container {
-            background: white;
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
-            margin-bottom: 2rem;
-            box-sizing: border-box;
-            position: relative;
-          }
-          button,
-          [aria-label^="Select"],
-          [class*="upload-btn"],
-          .no-print {
-            display: none !important;
-          }
-        }
-      `;
-      doc.head.appendChild(printStyle);
-
-      const container = doc.getElementById('print-container');
       pages.forEach(page => {
         const clone = page.cloneNode(true);
         // Clean up buttons and select prompts in the cloned pages
         clone.querySelectorAll('button, [aria-label^="Select"], .no-print').forEach(el => el.remove());
-        container.appendChild(clone);
+        printRoot.appendChild(clone);
       });
 
-      // Wait for all images (photos, logos) in the document to load
-      const images = Array.from(doc.querySelectorAll('img'));
+      document.body.appendChild(printRoot);
+
+      // Wait for all images (photos, logos) in the print root to load
+      const images = Array.from(printRoot.querySelectorAll('img'));
       const imagePromises = images.map(img => {
         if (img.complete) return Promise.resolve();
         return new Promise(resolve => {
@@ -556,27 +465,32 @@ const BuilderPage = () => {
       });
 
       // Wait for fonts and images to be fully loaded
-      Promise.all([...imagePromises, printWindow.document.fonts.ready]).then(() => {
+      Promise.all([...imagePromises, document.fonts.ready]).then(() => {
         setTimeout(() => {
-          printWindow.focus();
+          // Focus & print
+          window.focus();
+          window.print();
 
-          // Automatically close the window after printing is accepted or cancelled
-          printWindow.onafterprint = () => {
-            printWindow.close();
-          };
-
-          printWindow.print();
+          // Set downloading state back to false after a safe delay
+          // so the user can click print again, but do NOT remove printRoot yet
+          // as the Android print spooler takes time to capture the DOM.
+          setTimeout(() => {
+            setIsDownloading(false);
+          }, 2000);
         }, 300);
       }).catch(err => {
         console.error("Error waiting for print assets to load:", err);
-        printWindow.focus();
-        printWindow.print();
+        window.print();
+        setIsDownloading(false);
       });
 
     } catch (e) {
-      console.error("PDF Print Window initialization failed", e);
+      console.error("PDF printing failed", e);
       showBannerError(e.message || "An error occurred while preparing the PDF print layout.");
-    } finally {
+      const el = document.getElementById("print-only-root");
+      if (el) {
+        el.remove();
+      }
       setIsDownloading(false);
     }
   };
