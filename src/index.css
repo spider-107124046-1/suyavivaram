@@ -244,4 +244,22 @@ body {
   .preview-clickable-header {
     text-decoration: none !important;
   }
+
+  /* Fix Firefox table outer border rendering bug in collapsed tables */
+  .resume-page-container table {
+    border-collapse: separate !important;
+    border-spacing: 0 !important;
+    border-style: solid !important;
+    border-color: black !important;
+    border-width: 1px 0 0 1px !important;
+  }
+
+  .resume-page-container th, 
+  .resume-page-container td {
+    position: static !important;
+    background-clip: padding-box !important;
+    border-style: solid !important;
+    border-color: black !important;
+    border-width: 0 1px 1px 0 !important;
+  }
 }
